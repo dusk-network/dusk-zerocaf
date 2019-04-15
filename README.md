@@ -1,6 +1,6 @@
-# Doppio Curve
+# Corretto
 
-**This repository contains the implementation of the `Doppio Curve` designed by the Dusk-Team.**
+**This repository contains the implementation of the `Doppio Curve` inclusion over the `Ristretto Scalar field`. A pure Rust implementation designed by the Dusk-Team.**
 
 **WIP**
 
