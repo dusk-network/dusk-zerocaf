@@ -1,0 +1,148 @@
+sage: def egcd(a, b):
+....: ^Iif a == 0:
+....: ^I^Ireturn (b, 0, 1)
+....: ^Ielse:
+....: ^I^Ig, y, x = egcd(b % a, a)
+....: ^I^Ireturn (g, x - (b // a) * y, y)
+....: 
+sage: def modinv(a, m):
+....: ^Ig, x, y = egcd(a, m)
+....: ^Iif g != 1:
+....: ^I^Iraise Exception('modular inverse does not exist')
+....: ^Ielse:
+....: ^I^Ireturn x % m
+....: 
+sage: ^I^Ireturn pow(a, (p + 1) / 4, p)
+....: 
+....: ^I# Partition p-1 to s * 2^e for an odd s (i.e.
+....: ^I# reduce all the powers of 2 from p-1)
+....: ^I#
+....: ^Is = p - 1
+....: ^Ie = 0
+....: ^Iwhile s % 2 == 0:
+....: ^I^Is /= 2
+....: ^I^Ie += 1
+....: 
+....: ^I# Find some 'n' with a legendre symbol n|p = -1.
+....: ^I# Shouldn't take long.
+....: ^I#
+....: ^In = 2
+....: ^Iwhile legendre_symbol(n, p) != -1:
+....: ^I^In += 1
+....: 
+....: ^I# Here be dragons!
+....: ^I# Read the paper "Square roots from 1; 24, 51,
+....: ^I# 10 to Dan Shanks" by Ezra Brown for more
+....: ^I# information
+....: ^I#
+....: 
+....: ^I# x is a guess of the square root that gets better
+....: ^I# with each iteration.
+....: ^I# b is the "fudge factor" - by how much we're off
+....: ^I# with the guess. The invariant x^2 = ab (mod p)gx_w = (9 + a_m/3)%p
+....: ^I# is maintained throughout the loop.
+....: ^I# g is used for successive powers of n to update
+....: ^I# both a and b
+....: ^I# r is the exponent - decreases with each update
+....: ^I#
+....: ^Ix = pow(a, (s + 1) / 2, p)
+....: ^Ib = pow(a, s, p)
+....: ^Ig = pow(n, s, p)
+....: ^Ir = e
+....: 
+....: ^Iwhile True:
+....: ^I^It = b
+....: ^I^Im = 0
+....: ^I^Ifor m in xrange(r):
+....: ^I^I^Iif t == 1:
+....: ^I^I^I^Ibreak
+....: ^I^I^It = pow(t, 2, p)
+....: 
+....: ^I^Iif m == 0:
+....: ^I^I^Ireturn x
+....: 
+....: ^I^Igs = pow(g, 2 ** (r - m - 1), p)
+....: ^I^Ig = (gs * gs) % p
+....: ^I^Ix = (x * gs) % p
+....: ^I^Ib = (b * g) % p
+....: ^I^Ir = m
+....: 
+sage: 
+sage: def legendre_symbol(a, p):
+....: ^I""" Compute the Legendre symbol a|p using
+....: ^I^IEuler's criterion. p is a prime, a is
+....: ^I^Irelatively prime to p (if p divides
+....: ^I^Ia, then a|p = 0)
+....: 
+....: ^I^IReturns 1 if a has a square root modulo
+....: ^I^Ip, -1 otherwise.
+....: ^I"""
+....: ^Ils = pow(a, (p - 1) / 2, p)
+....: ^Ireturn -1 if ls == p - 1 else ls
+....: 
+sage: p = pow(2,255)-19
+sage: a_m = 486662
+sage: b_m = 1
+sage: interim_a_numerator = 3-pow(a_m,2)
+sage: interim_a_denominator = 3*pow(b_m,2)
+sage: interim_a_denominator = modinv(interim_a_denominator,p)
+sage: a_w = interim_a_numerator * interim_a_denominator
+sage: a_w = a_w % p
+sage: interim_b_numerator = 2*pow(a_m,3)-9*a_m
+sage: interim_b_denominator = 27 * pow(b_m,3)
+sage: interim_b_denominator = modinv(interim_b_denominator, p)
+sage: b_w = interim_b_numerator * interim_b_denominator
+sage: b_w = b_w % p
+sage: x = 9
+sage: x = (x + a_m * modinv(3,p))%p
+sage: y2 = pow(x,3) + a_w*x + b_w
+sage: y2 = y2 % p
+sage: y = modular_sqrt(y2,p)
+sage: P
+---------------------------------------------------------------------------
+NameError                                 Traceback (most recent call last)
+<ipython-input-23-c7e47e11af57> in <module>()
+----> 1 P
+
+NameError: name 'P' is not defined
+sage: 
+sage: p
+57896044618658097711785492504343953926634992332820282019728792003956564819949
+sage: a_w
+19298681539552699237261830834781317975544997444273427339909597334573241639236
+sage: b_w
+55751746669818908907645289078257140818241103727901012315294400837956729358436
+sage: x
+19298681539552699237261830834781317975544997444273427339909597334652188435546
+sage: y
+14781619447589544791020593568409986887264606134616475288964881837755586237401
+sage: p = pow(2,252) + 27742317777372353535851937790883648493
+sage: a_m = 346598
+sage: b_m = 1
+sage: interim_a_numerator = 3-pow(a_m,2)
+sage: interim_a_denominator = 3*pow(b_m,2)
+sage: interim_a_denominator = modinv(interim_a_denominator,p)
+sage: a_w = interim_a_numerator * interim_a_denominator
+sage: a_w = a_w % p
+sage: interim_b_numerator = 2*pow(a_m,3)-9*a_m
+....: 
+sage: interim_b_denominator = 27 * pow(b_m,3)
+sage: interim_b_denominator = modinv(interim_b_denominator, p)
+sage: b_w = interim_b_numerator * interim_b_denominator
+sage: b_w = b_w % p
+....: 
+sage: x = 17
+sage: x = (x + a_m * modinv(3,p))%p
+sage: y2 = pow(x,3) + a_w*x + b_w
+sage: y2 = y2 % p
+sage: y = modular_sqrt(y2,p)
+sage: p
+7237005577332262213973186563042994240857116359379907606001950938285454250989
+sage: a_w
+2412335192444087404657728854347664746952372119793302535333983646055108025796
+sage: b_w
+1340186218024493002587627141304258192751317844329612519629993998710484804961
+sage: x
+2412335192444087404657728854347664746952372119793302535333983646095151532546
+sage: y
+6222320563903764848551041754877036140234555813488015858364752483591799173948

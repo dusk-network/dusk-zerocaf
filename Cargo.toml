@@ -1,0 +1,37 @@
+[package]
+name = "doppio-curve"
+version = "0.1.0"
+authors = ["Luke Pearson <luke@dusk.network>", 
+           "CPerezz <carlos@dusk.network>"]
+readme = "README.md"
+repository = "https://gitlab.dusk.network/dusk-core/doppio-curve"
+keywords = ["cryptography", "ristretto", "doppio-curve", "ECC"]
+description = "A pure-Rust implementation of group operations on Doppio-curve"
+exclude = [
+    "**/.gitignore",
+    ".gitignore"
+]
+edition = "2018"
+
+[dependencies]
+subtle = { version = "2", default-features = false }
+
+
+[dev-dependencies]
+criterion = "0.2"
+
+
+# Criterion benchmarks
+[[bench]]
+path = "./benchmarks/dusk_benchmarks.rs"
+name = "dusk_benchmarks"
+harness = false
+
+
+[features]
+nightly = ["subtle/nightly"]
+# The u64 backend uses u64s with u128 products.
+u64_backend = []
+default = ["u64_backend"]
+
+
