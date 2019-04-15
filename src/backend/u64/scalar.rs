@@ -223,7 +223,7 @@ impl Scalar {
 
     /// Compute `a^2`
     #[inline]
-    fn square_internal(a: &Scalar) -> [u128; 9] {
+    pub fn square_internal(a: &Scalar) -> [u128; 9] {
         let a_sqrt = [
             a[0]*2,
             a[1]*2,
@@ -251,7 +251,7 @@ impl Scalar {
     }
 
     /// Compute `a * b` (mod l)
-    #[inline(never)]
+    #[inline]
     pub fn mul(a: &Scalar, b: &Scalar) -> Scalar {
         unimplemented!()
     }
@@ -327,6 +327,15 @@ mod tests {
         let res = Scalar::mul_internal(&B, &BA);
         for i in 0..9 {
             assert!(res[i] == B_TIMES_BA[i]);
+        }
+    }
+
+    #[test]
+    fn square_internal() {
+        let easy_res = Scalar::square_internal(&AB);
+        let res_correct: [u128; 9] = [0,0,0,0,0,0,16,0,0];
+        for i in 0..5 {
+            assert!(easy_res[i] == res_correct[i]);
         }
     }
 }
