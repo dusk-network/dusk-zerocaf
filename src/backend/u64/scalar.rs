@@ -96,7 +96,7 @@ macro_rules! m {
     }
 }
 
-/// u64 * u64 = u128 func multiply helper
+/// u64 * u64 = u128 inline func multiply helper
 #[inline]
 fn m(x: u64, y: u64) -> u128 {
     (x as u128) * (y as u128)
@@ -182,7 +182,7 @@ impl Scalar {
     }   
 
     /// Compute `a * b`
-    #[inline(always)]
+    #[inline]
     pub fn mul_internal(a: &Scalar, b: &Scalar) -> [u128; 9] {
         let mut res = [0u128; 9];
         // Note that this is just the normal way of performing a product.
@@ -202,7 +202,7 @@ impl Scalar {
     }
 
     /// Compute `a * b` with macros
-    #[inline(always)]
+    #[inline]
     pub fn mul_internal_macros(a: &Scalar, b: &Scalar) -> [u128; 9] {
         let mut res = [0u128; 9];
         // Note that this is just the normal way of performing a product.
@@ -222,7 +222,7 @@ impl Scalar {
     }
 
     /// Compute `a^2`
-    #[inline(always)]
+    #[inline]
     fn square_internal(a: &Scalar) -> [u128; 9] {
         let a_sqrt = [
             a[0]*2,
@@ -245,7 +245,7 @@ impl Scalar {
     }
 
     /// Compute `limbs/R` (mod l), where R is the Montgomery modulus 2^260
-    #[inline(always)]
+    #[inline]
     pub (crate) fn montgomery_reduce(limbs: &[u128; 9]) -> Scalar {
         unimplemented!()
     }

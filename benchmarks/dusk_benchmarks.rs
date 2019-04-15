@@ -2,12 +2,12 @@
 
 #[macro_use]
 extern crate criterion;
-extern crate doppio_curve;
+extern crate corretto;
 
 use criterion::{Criterion, Benchmark};
 
-use doppio_curve::backend::u64::constants;
-use doppio_curve::backend::u64::scalar::Scalar;
+use corretto::backend::u64::constants;
+use corretto::backend::u64::scalar::Scalar;
 
 
 
@@ -18,18 +18,9 @@ mod scalar_benches {
 
     // BA = B - A = 904625697166532776746648320014998870755800986942176787613709275418060104167
     pub static BA: Scalar = Scalar([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370491, 2199023255551]);
-    /*
-    // benchmarking mul_internal function with function calls
-    pub fn mul_int_func(c: &mut Criterion) {
-        // B * BA computed in Sage limb by limb. (Since we don't have any other way to verify it.
-        c.bench_function("mul_internal_function", move |b| b.iter(|| Scalar::mul_internal(&B, &BA)));
-    }  
-    // benchmarking mul_internal function with macro calls
-    pub fn mul_int_macros(c: &mut Criterion) {
-        // B * BA computed in Sage limb by limb. (Since we don't have any other way to verify it.
-        c.bench_function("mul_internal_macros", move |b| b.iter(|| Scalar::mul_internal_macros(&B, &BA)));
-    }
-    */
+    
+    // Test if some implementation performs much better than the other even `inline`
+    // forces to replace the code too. So both implementations should perform similarly.
     pub fn bench_mul_internal(c: &mut Criterion) {
     c.bench(
         "mul_internal",

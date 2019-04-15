@@ -1,12 +1,12 @@
 [package]
-name = "doppio-curve"
+name = "corretto"
 version = "0.1.0"
 authors = ["Luke Pearson <luke@dusk.network>", 
            "CPerezz <carlos@dusk.network>"]
 readme = "README.md"
-repository = "https://gitlab.dusk.network/dusk-core/doppio-curve"
+repository = "https://github.com/dusk-network/corretto"
 keywords = ["cryptography", "ristretto", "doppio-curve", "ECC"]
-description = "A pure-Rust implementation of group operations on Doppio-curve"
+description = "A pure-Rust implementation of elliptic curve operations on Doppio-curve"
 exclude = [
     "**/.gitignore",
     ".gitignore"

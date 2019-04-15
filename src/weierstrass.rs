@@ -1,5 +1,5 @@
 //! This is the definition and implementation 
-//! of a Weierstrass point on the Doppio-curve
+//! of a Weierstrass point.
 
 use core::ops::Add;
 use core::ops::Mul;
@@ -35,7 +35,7 @@ impl WeierstrassPoint {
 
 
 
-/// A `ProjectivePoint` represents a point on the Weierstrass form of Doppio-Cuurve.
+/// A `ProjectivePoint` represents a point on the Weierstrass form of the elliptic curve.
 #[derive(Debug, PartialEq)]
 pub struct ProjectivePoint {
     pub y: FieldElement

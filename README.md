@@ -1,6 +1,6 @@
-# Corretto
+# Coretto: our cryptographic protocol for set inclusion using elliptic curve operations
 
-**This repository contains the implementation of the `Doppio Curve` inclusion over the `Ristretto Scalar field`. A pure Rust implementation designed by the Dusk-Team.**
+**This repository contains the implementation of the `Doppio Curve` over the `Ristretto Scalar field`. This is a pure Rust implementation designed by the Dusk-Team.**
 
 **WIP**
 
@@ -55,8 +55,8 @@
     - [ ] Add the required constants for computation.
       - [x] Implement Addition.
       - [x] implement Subtraction.
-      - [ ] Implement Inner_Multiplication.
-      - [ ] Implement Inner_Squaring.
+      - [x] Implement Inner_Multiplication.
+      - [x] Implement Inner_Squaring.
       - [ ] Implement Montgomery_reduction. (BigUint implementation done on tools/src/main.rs to test it and get an idea.)
         - [ ] Implement Montgomery_Muliplication.
         - [ ] Implement Montgomery_Squaring.

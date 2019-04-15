@@ -8,15 +8,11 @@ use core::ops::{Sub, SubAssign};
 use core::ops::{Mul, MulAssign};
 
 
-
-
-
 /// A `FieldElement` represents an element into the field 
 /// `2^252 + 27742317777372353535851937790883648493`
 /// 
 /// In the 64-bit backend implementation, the `FieldElement is 
 /// represented in radix `2^51`
-///  
 
 #[derive(Copy, Clone)]
 pub struct FieldElement(pub(crate) [u64;5] );
