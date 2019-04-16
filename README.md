@@ -1,4 +1,4 @@
-# Coretto: our cryptographic protocol for set inclusion using elliptic curve operations
+# Corretto: our cryptographic protocol for set inclusion using elliptic curve operations
 
 **This repository contains the implementation of the `Doppio Curve` over the `Ristretto Scalar field`. This is a pure Rust implementation designed by the Dusk-Team.**
 
