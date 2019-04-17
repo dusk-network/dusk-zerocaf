@@ -114,7 +114,7 @@ impl Scalar {
         for i in 0..4 {
             for j in 0..8 {
                 words[i] |= (bytes[(i * 8) + j] as u64) << (j * 8);
-            }
+            } 
         }
 
         let mask = (1u64 << 52) - 1;
@@ -247,13 +247,44 @@ impl Scalar {
     /// Compute `limbs/R` (mod l), where R is the Montgomery modulus 2^260
     #[inline]
     pub (crate) fn montgomery_reduce(limbs: &[u128; 9]) -> Scalar {
-        unimplemented!()
+
+        #[inline]
+        fn carry_and_res(sum: u128) -> (u128, u64) {
+            let p = (sum as u64).wrapping_mul(constants::LFACTOR) & ((1u64 << 52) - 1);
+            ((sum + m(p,constants::R[0])) >> 52, p)
+        }
+
+        #[inline]
+        fn mont_res(sum: u128) -> (u128, u64) {
+            let w = (sum as u64) & ((1u64 << 52) - 1);
+            (sum >> 52, w)
+        }
+
+        let l = &constants::R;
+
+        // the first half computes the Montgomery adjustment factor n, and begins adding n*l to make limbs divisible by R
+        let (carry, n0) = carry_and_res(        limbs[0]);
+        let (carry, n1) = carry_and_res(carry + limbs[1] + m(n0,l[1]));
+        let (carry, n2) = carry_and_res(carry + limbs[2] + m(n0,l[2]) + m(n1,l[1]));
+        let (carry, n3) = carry_and_res(carry + limbs[3] + m(n0,l[3]) + m(n1,l[2]) + m(n2,l[1]));
+        let (carry, n4) = carry_and_res(carry + limbs[4] + m(n0,l[4]) + m(n1,l[3]) + m(n2,l[2]) + m(n3,l[1]));
+
+        // limbs is divisible by R now, so we can divide by R by simply storing the upper half as the result
+        let (carry, r0) = mont_res(carry + limbs[5]              + m(n1,l[4]) + m(n2,l[3]) + m(n3,l[2]) + m(n4,l[1]));
+        let (carry, r1) = mont_res(carry + limbs[6]                           + m(n2,l[4]) + m(n3,l[3]) + m(n4,l[2]));
+        let (carry, r2) = mont_res(carry + limbs[7]                                        + m(n3,l[4]) + m(n4,l[3]));
+        let (carry, r3) = mont_res(carry + limbs[8]                                                     + m(n4,l[4]));
+        let         r4 = carry as u64;
+
+        // result may be >= l, so attempt to subtract l
+        Scalar::sub(Scalar([r0,r1,r2,r3,r4]), l)
     }
 
     /// Compute `a * b` (mod l)
     #[inline]
     pub fn mul(a: &Scalar, b: &Scalar) -> Scalar {
-        unimplemented!()
+        let ab = Scalar::montgomery_reduce(&Scalar::mul_internal(a, b));
+        Scalar::montgomery_reduce(&Scalar::mul_internal(&ab, &constants::RR))
     }
 }
 
@@ -289,7 +320,6 @@ mod tests {
         20302216644276907411437105105337, 
         19807040628557059606945202184, 
         4835703278454118652313601];
-
 
 
     #[test]
@@ -337,5 +367,10 @@ mod tests {
         for i in 0..5 {
             assert!(easy_res[i] == res_correct[i]);
         }
+    }
+
+    #[test]
+    fn montgomery_reduc() {
+        unimplemented!()
     }
 }
