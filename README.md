@@ -1,8 +1,12 @@
-# Corretto: our cryptographic protocol for set inclusion using elliptic curve operations
+# Corretto: A library which presents a collection of various cryptographic protocols, written in Rust, which are created for the purpose of fast and efficient cryptogrpahic operations.   
 
 **This repository contains the implementation of the `Doppio Curve` over the `Ristretto Scalar field`. This is a pure Rust implementation designed by the Dusk-Team.**
 
 **WIP**
+
+ Ristretto is a technique for constructing prime order elliptic curve groups with non-malleable encodings. The Ristretto protocol arose as an extension of Mike Hamburg's Decaf approach to cofactor elimination, which is applicable to curves of cofactor 4, whereas the Ristretto is designed for non-prime-order Edwards curves of cofactor 8. As the initial operations within Corretto are performed on the Doppio curve, the Ristretto scalar field is used to allow the elimination of the negative impacts of the cofactor 8 of this curve.
+
+ Within this library, the implementation of the Ristretto to construct the curve with desired properties is mad possible by defining the curve over the field, using only a thin abstraction layer,  which makes it possible for systems using signatures to be safely extended with zero-knowledge protocols. These zero-knowledge protocols are utilised  with no additional cryptographic assumptions and minimal changes in the code. The Ristretto scalar field is bulletproof friendly, which makes it possible to use both cryptographic protocols in tandem with one another, as they are centric to contemporary applications of elliptic curve operations. 
 
 
 # Curve parameters:
