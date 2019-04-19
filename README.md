@@ -9,12 +9,8 @@ cofactor 4, whereas the Ristretto is designed for non-prime-order Edwards curves
 within Corretto are performed on the Doppio curve, **the Ristretto scalar field is used to allow the elimination of the 
 negative impacts of the cofactor 8 of this curve.**
 
-Within this library, the implementation of the Ristretto to construct the curve with desired properties is mad possible by 
-defining the curve over the field, using only a thin abstraction layer,  which makes it possible for systems using signatures 
-to be safely extended with zero-knowledge protocols. These zero-knowledge protocols are utilised  with no additional 
-cryptographic assumptions and minimal changes in the code. The Ristretto scalar field is bulletproof friendly, which makes 
-it possible to use both cryptographic protocols in tandem with one another, as they are centric to contemporary applications
-of elliptic curve operations. 
+Within this library, the implementation of the Ristretto to construct the curve with desired properties is made possible by 
+defining the curve over the scalar field, using only a thin abstraction layer, which makes it possible for systems using signatures to be safely extended with zero-knowledge protocols. These zero-knowledge protocols are utilised with no additional cryptographic assumptions and minimal changes in the code. The Ristretto scalar field is Bulletproof friendly, which makes it possible to use both cryptographic protocols in tandem with one another, as they are centric to contemporary applications of elliptic curve operations. 
 
 
 # Curve parameters:
@@ -69,13 +65,13 @@ of elliptic curve operations.
       - [x] implement Subtraction.
       - [x] Implement Inner_Multiplication.
       - [x] Implement Inner_Squaring.
-      - [ ] Implement Montgomery_reduction. (BigUint implementation done on tools/src/main.rs to test it and get an idea.)
+      - [x] Implement Montgomery_reduction. (BigUint implementation done on tools/src/main.rs to test it and get an idea.)
         - [ ] Implement Montgomery_Muliplication.
         - [ ] Implement Montgomery_Squaring.
 - [ ] Create Conversions from Montgomery points to Weierstrass ones. (Not clear if necessary yet.)
 
 # Encoding / Decoding tools and examples.
-In order to work with our points along the curve, or any non trivial computuaions, for example those with tough notations - there has been a set of tools and examples has been created to make facilitiate the Encoding/Decoding processes. Thye can be found at: `tools/src/main.rs` 
+In order to work with our points along the curve, or any non trivial computuaions, for example those with tough notations - there has been a set of tools and examples which have been created to make facilitate the Encoding/Decoding processes. These can be found at: `tools/src/main.rs` 
 
 **Examples**
 ```rust
@@ -94,8 +90,6 @@ from_radix_to_radix_10("1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0
 // Prints: 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
 
 ```
-> When performing operations with large values, such as: `2²⁵² - 121160309657751286123858757838224683208` it is recomended to compute through `SageMath`, as the user interface is adheres to these types of fucntions.
+> When performing operations with large values, such as: `2²⁵² - 121160309657751286123858757838224683208`, it is recomended to compute them through `SageMath`, as the user interface adheres to these types of functions. From `SageMath`, they can be converted in a consistent format and easily compiled into Rust. 
 
-<br/>
 
-> Operations with large numbers are recommended to be done in `SageMath`, where they can be converted in a continuouse format into rust and easily compiled each time. 
