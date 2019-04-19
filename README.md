@@ -1,4 +1,4 @@
-# Corretto: A library which presents a collection of various cryptographic protocols, written in Rust, which are created for the purpose of fast and efficient cryptogrpahic operations.   
+# Corretto: A library which presents a collection of various cryptographic protocols, written in Rust, which are created for the purpose of fast and efficient cryptographic operations.   
 
 **This repository contains the implementation of the `Doppio Curve` over the `Ristretto Scalar field`. This is a pure Rust implementation designed by the Dusk-Team.**
 
