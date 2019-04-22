@@ -65,9 +65,10 @@ defining the curve over the scalar field, using only a thin abstraction layer, w
       - [x] implement Subtraction.
       - [x] Implement Inner_Multiplication.
       - [x] Implement Inner_Squaring.
-      - [x] Implement Montgomery_reduction. (BigUint implementation done on tools/src/main.rs to test it and get an idea.)
-        - [ ] Implement Montgomery_Muliplication.
-        - [ ] Implement Montgomery_Squaring.
+      - [x] Implement Montgomery_reduction.
+        - [x] Implement Montgomery_Muliplication. (ACTUALLY UNDER TESTING)
+        - [x] Implement Montgomery_Squaring.
+        - [x] Implement tests of Montgomery Arithmetics. (UNDER REVISION)
 - [ ] Create Conversions from Montgomery points to Weierstrass ones. (Not clear if necessary yet.)
 
 # Encoding / Decoding tools and examples.
