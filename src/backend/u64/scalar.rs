@@ -260,31 +260,53 @@ impl Scalar {
             (sum >> 52, w)
         }
 
-        let l = &constants::R;
+        let r = &constants::R;
 
         // the first half computes the Montgomery adjustment factor n, and begins adding n*l to make limbs divisible by R
         let (carry, n0) = carry_and_res(        limbs[0]);
-        let (carry, n1) = carry_and_res(carry + limbs[1] + m(n0,l[1]));
-        let (carry, n2) = carry_and_res(carry + limbs[2] + m(n0,l[2]) + m(n1,l[1]));
-        let (carry, n3) = carry_and_res(carry + limbs[3] + m(n0,l[3]) + m(n1,l[2]) + m(n2,l[1]));
-        let (carry, n4) = carry_and_res(carry + limbs[4] + m(n0,l[4]) + m(n1,l[3]) + m(n2,l[2]) + m(n3,l[1]));
+        let (carry, n1) = carry_and_res(carry + limbs[1] + m(n0,r[1]));
+        let (carry, n2) = carry_and_res(carry + limbs[2] + m(n0,r[2]) + m(n1,r[1]));
+        let (carry, n3) = carry_and_res(carry + limbs[3] + m(n0,r[3]) + m(n1,r[2]) + m(n2,r[1]));
+        let (carry, n4) = carry_and_res(carry + limbs[4] + m(n0,r[4]) + m(n1,r[3]) + m(n2,r[2]) + m(n3,r[1]));
 
         // limbs is divisible by R now, so we can divide by R by simply storing the upper half as the result
-        let (carry, r0) = mont_res(carry + limbs[5]              + m(n1,l[4]) + m(n2,l[3]) + m(n3,l[2]) + m(n4,l[1]));
-        let (carry, r1) = mont_res(carry + limbs[6]                           + m(n2,l[4]) + m(n3,l[3]) + m(n4,l[2]));
-        let (carry, r2) = mont_res(carry + limbs[7]                                        + m(n3,l[4]) + m(n4,l[3]));
-        let (carry, r3) = mont_res(carry + limbs[8]                                                     + m(n4,l[4]));
+        let (carry, r0) = mont_res(carry + limbs[5]              + m(n1,r[4]) + m(n2,r[3]) + m(n3,r[2]) + m(n4,r[1]));
+        let (carry, r1) = mont_res(carry + limbs[6]                           + m(n2,r[4]) + m(n3,r[3]) + m(n4,r[2]));
+        let (carry, r2) = mont_res(carry + limbs[7]                                        + m(n3,r[4]) + m(n4,r[3]));
+        let (carry, r3) = mont_res(carry + limbs[8]                                                     + m(n4,r[4]));
         let         r4 = carry as u64;
 
         // result may be >= l, so attempt to subtract l
-        Scalar::sub(Scalar([r0,r1,r2,r3,r4]), l)
+        Scalar::sub(Scalar([r0,r1,r2,r3,r4]), r)
     }
 
     /// Compute `a * b` (mod l)
     #[inline]
     pub fn mul(a: &Scalar, b: &Scalar) -> Scalar {
-        let ab = Scalar::montgomery_reduce(&Scalar::mul_internal(a, b));
+        let ab = Scalar::montgomery_reduce(&Scalar::mul_internal(a, b)); 
         Scalar::montgomery_reduce(&Scalar::mul_internal(&ab, &constants::RR))
+    }
+
+    /// Compute `(a * b) / R` (mod l), where R is the Montgomery modulus 2^260
+    #[inline]
+    pub fn montgomery_mul(a: &Scalar, b: &Scalar) -> Scalar {
+        Scalar::montgomery_reduce(&Scalar::mul_internal(a, b))
+    }
+
+    /// Puts a Scalar into Montgomery form, i.e. computes `a*R (mod l)`
+    #[inline(never)]
+    pub fn to_montgomery(&self) -> Scalar {
+        Scalar::montgomery_mul(self, &constants::RR)
+    }
+
+    /// Takes a Scalar out of Montgomery form, i.e. computes `a/R (mod l)`
+    #[inline(never)]
+    pub fn from_montgomery(&self) -> Scalar {
+        let mut limbs = [0u128; 9];
+        for i in 0..5 {
+            limbs[i] = self[i] as u128;
+        }
+        Scalar::montgomery_reduce(&limbs)
     }
 }
 
@@ -292,7 +314,7 @@ impl Scalar {
 #[cfg(test)]
 mod tests {
     use super::*;
-    /// Computed A and B, some Scalars defined over the modulo `r = 2\^{249} - 15145038707218910765482344729778085401\\`.
+    /// Computed A and B, some Scalars defined over the modulo `r = 2^{249} - 15145038707218910765482344729778085401`.
     /// A = 182687704666362864775460604089535377456991567872
     pub static A: Scalar = Scalar([0, 0, 0, 2, 0]);
 
@@ -320,6 +342,20 @@ mod tests {
         20302216644276907411437105105337, 
         19807040628557059606945202184, 
         4835703278454118652313601];
+
+
+    /// Montgomery x
+    pub static X_MONT: Scalar = Scalar([3967855409315932, 4468715158741414, 1532785699107429, 3431559202417771, 864832837719]);
+
+    pub static X: Scalar = Scalar([4503599627370495, 4503599627370495, 4503599627370495, 4503599627370495, 4398046511103]);
+    /// Y
+    pub static Y: Scalar = Scalar([3224898173688058, 3370928136179116, 1182880079308587, 1688835920473363, 14937922189349]);
+
+    /// `(x * y)/R (mod l)`
+    pub static X_TIMES_Y_MONT: Scalar = Scalar([2506269041400604, 1231103222380683, 3428697373767643, 1095442560240545, 1294911592878]); 
+
+    /// `x * y (mod l)`
+    pub static X_TIMES_Y: Scalar = Scalar([3414372756436001, 1500062170770321, 4341044393209371, 2791496957276064, 2164111380879]); 
 
 
     #[test]
@@ -369,8 +405,39 @@ mod tests {
         }
     }
 
+    // Needs to be reviewed
     #[test]
-    fn montgomery_reduc() {
-        unimplemented!()
+    fn to_montgomery_conversion() {
+        let mont_x = Scalar::to_montgomery(&X);
+        for i in 0..5 {
+            assert!(mont_x[i] == X_MONT[i]);
+        }
+    }
+
+    // Need to review and compute correct values
+    #[test]
+    fn from_montgomery_conversion() {
+        let x = Scalar::from_montgomery(&X_MONT);
+        for i in 0..5 {
+            assert!(x[i] == X[i]);
+        }
+    }
+
+    // Need to review the values and the algorithm
+    #[test]
+    fn full_montgomery_mul() {
+        let res = Scalar::mul(&X_MONT, &Y);
+        for i in 0..5 {
+            assert!(res[i] == X_TIMES_Y[i]);
+        }
+    }
+
+    // Need to review the values and the algorithm
+    #[test]
+    fn montgomery_mul() {
+        let res = Scalar::montgomery_mul(&X_MONT, &Scalar::to_montgomery(&Y));
+        for i in 0..5 {
+            assert!( res[i] == X_TIMES_Y_MONT[i]);
+        }
     }
 }
