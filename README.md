@@ -14,7 +14,7 @@ The `Ristretto scalar field` is used to **solve all negative impacts of using co
 Within this library, the implementation of the Ristretto to construct the curve with desired properties is made possible by 
 defining the curve over the scalar field, using only a thin abstraction layer, which makes it possible for systems using signatures to be safely extended with zero-knowledge protocols. These zero-knowledge protocols are utilised with no additional cryptographic assumptions and minimal changes in the code. The Ristretto scalar field is Bulletproof friendly, which makes it possible to use both cryptographic protocols in tandem with one another, as they are centric to contemporary applications of elliptic curve operations.
 
-Special thanks to @ebfull who triggered this work with the following tweet:
+Special thanks to [@ebfull](https://github.com/ebfull) who triggered this work with the following tweet:
 
 <blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">Here&#39;s an &quot;embedded&quot; curve over ristretto255&#39;s scalar field<br><br>-x^2 + y^2 = 1 - (86649/86650)x^2y^2<br><br>which is Ristretto-ready and birationally equivalent to<br><br>y^2 = x^3 + 346598x^2 + x (and it&#39;s twist secure)<br><br>Any other suggestions?</p>&mdash; Sean Bowe (@ebfull) <a href="https://twitter.com/ebfull/status/1087571257057406976?ref_src=twsrc%5Etfw">January 22, 2019</a></blockquote>
 
