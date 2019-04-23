@@ -5,6 +5,8 @@ use num_bigint::BigUint;
 use num::{Zero, One, Integer, Num};
 use std::str::FromStr;
 use num_traits::cast::ToPrimitive;
+use num_traits::pow;
+
 
 
 fn main() {
@@ -25,7 +27,7 @@ fn main() {
     let x2 = BigUint::from_str("515692107665463680305819378593").unwrap();
 
     reduction(m, x1, x2).unwrap();
-    */
+    
 
     let x = to_scalar_base_52("1809251394333065553493296640760748560207343510400633813116524750123642650623");
     println!("R: {:?}", x);
@@ -35,8 +37,13 @@ fn main() {
     println!("R: {:?}", x_y_mont);
     let x_y = to_scalar_base_52("890263784947025690345271110799906008759402458672628420828189878638015362081");
     println!("R: {:?}", x_y);
-    let mont_x = to_scalar_base_52("355771593947224831440150902784884128345566771109158009734431874890201120860");
+    let mont_x = to_scalar_base_52("658448296334113745583381664921721413881518248721417041768778176391714104386");
     println!("{:?}", mont_x);
+    */
+    let _ = from_scalar_base_52(&[0x0006d52bf200cfd5, 0x00033fb1d7021570, 0x000f201bc07139d8, 0x0001267e3e49169e, 0x000007b839c00268]);
+    
+    let x = to_scalar_base_52("31017039272384329247707842006585518901248");
+    println!("{:?}", x);
 }
 
 /// The num has to be positive! Otherways it will fail
@@ -87,6 +94,17 @@ pub fn to_scalar_base_52(num: &str) -> [u64; 5] {
     let mut res2: Vec<u64> = response.iter().map(|x| u64::from_str(&x.to_str_radix(10u32)).unwrap()).collect();
     resp_as_array.swap_with_slice(&mut res2);
     resp_as_array
+}
+
+/// Gets a Scalar in base 52 and transforms it into a normal representation
+pub fn from_scalar_base_52(limbs: &[u64; 5]) -> () {
+    let mut res: BigUint = BigUint::zero();
+    let two_pow_52 = BigUint::from_str("4503599627370496").unwrap();
+    for i in 0..5 {
+        res = res + (pow(two_pow_52.clone(), i) * limbs[i]);
+    }
+    println!("{}", res);
+    ()
 }
 
 /// Montgomery struct
