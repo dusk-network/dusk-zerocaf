@@ -1,17 +1,26 @@
-# Corretto: A library which presents a collection of various cryptographic protocols, written in Rust, which are created for the purpose of fast and efficient cryptographic operations.   
+# Corretto: Fast, efficient and bulletproof-friendly cryptographic operations.
 
-**This repository contains the implementation of the `Doppio Curve` over the `Ristretto Scalar field`. This is a pure Rust implementation designed by the Dusk-Team.**
+This repository contains the first ever implementation of an elliptic curve over the `Ristretto Scalar field`: a pure Rust implementation designed by [Dusk](https://dusk.network) team
+
+### Ristretto curve 
 
 Ristretto is a technique for constructing prime order elliptic curve groups with non-malleable encodings. The [Ristretto protocol](https://ristretto.group/ristretto.html) arose as an extension of [Mike Hamburg's Decaf](https://www.shiftleft.org/papers/decaf/decaf.pdf) approach to cofactor elimination, which is applicable to curves of
-cofactor 4, whereas the Ristretto is designed for non-prime-order Edwards curves of cofactor 8. As the initial operations 
-within Corretto are performed on the Doppio curve, **the Ristretto scalar field is used to allow the elimination of the 
-negative impacts of the cofactor 8 of this curve.**
+cofactor 4, whereas the Ristretto is designed for non-prime-order Edwards curves of cofactor 8. 
+
+### Ristretto scalar field
+
+The `Ristretto scalar field` is used to **solve all negative impacts of using cofactor 8 of Ristretto curve.**. The strategy is to use a _Ristretto embedded curve_ (also called `Doppio Curve`), as the initial operations within `Corretto` are performed therein.
 
 Within this library, the implementation of the Ristretto to construct the curve with desired properties is made possible by 
-defining the curve over the scalar field, using only a thin abstraction layer, which makes it possible for systems using signatures to be safely extended with zero-knowledge protocols. These zero-knowledge protocols are utilised with no additional cryptographic assumptions and minimal changes in the code. The Ristretto scalar field is Bulletproof friendly, which makes it possible to use both cryptographic protocols in tandem with one another, as they are centric to contemporary applications of elliptic curve operations. 
+defining the curve over the scalar field, using only a thin abstraction layer, which makes it possible for systems using signatures to be safely extended with zero-knowledge protocols. These zero-knowledge protocols are utilised with no additional cryptographic assumptions and minimal changes in the code. The Ristretto scalar field is Bulletproof friendly, which makes it possible to use both cryptographic protocols in tandem with one another, as they are centric to contemporary applications of elliptic curve operations.
 
+Special thanks to @ebfull who triggered this work with the following tweet:
 
-# Curve parameters:
+<blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">Here&#39;s an &quot;embedded&quot; curve over ristretto255&#39;s scalar field<br><br>-x^2 + y^2 = 1 - (86649/86650)x^2y^2<br><br>which is Ristretto-ready and birationally equivalent to<br><br>y^2 = x^3 + 346598x^2 + x (and it&#39;s twist secure)<br><br>Any other suggestions?</p>&mdash; Sean Bowe (@ebfull) <a href="https://twitter.com/ebfull/status/1087571257057406976?ref_src=twsrc%5Etfw">January 22, 2019</a></blockquote>
+
+## Details
+
+### Curve parameters:
 
 | Variable | Value | Explanation |
 |--|--|--|
@@ -44,9 +53,34 @@ defining the curve over the scalar field, using only a thin abstraction layer, w
 
 <br/>
 
-# TODO:
+### Encoding / Decoding tools
+In order to work with our points along the curve, or any non trivial computuaions, for example those with tough notations - there has been a set of tools and examples which have been created to make facilitate the Encoding/Decoding processes. These can be found at: `tools/src/main.rs` 
 
-### The refactoring relations are expressed as indentations.
+### Examples
+
+```rust
+num_from_bytes_le(&[76, 250, 187, 243, 105, 92, 117, 70, 234, 124, 126, 180, 87, 149, 62, 249, 16, 149, 138, 56, 26, 87, 14, 76, 251, 39, 168, 74, 176, 202, 26, 84]);
+// Prints: 38041616210253564751207933125345413214423929536328854382158537130491690875468
+    
+let res = to_field_elem_51(&"1201935917638644956968126114584555454358623906841733991436515590915937358637");
+println!("{:?}", res);
+// Gives us: [939392471225133, 1174884015108736, 2226020409917912, 1948943783348399, 46747909865470]
+
+hex_bytes_le("120193591763864495696812611458455545435862390684173399143651559091593735863735685683568356835683");
+// Prints: Encoding result -> [63, 41, b7, c, b, 79, 94, 7b, 21, d2, fe, 7b, c8, 89, c9, 7f, 76, c8, 9b, a3, 58, 18, 39, a, f2, d2, 7c, 17, ed, 7f, 6, c4, 9d, 44, f3, 7c, 85, c2, 67, e]
+// Put the 0x by yourseleves and if there's any value alone like `c` padd it with a 0 on the left like: `0x0c`
+
+from_radix_to_radix_10("1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab", 16u32);
+// Prints: 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
+
+```
+
+> When performing operations with large values, such as: `2²⁵² - 121160309657751286123858757838224683208`, it is recomended to compute them through `SageMath`, as the user interface adheres to these types of functions. From `SageMath`, they can be converted in a consistent format and easily compiled into Rust.
+
+### Roadmap:
+
+Note: the refactoring relations are expressed as indentations
+
 - [ ] Create FieldElement Struct and implement the basic operations we need on a u64 backend.
   - [x] Find the proper radix value for FieldElement.
   - [ ] Add basic and needed constants.
@@ -68,27 +102,5 @@ defining the curve over the scalar field, using only a thin abstraction layer, w
         - [x] Implement Montgomery_Squaring.
         - [x] Implement tests of Montgomery Arithmetics. (UNDER REVISION)
 - [ ] Create Conversions from Montgomery points to Weierstrass ones. (Not clear if necessary yet.)
-
-# Encoding / Decoding tools and examples.
-In order to work with our points along the curve, or any non trivial computuaions, for example those with tough notations - there has been a set of tools and examples which have been created to make facilitate the Encoding/Decoding processes. These can be found at: `tools/src/main.rs` 
-
-**Examples**
-```rust
-num_from_bytes_le(&[76, 250, 187, 243, 105, 92, 117, 70, 234, 124, 126, 180, 87, 149, 62, 249, 16, 149, 138, 56, 26, 87, 14, 76, 251, 39, 168, 74, 176, 202, 26, 84]);
-// Prints: 38041616210253564751207933125345413214423929536328854382158537130491690875468
-    
-let res = to_field_elem_51(&"1201935917638644956968126114584555454358623906841733991436515590915937358637");
-println!("{:?}", res);
-// Gives us: [939392471225133, 1174884015108736, 2226020409917912, 1948943783348399, 46747909865470]
-
-hex_bytes_le("120193591763864495696812611458455545435862390684173399143651559091593735863735685683568356835683");
-// Prints: Encoding result -> [63, 41, b7, c, b, 79, 94, 7b, 21, d2, fe, 7b, c8, 89, c9, 7f, 76, c8, 9b, a3, 58, 18, 39, a, f2, d2, 7c, 17, ed, 7f, 6, c4, 9d, 44, f3, 7c, 85, c2, 67, e]
-// Put the 0x by yourseleves and if there's any value alone like `c` padd it with a 0 on the left like: `0x0c`
-
-from_radix_to_radix_10("1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab", 16u32);
-// Prints: 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
-
-```
-> When performing operations with large values, such as: `2²⁵² - 121160309657751286123858757838224683208`, it is recomended to compute them through `SageMath`, as the user interface adheres to these types of functions. From `SageMath`, they can be converted in a consistent format and easily compiled into Rust. 
 
 
