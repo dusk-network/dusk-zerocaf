@@ -2,8 +2,6 @@
 
 **This repository contains the implementation of the `Doppio Curve` over the `Ristretto Scalar field`. This is a pure Rust implementation designed by the Dusk-Team.**
 
-**WIP**
-
 Ristretto is a technique for constructing prime order elliptic curve groups with non-malleable encodings. The [Ristretto protocol](https://ristretto.group/ristretto.html) arose as an extension of [Mike Hamburg's Decaf](https://www.shiftleft.org/papers/decaf/decaf.pdf) approach to cofactor elimination, which is applicable to curves of
 cofactor 4, whereas the Ristretto is designed for non-prime-order Edwards curves of cofactor 8. As the initial operations 
 within Corretto are performed on the Doppio curve, **the Ristretto scalar field is used to allow the elimination of the 
