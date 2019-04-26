@@ -88,14 +88,6 @@ impl<'b> Sub<&'b Scalar> for Scalar {
     }
 }
 
-/// u64 * u64 = u128 macro multiply helper
-
-macro_rules! m {
-    ($x:expr, $y:expr) => {
-        ($x as u128 * $y as u128) 
-    }
-}
-
 /// u64 * u64 = u128 inline func multiply helper
 #[inline]
 fn m(x: u64, y: u64) -> u128 {
@@ -208,15 +200,15 @@ impl Scalar {
         // Note that this is just the normal way of performing a product.
         // We need to store the results on u128 as otherwise we'll end
         // up having overflowings.
-        res[0] = m!(a[0],b[0]);
-        res[1] = m!(a[0],b[1]) + m!(a[1],b[0]);
-        res[2] = m!(a[0],b[2]) + m!(a[1],b[1]) + m!(a[2],b[0]);
-        res[3] = m!(a[0],b[3]) + m!(a[1],b[2]) + m!(a[2],b[1]) + m!(a[3],b[0]);
-        res[4] = m!(a[0],b[4]) + m!(a[1],b[3]) + m!(a[2],b[2]) + m!(a[3],b[1]) + m!(a[4],b[0]);
-        res[5] =                                 m!(a[1],b[4]) + m!(a[2],b[3]) + m!(a[3],b[2]) + m!(a[4],b[1]);
-        res[6] =                                                 m!(a[2],b[4]) + m!(a[3],b[3]) + m!(a[4],b[2]);
-        res[7] =                                                                 m!(a[3],b[4]) + m!(a[4],b[3]);
-        res[8] =                                                                                 m!(a[4],b[4]);
+        res[0] = m(a[0],b[0]);
+        res[1] = m(a[0],b[1]) + m(a[1],b[0]);
+        res[2] = m(a[0],b[2]) + m(a[1],b[1]) + m(a[2],b[0]);
+        res[3] = m(a[0],b[3]) + m(a[1],b[2]) + m(a[2],b[1]) + m(a[3],b[0]);
+        res[4] = m(a[0],b[4]) + m(a[1],b[3]) + m(a[2],b[2]) + m(a[3],b[1]) + m(a[4],b[0]);
+        res[5] =                               m(a[1],b[4]) + m(a[2],b[3]) + m(a[3],b[2]) + m(a[4],b[1]);
+        res[6] =                                              m(a[2],b[4]) + m(a[3],b[3]) + m(a[4],b[2]);
+        res[7] =                                                             m(a[3],b[4]) + m(a[4],b[3]);
+        res[8] =                                                                            m(a[4],b[4]);
 
         res
     }
@@ -261,19 +253,28 @@ impl Scalar {
         }
 
         let r = &constants::R;
-
+        //[0, 0, 0, 3364497741851626, 8157760529407336, 4578246298255362, 8338476871505692, 4208671329842, 0]
         // the first half computes the Montgomery adjustment factor n, and begins adding n*l to make limbs divisible by R
         let (carry, n0) = carry_and_res(        limbs[0]);
+        println!("Carry0: {:?}, n0: {:?}", carry, n0);
         let (carry, n1) = carry_and_res(carry + limbs[1] + m(n0,r[1]));
+        println!("Carry1: {:?}, n1: {:?}", carry, n1);
         let (carry, n2) = carry_and_res(carry + limbs[2] + m(n0,r[2]) + m(n1,r[1]));
+        println!("Carry2: {:?}, n2: {:?}", carry, n2);
         let (carry, n3) = carry_and_res(carry + limbs[3] + m(n0,r[3]) + m(n1,r[2]) + m(n2,r[1]));
+        println!("Carry3: {:?}, n3: {:?}", carry, n3);
         let (carry, n4) = carry_and_res(carry + limbs[4] + m(n0,r[4]) + m(n1,r[3]) + m(n2,r[2]) + m(n3,r[1]));
+        println!("Carry4: {:?}, n4: {:?}", carry, n4);
 
         // limbs is divisible by R now, so we can divide by R by simply storing the upper half as the result
         let (carry, r0) = mont_res(carry + limbs[5]              + m(n1,r[4]) + m(n2,r[3]) + m(n3,r[2]) + m(n4,r[1]));
+        println!("Carry5: {:?}, n5: {:?}", carry, r0);
         let (carry, r1) = mont_res(carry + limbs[6]                           + m(n2,r[4]) + m(n3,r[3]) + m(n4,r[2]));
+        println!("Carry6: {:?}, n6: {:?}", carry, r1);
         let (carry, r2) = mont_res(carry + limbs[7]                                        + m(n3,r[4]) + m(n4,r[3]));
+        println!("Carry7: {:?}, n7: {:?}", carry, r2);
         let (carry, r3) = mont_res(carry + limbs[8]                                                     + m(n4,r[4]));
+        println!("Carry8: {:?}, n8: {:?}", carry, r3);
         let         r4 = carry as u64;
 
         // result may be >= l, so attempt to subtract l
@@ -343,6 +344,8 @@ mod tests {
         19807040628557059606945202184, 
         4835703278454118652313601];
 
+    /// A MONT
+    pub static A_MONT: Scalar = Scalar([1567838828801400, 451067506279711, 2025563415287461, 2630757602483252, 2181784694456]);
 
     /// Montgomery x
     pub static X_MONT: Scalar = Scalar([3967855409315932, 4468715158741414, 1532785699107429, 3431559202417771, 864832837719]);
@@ -352,10 +355,10 @@ mod tests {
     pub static Y: Scalar = Scalar([3224898173688058, 3370928136179116, 1182880079308587, 1688835920473363, 14937922189349]);
 
     /// `(x * y)/R (mod l)`
-    pub static X_TIMES_Y_MONT: Scalar = Scalar([2506269041400604, 1231103222380683, 3428697373767643, 1095442560240545, 1294911592878]); 
+    pub static X_TIMES_Y_MONT: Scalar = Scalar([1458967730377260, 963769115966027, 34859148282403, 2124040828839810, 1900554115968]); 
 
     /// `x * y (mod l)`
-    pub static X_TIMES_Y: Scalar = Scalar([3414372756436001, 1500062170770321, 4341044393209371, 2791496957276064, 2164111380879]); 
+    pub static X_TIMES_Y: Scalar = Scalar([1458967730377260, 963769115966027, 34859148282403, 2124040828839810, 1900554115968]); 
 
 
     #[test]
@@ -408,9 +411,9 @@ mod tests {
     // Needs to be reviewed
     #[test]
     fn to_montgomery_conversion() {
-        let mont_x = Scalar::to_montgomery(&X);
+        let a = Scalar::to_montgomery(&A);
         for i in 0..5 {
-            assert!(mont_x[i] == X_MONT[i]);
+            assert!(a[i] == A_MONT[i]);
         }
     }
 
@@ -425,8 +428,9 @@ mod tests {
 
     // Need to review the values and the algorithm
     #[test]
-    fn full_montgomery_mul() {
-        let res = Scalar::mul(&X_MONT, &Y);
+    fn ful_montgomery_mul() {
+        let res = Scalar::mul(&X, &Y);
+        println!("{:?}", res);
         for i in 0..5 {
             assert!(res[i] == X_TIMES_Y[i]);
         }
@@ -435,9 +439,15 @@ mod tests {
     // Need to review the values and the algorithm
     #[test]
     fn montgomery_mul() {
-        let res = Scalar::montgomery_mul(&X_MONT, &Scalar::to_montgomery(&Y));
+        let res = Scalar::montgomery_mul(&X, &Y);
+        println!("{:?}", res);
         for i in 0..5 {
             assert!( res[i] == X_TIMES_Y_MONT[i]);
         }
+    }
+
+    #[test]
+    fn carlos() {
+        println!("{:?}", Scalar::montgomery_reduce(&[0,0,0,0,8,0,0,0,0]));   
     }
 }
