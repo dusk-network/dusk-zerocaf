@@ -85,7 +85,7 @@ Note: the refactoring relations are expressed as indentations
   - [x] Find the proper radix value for FieldElement.
   - [ ] Add basic and needed constants.
   - [ ] Implement Reduce function to make the FieldElements fit on a 5 u64-bit limbs.
-    - [x] Implement Addition. (Testing needed)
+    - [x] Implement Addition.
     - [ ] Implement Subtraction.
     - [x] Implement Byte-encoding/decoding.
     - [x] Implement Multiplication on u64-backend with u128 usage.
@@ -98,9 +98,9 @@ Note: the refactoring relations are expressed as indentations
       - [x] Implement Inner_Multiplication.
       - [x] Implement Inner_Squaring.
       - [x] Implement Montgomery_reduction.
-        - [x] Implement Montgomery_Muliplication. (ACTUALLY UNDER TESTING)
+        - [x] Implement Montgomery_Muliplication.
         - [x] Implement Montgomery_Squaring.
-        - [x] Implement tests of Montgomery Arithmetics. (UNDER REVISION)
+        - [x] Implement tests of Montgomery Arithmetics. (under revision)
 - [ ] Create Conversions from Montgomery points to Weierstrass ones. (Not clear if necessary yet.)
 
 
