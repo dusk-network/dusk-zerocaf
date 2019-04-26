@@ -87,12 +87,12 @@ Note: the refactoring relations are expressed as indentations
   - [ ] Implement Reduce function to make the FieldElements fit on a 5 u64-bit limbs.
     - [x] Implement Addition. (Testing needed)
     - [ ] Implement Subtraction.
-    - [ ] Implement Byte-encoding/decoding. (Encoding done)
-    - [ ] Implement Multiplication on u64-backend with u128 usage.
+    - [x] Implement Byte-encoding/decoding.
+    - [x] Implement Multiplication on u64-backend with u128 usage.
   - [ ] Add proper tests for every function.
-- [ ] Build Scalar Arithmetics and Scalar Struct definition.
+- [x] Build Scalar Arithmetics and Scalar Struct definition.
     - [x] Find the proper radix value for FieldElement.
-    - [ ] Add the required constants for computation.
+    - [x] Add the required constants for computation.
       - [x] Implement Addition.
       - [x] implement Subtraction.
       - [x] Implement Inner_Multiplication.
