@@ -1,6 +1,6 @@
 # Corretto: Fast, efficient and bulletproof-friendly cryptographic operations.
 
-This repository contains the first ever implementation of an elliptic curve over the `Ristretto Scalar field`: a pure Rust implementation designed by [Dusk](https://dusk.network) team
+This repository contains the first ever implementation of an elliptic curve over the `Ristretto Scalar field`: a pure Rust implementation designed by [Dusk](https://dusk.network) team.
 
 ### Ristretto curve 
 
@@ -98,9 +98,10 @@ Note: the refactoring relations are expressed as indentations
       - [x] Implement Inner_Multiplication.
       - [x] Implement Inner_Squaring.
       - [x] Implement Montgomery_reduction.
+      - [x] Define Montgomery_reduction algorithm.
         - [x] Implement Montgomery_Muliplication.
         - [x] Implement Montgomery_Squaring.
         - [x] Implement tests of Montgomery Arithmetics. (under revision)
-- [ ] Create Conversions from Montgomery points to Weierstrass ones. (Not clear if necessary yet.)
+- [ ] Create Conversions from Montgomery points to Weierstrass ones. 
 
 
