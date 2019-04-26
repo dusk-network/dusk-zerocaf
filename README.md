@@ -1,15 +1,15 @@
 # Corretto: Fast, efficient and bulletproof-friendly cryptographic operations.
 
-This repository contains the first ever implementation of an elliptic curve over the `Ristretto Scalar field`: a pure Rust implementation designed by [Dusk](https://dusk.network) team
+This repository contains the first ever implementation of an elliptic curve over the `Ristretto Scalar field`: a pure Rust implementation designed by [Dusk](https://dusk.network) team.
 
 ### Ristretto curve 
 
 Ristretto is a technique for constructing prime order elliptic curve groups with non-malleable encodings. The [Ristretto protocol](https://ristretto.group/ristretto.html) arose as an extension of [Mike Hamburg's Decaf](https://www.shiftleft.org/papers/decaf/decaf.pdf) approach to cofactor elimination, which is applicable to curves of
-cofactor 4, whereas the Ristretto is designed for non-prime-order Edwards curves of cofactor 8. 
+cofactor 4, whereas the Ristretto is designed for non-prime-order Edwards curves of cofactor 8.
 
-### Ristretto scalar field
+### Ristretto Scalar Field And Bulletproof
 
-The `Ristretto scalar field` is used to **solve all negative impacts of using cofactor 8 of Ristretto curve.**. The strategy is to use a _Ristretto embedded curve_ (also called `Doppio Curve`), as the initial operations within `Corretto` are performed therein.
+Originally designed to abstract _non-prime-order curves into prime-order scalar fields_, the `Ristretto` abstraction would have been far too inefficient to implement for Bulletproofs zero-knowledge proof. Therefore the `Ristretto scalar field` is used to **solve all negative impacts of using cofactor 8 of Ristretto curve.**. The strategy is to use a _Ristretto embedded curve_ (also called `Doppio Curve`), as the initial operations within `Corretto` are performed therein. `Corretto` opens up new opportunities for the use cases of **zero-knowledge proofs** inside the Dusk Network protocol as well as making a _Bulletproof-integrated ring signature substitute possible_, with orders of magnitude performance improvements compared to the fastest ringsig implementation.
 
 Within this library, the implementation of the Ristretto to construct the curve with desired properties is made possible by 
 defining the curve over the scalar field, using only a thin abstraction layer, which makes it possible for systems using signatures to be safely extended with zero-knowledge protocols. These zero-knowledge protocols are utilised with no additional cryptographic assumptions and minimal changes in the code. The Ristretto scalar field is Bulletproof friendly, which makes it possible to use both cryptographic protocols in tandem with one another, as they are centric to contemporary applications of elliptic curve operations.
@@ -85,22 +85,23 @@ Note: the refactoring relations are expressed as indentations
   - [x] Find the proper radix value for FieldElement.
   - [ ] Add basic and needed constants.
   - [ ] Implement Reduce function to make the FieldElements fit on a 5 u64-bit limbs.
-    - [x] Implement Addition. (Testing needed)
+    - [x] Implement Addition.
     - [ ] Implement Subtraction.
-    - [ ] Implement Byte-encoding/decoding. (Encoding done)
-    - [ ] Implement Multiplication on u64-backend with u128 usage.
+    - [x] Implement Byte-encoding/decoding.
+    - [x] Implement Multiplication on u64-backend with u128 usage.
   - [ ] Add proper tests for every function.
-- [ ] Build Scalar Arithmetics and Scalar Struct definition.
+- [x] Build Scalar Arithmetics and Scalar Struct definition.
     - [x] Find the proper radix value for FieldElement.
-    - [ ] Add the required constants for computation.
+    - [x] Add the required constants for computation.
       - [x] Implement Addition.
       - [x] implement Subtraction.
       - [x] Implement Inner_Multiplication.
       - [x] Implement Inner_Squaring.
       - [x] Implement Montgomery_reduction.
-        - [x] Implement Montgomery_Muliplication. (ACTUALLY UNDER TESTING)
+      - [x] Define Montgomery_reduction algorithm.
+        - [x] Implement Montgomery_Muliplication.
         - [x] Implement Montgomery_Squaring.
-        - [x] Implement tests of Montgomery Arithmetics. (UNDER REVISION)
-- [ ] Create Conversions from Montgomery points to Weierstrass ones. (Not clear if necessary yet.)
+        - [x] Implement tests of Montgomery Arithmetics. (under revision)
+- [ ] Create Conversions from Montgomery points to Weierstrass ones. 
 
 
