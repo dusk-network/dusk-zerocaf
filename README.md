@@ -5,14 +5,14 @@ This repository contains the first ever implementation of an elliptic curve over
 ### Ristretto curve 
 
 Ristretto is a technique for constructing prime order elliptic curve groups with non-malleable encodings. The [Ristretto protocol](https://ristretto.group/ristretto.html) arose as an extension of [Mike Hamburg's Decaf](https://www.shiftleft.org/papers/decaf/decaf.pdf) approach to cofactor elimination, which is applicable to curves of
-cofactor 4, whereas the Ristretto is designed for non-prime-order Edwards curves of cofactor 8.
+cofactor 4, whereas the Ristretto is designed for non-prime-order curves of cofactor 8 or 4.
 
 ### Ristretto Scalar Field And Bulletproof
 
-Originally designed to abstract _non-prime-order curves into prime-order scalar fields_, the `Ristretto` abstraction would have been far too inefficient to implement for Bulletproofs zero-knowledge proof. Therefore the `Ristretto scalar field` is used to **solve all negative impacts of using cofactor 8 of Ristretto curve.**. The strategy is to use a _Ristretto embedded curve_ (also called `Doppio Curve`), as the initial operations within `Corretto` are performed therein. `Corretto` opens up new opportunities for the use cases of **zero-knowledge proofs** inside the Dusk Network protocol as well as making a _Bulletproof-integrated ring signature substitute possible_, with orders of magnitude performance improvements compared to the fastest ringsig implementation.
+Originally designed to abstract _non-prime-order curves into prime-order scalar fields_, the `Ristretto` abstraction would have been far too inefficient to implement for Bulletproofs zero-knowledge proof. Therefore the `Ristretto scalar field` is used to **solve all negative impacts of using cofactors equalling 8 or 4 on a Ristretto curve.**. The strategy is to use a _Ristretto embedded curve_ (also called `Doppio Curve`), as the initial operations within `Corretto` are performed therein. `Corretto` opens up new opportunities for the use cases of **zero-knowledge proofs** inside the Dusk Network protocol as well as making a _Bulletproof-integrated ring signature substitute possible_, with orders of magnitude performance improvements compared to the fastest ringsig implementation.
 
 Within this library, the implementation of the Ristretto to construct the curve with desired properties is made possible by 
-defining the curve over the scalar field, using only a thin abstraction layer, which makes it possible for systems using signatures to be safely extended with zero-knowledge protocols. These zero-knowledge protocols are utilised with no additional cryptographic assumptions and minimal changes in the code. The Ristretto scalar field is Bulletproof friendly, which makes it possible to use both cryptographic protocols in tandem with one another, as they are centric to contemporary applications of elliptic curve operations.
+defining the curve over the scalar field, using only a thin abstraction layer, which in turn allows for systems that use signatures to be safely extended with zero-knowledge protocols. These zero-knowledge protocols are utilised with no additional cryptographic assumptions and minimal changes in the code. The Ristretto scalar field is Bulletproof friendly, which makes it possible to use both cryptographic protocols in tandem with one another, as they are centric to contemporary applications of elliptic curve operations.
 
 Special thanks to [@ebfull](https://github.com/ebfull) who triggered this work with the following tweet:
 
