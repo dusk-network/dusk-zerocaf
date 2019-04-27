@@ -86,4 +86,4 @@ from_radix_to_radix_10("1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0
 
 <br/>
 
-> Operations with large numbers are recommended to be done in `SageMath`, where they can be converted in a continuouse format into rust and easily compiled each time. 
+> Operations with large numbers are recommended to be done in `SageMath`, where they can be converted in a continuous format into rust and easily compiled each time. 
