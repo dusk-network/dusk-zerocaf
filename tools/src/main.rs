@@ -40,10 +40,10 @@ fn main() {
     let mont_x = to_scalar_base_52("658448296334113745583381664921721413881518248721417041768778176391714104386");
     println!("{:?}", mont_x);
     */
-    println!("{:?}", 13732614365738161174u64 & ((1u64 << 52)-1));
-    let _ = from_scalar_base_52(&[0,0,0,0,0,0,0,8,0]);
+   
+    //let _ = from_scalar_base_52(&[1682248870925813, 4078880264703668, 2289123149127681, 4169238435752846, 2104335664921]);
     
-    let x = to_scalar_base_52("781842614815424000988673591006250240924873016371899513350486876443913409068");
+    let x = to_scalar_base_52("904625697166532776746648320380374280088526716493097995792780030332043239911");
     println!("{:?}", x);
 }
 
@@ -98,10 +98,10 @@ pub fn to_scalar_base_52(num: &str) -> [u64; 5] {
 }
 
 /// Gets a Scalar in base 52 and transforms it into a normal representation
-pub fn from_scalar_base_52(limbs: &[u64; 9]) -> () {
+pub fn from_scalar_base_52(limbs: &[u64; 5]) -> () {
     let mut res: BigUint = BigUint::zero();
     let two_pow_52 = BigUint::from_str("4503599627370496").unwrap();
-    for i in 0..9 {
+    for i in 0..5 {
         res = res + (pow(two_pow_52.clone(), i) * limbs[i]);
     }
     println!("{}", res);
