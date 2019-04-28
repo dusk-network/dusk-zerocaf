@@ -7,7 +7,7 @@ use crate::backend::u64::scalar::Scalar;
 pub(crate) const R: Scalar = Scalar([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370495, 2199023255551]);
 
 /// `L` * `LFACTOR` = -1 (mod 2^52)
-pub(crate) const LFACTOR: u64 = 0x51da312547e1b;
+pub(crate) const LFACTOR: u64 = 547593343082025;
 
-/// `R^2` = (2^260)^2
+/// `R^2` = (2^260)^2 % R
 pub(crate) const RR: Scalar = Scalar([1682248870925813, 4078880264703668, 2289123149127681, 4169238435752846, 2104335664921]);
