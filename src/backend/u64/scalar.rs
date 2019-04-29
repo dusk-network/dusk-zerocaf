@@ -1,15 +1,5 @@
-//! Arithmetic mod \\(2\^{249} - 15145038707218910765482344729778085401\\)
+//! Arithmetic mod (2^249 - 15145038707218910765482344729778085401)
 //! with five \\(52\\)-bit unsigned limbs.
-//!
-//! \\(51\\)-bit limbs would cover the desired bit range (\\(253\\)
-//! bits), but isn't large enough to reduce a \\(512\\)-bit number with
-//! Montgomery multiplication, so \\(52\\) bits is used instead.  To see
-//! that this is safe for intermediate results, note that the largest
-//! limb in a \\(5\times 5\\) product of \\(52\\)-bit limbs will be
-//!
-//! ```text
-//! (0xfffffffffffff^2) * 5 = 0x4ffffffffffff60000000000005 (107 bits).
-//! ```
 
 use core::fmt::Debug;
 use core::ops::{Index, IndexMut};
@@ -17,8 +7,8 @@ use core::ops::Add;
 use core::ops::Sub;
 use crate::backend::u64::constants;
 
-/// The `Scalar` struct represents an element in
-/// \\(\mathbb Z / \ell \mathbb Z\\) as 5 \\(52\\)-bit limbs.
+/// The `Scalar` struct represents an Scalar over a modulo
+/// `2^249 - 15145038707218910765482344729778085401` as 5 52-bit limbs.
 #[derive(Copy,Clone)]
 pub struct Scalar(pub [u64; 5]);
 
@@ -94,6 +84,14 @@ fn m(x: u64, y: u64) -> u128 {
     (x as u128) * (y as u128)
 }
 
+/// u64 * u64 = u128 macro multiply helper
+macro_rules! m {
+    ($x:expr, $y:expr) => {
+        ($x as u128 * $y as u128) 
+    }
+}
+
+
 impl Scalar {
     /// Return the zero Scalar
     pub fn zero() -> Scalar {
@@ -127,7 +125,7 @@ impl Scalar {
     /// Reduce a 64 byte / 512 bit scalar mod l
     pub fn from_bytes_wide(bytes: &[u8; 64]) -> Scalar {
        // We could provide 512 bit scalar support using Montgomery Reduction. 
-       //But first we need to finnish the 256-bit implementation.
+       // But first we need to finnish the 256-bit implementation.
        unimplemented!()
     }
 
@@ -173,7 +171,7 @@ impl Scalar {
         res
     }   
 
-    /// Compute `a * b`
+    /// Compute `a * b` with the function multiplying helper
     #[inline]
     pub fn mul_internal(a: &Scalar, b: &Scalar) -> [u128; 9] {
         let mut res = [0u128; 9];
@@ -193,22 +191,22 @@ impl Scalar {
         res
     }
 
-    /// Compute `a * b` with macros
+    /// Compute `a * b` with the macro multiplying helper
     #[inline]
     pub fn mul_internal_macros(a: &Scalar, b: &Scalar) -> [u128; 9] {
         let mut res = [0u128; 9];
         // Note that this is just the normal way of performing a product.
         // We need to store the results on u128 as otherwise we'll end
-        // up having overflowings.
-        res[0] = m(a[0],b[0]);
-        res[1] = m(a[0],b[1]) + m(a[1],b[0]);
-        res[2] = m(a[0],b[2]) + m(a[1],b[1]) + m(a[2],b[0]);
-        res[3] = m(a[0],b[3]) + m(a[1],b[2]) + m(a[2],b[1]) + m(a[3],b[0]);
-        res[4] = m(a[0],b[4]) + m(a[1],b[3]) + m(a[2],b[2]) + m(a[3],b[1]) + m(a[4],b[0]);
-        res[5] =                               m(a[1],b[4]) + m(a[2],b[3]) + m(a[3],b[2]) + m(a[4],b[1]);
-        res[6] =                                              m(a[2],b[4]) + m(a[3],b[3]) + m(a[4],b[2]);
-        res[7] =                                                             m(a[3],b[4]) + m(a[4],b[3]);
-        res[8] =                                                                            m(a[4],b[4]);
+        // up having overflows.
+        res[0] = m!(a[0],b[0]);
+        res[1] = m!(a[0],b[1]) + m!(a[1],b[0]);
+        res[2] = m!(a[0],b[2]) + m!(a[1],b[1]) + m!(a[2],b[0]);
+        res[3] = m!(a[0],b[3]) + m!(a[1],b[2]) + m!(a[2],b[1]) + m!(a[3],b[0]);
+        res[4] = m!(a[0],b[4]) + m!(a[1],b[3]) + m!(a[2],b[2]) + m!(a[3],b[1]) + m!(a[4],b[0]);
+        res[5] =                                 m!(a[1],b[4]) + m!(a[2],b[3]) + m!(a[3],b[2]) + m!(a[4],b[1]);
+        res[6] =                                                 m!(a[2],b[4]) + m!(a[3],b[3]) + m!(a[4],b[2]);
+        res[7] =                                                                 m!(a[3],b[4]) + m!(a[4],b[3]);
+        res[8] =                                                                                 m!(a[4],b[4]);
 
         res
     }
@@ -286,13 +284,13 @@ impl Scalar {
     }
 
     /// Puts a Scalar into Montgomery form, i.e. computes `a*R (mod l)`
-    #[inline(never)]
+    #[inline]
     pub fn to_montgomery(&self) -> Scalar {
         Scalar::montgomery_mul(self, &constants::RR)
     }
 
     /// Takes a Scalar out of Montgomery form, i.e. computes `a/R (mod l)`
-    #[inline(never)]
+    #[inline]
     pub fn from_montgomery(&self) -> Scalar {
         let mut limbs = [0u128; 9];
         for i in 0..5 {
@@ -306,7 +304,8 @@ impl Scalar {
 #[cfg(test)]
 mod tests {
     use super::*;
-    /// Computed A and B, some Scalars defined over the modulo `r = 2^{249} - 15145038707218910765482344729778085401`.
+    // Computed A and B, some Scalars defined over the modulo `r = 2^249 - 15145038707218910765482344729778085401`.
+    
     /// A = 182687704666362864775460604089535377456991567872
     pub static A: Scalar = Scalar([0, 0, 0, 2, 0]);
 
@@ -335,21 +334,23 @@ mod tests {
         19807040628557059606945202184, 
         4835703278454118652313601];
 
-    /// A MONT
-    pub static A_MONT: Scalar = Scalar([1567838828801400, 451067506279711, 2025563415287461, 2630757602483252, 2181784694456]);
+    /// A in Montgomery domain; `A_MONT = (A * R) (mod l) = 295345389055300509611653655730781949282003822754281035405592286100742960688`
+    pub static A_MONT: Scalar = Scalar([946644518663728, 4368868487057990, 2524289321948647, 594442899788814, 717944870444]);
 
-    /// Montgomery x
-    pub static X_MONT: Scalar = Scalar([3967855409315932, 4468715158741414, 1532785699107429, 3431559202417771, 864832837719]);
-
+    /// `X = 1809251394333065553493296640760748560207343510400633813116524750123642650623`
     pub static X: Scalar = Scalar([4503599627370495, 4503599627370495, 4503599627370495, 4503599627370495, 4398046511103]);
-    /// Y
+    
+    /// `Y = 6145104759870991071742105800796537629880401874866217824609283457819451087098`
     pub static Y: Scalar = Scalar([3224898173688058, 3370928136179116, 1182880079308587, 1688835920473363, 14937922189349]);
 
-    /// `(x * y)/R (mod l)`
+    /// Y in Montgomery domain; `Y_MONT = (Y * R) (mod l) = 682963356548663143913382285837893622221394109239214830065314998385324548003`
+    pub static Y_MONT: Scalar = Scalar([2328716356837283, 1997480944140188, 4481133454453893, 3196446152249575, 1660191953914]);
+    
+    /// `(X * Y)/R (mod l) = 781842614815424000988673591006250240924873016371899513350486876443913409068`
     pub static X_TIMES_Y_MONT: Scalar = Scalar([1458967730377260, 963769115966027, 34859148282403, 2124040828839810, 1900554115968]); 
 
-    /// `x * y (mod l)`
-    pub static X_TIMES_Y: Scalar = Scalar([1458967730377260, 963769115966027, 34859148282403, 2124040828839810, 1900554115968]); 
+    /// `X * Y (mod l) = 890263784947025690345271110799906008759402458672628420828189878638015362081`
+    pub static X_TIMES_Y: Scalar = Scalar([3414372756436001, 1500062170770321, 4341044393209371, 2791496957276064, 2164111380879]); 
 
 
     #[test]
@@ -399,39 +400,31 @@ mod tests {
         }
     }
 
-    // Needs to be reviewed
     #[test]
-    #[ignore]
     fn to_montgomery_conversion() {
-        let a = Scalar::to_montgomery(&X);
-        println!("Wanted: {:?}\n We got: {:?}", X, a);
+        let a = Scalar::to_montgomery(&A);
         for i in 0..5 {
-            assert!(a[i] == X_MONT[i]);
+            assert!(a[i] == A_MONT[i]);
         }
     }
 
     // Need to review and compute correct values
     #[test]
-    #[ignore]
     fn from_montgomery_conversion() {
-        let x = Scalar::from_montgomery(&X_MONT);
+        let y = Scalar::from_montgomery(&Y_MONT);
         for i in 0..5 {
-            assert!(x[i] == X[i]);
+            assert!(y[i] == Y[i]);
         }
     }
 
-    // Need to review the values and the algorithm
     #[test]
-    #[ignore]
-    fn ful_montgomery_mul() {
+    fn full_montgomery_mul() {
         let res = Scalar::mul(&X, &Y);
-        println!("{:?}", res);
         for i in 0..5 {
             assert!(res[i] == X_TIMES_Y[i]);
         }
     }
 
-   
     #[test]
     fn montgomery_mul() {
         let res = Scalar::montgomery_mul(&X, &Y);
