@@ -70,7 +70,7 @@ The Bulletproof paper uses the following format for the constraint system:
     \item An vector of $q$ linear constraints between these variables.
     \item Additional \emph{m high-level variables} that represent external facts.
 \end{itemize} 
-The downfall that Bulletproofs have is that they are not efficient with various elliptic curves and fields. Although Bulletproof implementation provides a solid means of creating fast proofs, the prior choice of curve is important to ensure that binary decompostion is not needed within the circuit for reduction. This reduction is negated as the curve is defined over the ristretto scalar field.  
+The downfall that Bulletproofs have is that they are not efficient with various elliptic curves and fields. Although Bulletproof implementation provides a solid means of creating fast proofs, the prior choice of curve is important to ensure that binary decomposition is not needed within the circuit for reduction. This reduction is negated as the curve is defined over the ristretto scalar field.  
 
 \section{The Ristretto Scalar Field}
 Ristretto $[4]$ is a technique which constructs a prime-order elliptic curve groups, this construction stems from non prime-order Elliptic curves. The Ristretto scalar field builds upon the ideas of the Decaf paper$[5]$, which also constructs prime order curves but only those whose co-factor is equal to 4. Ristretto, on the other hand, is applicable to curves which have a co-factor equalling 8. The motive for this is to be able to avoid the drawbacks that are concurrent with a co-factor, whilst being able to capitalize on the robustness of an otherwise solid curve. In order for the reasoning behind this protocol to be shown, it is crucial that an understanding of co-factors and their potential pitfalls are given a contextual review. \\
@@ -162,4 +162,3 @@ From this point addition, many of the further operations are made elementary as 
 
 
 \end{document}
-
