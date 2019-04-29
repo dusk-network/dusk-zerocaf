@@ -44,8 +44,8 @@ impl<'b> Add<&'b Scalar> for Scalar {
             carry = self.0[i] + b[i] + (carry >> 52);
             sum[i] = carry & mask;
         }
-        // subtract r if the sum is >= r
-        sum.sub(&constants::R)
+        // subtract r if the sum is >= l
+        sum.sub(&constants::L)
     }
 } 
 
@@ -66,11 +66,11 @@ impl<'b> Sub<&'b Scalar> for Scalar {
         }
 
         // conditionally add `r` if the difference is negative.
-        // Note that here borrow tells us the Most Signif Bit of the last limb so then we know if it's greater than `r`.
+        // Note that here borrow tells us the Most Signif Bit of the last limb so then we know if it's greater than `l`.
         let underflow_mask = ((borrow >> 63) ^ 1).wrapping_sub(1); // If isn't greater, we will not add it as XOR = 0.
         let mut carry: u64 = 0;
         for i in 0..5 {
-            carry = (carry >> 52) + difference[i] + (constants::R[i] & underflow_mask);
+            carry = (carry >> 52) + difference[i] + (constants::L[i] & underflow_mask);
             difference[i] = carry & mask;
         }
 
@@ -241,7 +241,7 @@ impl Scalar {
         #[inline]
         fn adjustment_fact(sum: u128) -> (u128, u64) {
             let p = (sum as u64).wrapping_mul(constants::LFACTOR) & ((1u64 << 52) - 1);
-            ((sum + m(p,constants::R[0])) >> 52, p)
+            ((sum + m(p,constants::L[0])) >> 52, p)
         }
 
         #[inline]
@@ -250,24 +250,24 @@ impl Scalar {
             (sum >> 52, w)
         }
 
-        let r = &constants::R;
+        let l = &constants::L;
         
-        // the first half computes the Montgomery adjustment factor n, and begins adding n*r to make limbs divisible by R
+        // the first half computes the Montgomery adjustment factor n, and begins adding n*l to make limbs divisible by R
         let (carry, n0) = adjustment_fact(        limbs[0]);
-        let (carry, n1) = adjustment_fact(carry + limbs[1] + m(n0,r[1]));
-        let (carry, n2) = adjustment_fact(carry + limbs[2] + m(n0,r[2]) + m(n1,r[1]));
-        let (carry, n3) = adjustment_fact(carry + limbs[3] + m(n0,r[3]) + m(n1,r[2]) + m(n2,r[1]));
-        let (carry, n4) = adjustment_fact(carry + limbs[4] + m(n0,r[4]) + m(n1,r[3]) + m(n2,r[2]) + m(n3,r[1]));
+        let (carry, n1) = adjustment_fact(carry + limbs[1] + m(n0,l[1]));
+        let (carry, n2) = adjustment_fact(carry + limbs[2] + m(n0,l[2]) + m(n1,l[1]));
+        let (carry, n3) = adjustment_fact(carry + limbs[3] + m(n0,l[3]) + m(n1,l[2]) + m(n2,l[1]));
+        let (carry, n4) = adjustment_fact(carry + limbs[4] + m(n0,l[4]) + m(n1,l[3]) + m(n2,l[2]) + m(n3,l[1]));
 
         // limbs is divisible by R now, so we can divide by R by simply storing the upper half as the result
-        let (carry, r0) = montg_red_res(carry + limbs[5]              + m(n1,r[4]) + m(n2,r[3]) + m(n3,r[2]) + m(n4,r[1]));
-        let (carry, r1) = montg_red_res(carry + limbs[6]                           + m(n2,r[4]) + m(n3,r[3]) + m(n4,r[2]));
-        let (carry, r2) = montg_red_res(carry + limbs[7]                                        + m(n3,r[4]) + m(n4,r[3]));
-        let (carry, r3) = montg_red_res(carry + limbs[8]                                                     + m(n4,r[4]));
+        let (carry, r0) = montg_red_res(carry + limbs[5]              + m(n1,l[4]) + m(n2,l[3]) + m(n3,l[2]) + m(n4,l[1]));
+        let (carry, r1) = montg_red_res(carry + limbs[6]                           + m(n2,l[4]) + m(n3,l[3]) + m(n4,l[2]));
+        let (carry, r2) = montg_red_res(carry + limbs[7]                                        + m(n3,l[4]) + m(n4,l[3]));
+        let (carry, r3) = montg_red_res(carry + limbs[8]                                                     + m(n4,l[4]));
         let         r4 = carry as u64;
 
-        // result may be >= r, so attempt to subtract r
-        Scalar::sub(Scalar([r0,r1,r2,r3,r4]), r)
+        // result may be >= r, so attempt to subtract l
+        Scalar::sub(Scalar([r0,r1,r2,r3,r4]), l)
     }
 
     /// Compute `a * b` (mod l)
@@ -304,7 +304,7 @@ impl Scalar {
 #[cfg(test)]
 mod tests {
     use super::*;
-    // Computed A and B, some Scalars defined over the modulo `r = 2^249 - 15145038707218910765482344729778085401`.
+    // Computed A and B, some Scalars defined over the modulo `l = 2^249 - 15145038707218910765482344729778085401`.
     
     /// A = 182687704666362864775460604089535377456991567872
     pub static A: Scalar = Scalar([0, 0, 0, 2, 0]);
@@ -408,7 +408,6 @@ mod tests {
         }
     }
 
-    // Need to review and compute correct values
     #[test]
     fn from_montgomery_conversion() {
         let y = Scalar::from_montgomery(&Y_MONT);
