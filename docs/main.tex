@@ -5,7 +5,7 @@
 \graphicspath{ {images/} }
 \newcommand{\Mod}[1]{\ (\mathrm{mod}\ #1)}
 
-\title{Corretto: A set of cryptographic primitives for Bulletproof-friendly circuits}
+\title{Corretto: Short ring signatures with Bulletproofs}
 \author{
   Carlos Perez\\
   Dusk Foundation\footnote{https://dusk.network/}\\
@@ -26,7 +26,7 @@
 \pagestyle{empty}
 
 \begin{abstract}
-Corretto is an elliptic curve defined over a Ristretto scalar field which enables the use of Ristretto in Bulletproofs while simultaneously abstracting the computationally intensive conversion within Rank-1 Constraint System from co-factor 8 scalar field into a co-factor 1 Ristretto field. The paper provides an explanation of the the current Corretto Curve development, as well as a contextual understanding of how this curve implementation acts as one of the aspects within the Dusk network protocol.
+Corretto is a library, within which a protocol for using zero-knowledge proofs to show the existence of a private key within one of many key. For this, there will be an elliptic curve defined over a Ristretto scalar field which enables the use of Ristretto in Bulletproofs while simultaneously abstracting the computationally intensive conversion within Rank-1 Constraint System from co-factor 8 scalar field into a co-factor 1 Ristretto field. This paper provides an explanation of the current Corretto curve development, as well as a contextual understanding of how this curve implementation is one of the aspects within the Dusk network protocol.
 
 
 \end{abstract}
@@ -38,67 +38,67 @@ Corretto is an elliptic curve defined over a Ristretto scalar field which enable
 \newpage
 
 \section{Introduction}
-The construction and use of elliptic curves is paramount to many cryptographic operations, this is because as a source of arithmetic data they are absolute.  As the field of cryptography advances, elliptic curves have been proved to be unparalleled in their use as a cryptographic system at which speed and security are two of the most outstanding features.  To understand the theory and some of the practical applications of elliptic curves and their operations in a stand alone context, or their workings with other cryptographic tools, it is important to familiarise with the difference in utility of various elliptic curves. From a greater understanding of these curves, many of the goals in this current project of Dusk will become apparent.  The curve implementation and the choice for certain novel methods can be seen holistically with all the aspects discussed in this paper and as part of a wider pragmatic solution to one of the aspects of the Dusk network, which is to perform elliptic curve cryptography inside of a circuit. \\\\
+The construction and use of elliptic curves is paramount to many cryptographic protocols, this is because as a source of arithmetic data they are absolute.  As the field of cryptography advances, elliptic curves have been proved to be unparalleled in their use as a cryptographic system at which speed and security are two of the most outstanding features. Elliptic curves are among the fastest performing primitives where the discrete logarithm problem is hard, which is why they are regarded dominant in the field of cryptography.  To understand the theory and some of the practical applications of elliptic curves and their operations in a stand alone context, or their workings with other cryptographic tools, it is important to familiarise with the difference in utility of various elliptic curves. From a greater understanding of these curves, many of the goals in this current project of Dusk will become apparent.  The curve implementation and the choice for certain novel methods can be seen holistically with all the aspects discussed in this paper and as part of a wider pragmatic solution to one of the aspects of the Dusk network, which is to perform elliptic curve cryptography inside of a circuit. \\\\
 All of the work associated, both current and future either is or will be written in rust, as this is the language of the library that is being built.
 \section{Set Inclusion}
-Set inclusion is a relationship between two sets. A set can qualify as a subset of the other set if and only if the elements of the former set are likewise present, yet not the sole elements of the latter set. In order to produce a set inclusion proof, the Prover $\mathcal{P}$ has to convince the Verifier $\mathcal{V}$ that a given set is a subset of another set.
+Set inclusion will be used to show that a private key is one of many public key. A set can qualify as a subset of the other set if and only if the elements of the former set are likewise present, yet not the sole elements of the latter set. In order to produce a set inclusion proof, the Prover $\mathcal{P}$ has to convince the Verifier $\mathcal{V}$ that a given set is a subset of another set.
 \subsection{Example}
 A simplistic example of the logic outlined above is demonstrated hereafter. If:  $$ A={1,3,5} $$
 $$ B={1,5} $$ then \textbf{\textit{B}} is a subset, or \textbf{\textit{‘proper subset’ of A.}} 
-It is also important to note that if: $$ B={1,3,5} $$ then \textbf{\textit{B} would not be a subset of \textit{A} as \textit{B = A}}, in this case. Also, if $$ B={1,4} $$ then \textbf{\textit{B} would not be a subset of \textit{A}}, as every element of a $B$ must simultaneously be part of $A$ for the subset to exist.
+It is also important to note that if: $$ B={1,3,5} $$ then \textbf{\textit{B} would not be a subset of \textit{A} as \textit{B = A}}, in this case. Also, if $$ B={1,4} $$ then \textbf{\textit{B} would be a subset but not a proper subset of \textit{A}}, as every element of a $B$ must simultaneously be part of $A$ for the subset to exist.
 \subsection{Advantages}
 \begin{itemize}
     \item The advantage of using subsets is that they have varying mathematical properties, the one which is most pertinent to us is the proof that a subset exists inside of a set.
     \item From this, operations can be performed to that particular subset which can be used to show properties and create proofs of the larger subset without the extra expense as the whole set is not being used.
-    \item Within curves, specifically elliptic curves, which is the central topic to this paper, the use of sets in divisor arithmetic allows us to show that the order of $H$ is a divisor of the order of $G$, where $H$ is a subgroup in a finite group $G$.
 \end{itemize}
 A full comprehension of this subset rule is very helpful, as well as largely applicable to the defined curve. \\\\
 For the current set inclusion use case, due to the set elements being public keys and the input being a secret key, there needs to be a $ScalarBaseMult (P=x\cdot G)$ operation.
 \section{Bulletproofs and Rank 1 Constraint Circuits} 
-Bulletproofs[1] are short non-interactive zero-knowledge proofs[2] that require no trusted setup. For example, Bulletproofs can be used to prove that an encrypted number is in a given range, without leaking any information about the number. Compared to SNARKs$[2]$, Bulletproofs require no trusted setup, which further reduces the risk of a middle man attack. However, Bulletproofs verification is computationally more intensive relative to the SNARK proof verification.\\\\
-Bulletproofs are designed to enable efficient confidential transactions in Bitcoin and other cryptocurrencies. Every confidential transaction contains a cryptographic proof which proves the validity of the spending transaction. Bulletproofs shrink the size of the cryptographic proofs from over 10kB to less than 1kB. Moreover, Bulletproofs support proof aggregation, meaning that proving that $m$ transaction values are valid adds only $O(log(m))$ additional elements to the size of a single proof.\\\\
-Bulletproofs have many other applications in cryptographic protocols, such as shortening proofs of solvency, short verifiable shuffles, confidential smart contracts, and as a general drop-in replacement for Sigma-protocols. Theoretically, Bulletproofs can be deployed to prove any NP problem expressed through an NP-complete problem.\\\\
+Bulletproofs[1] are short non-interactive zero-knowledge proofs[2]. For example, Bulletproofs can be used to prove that an encrypted number is in a given range, without leaking any information about the number. Compared to SNARKs$[2]$, Bulletproofs require no trusted setup, which further reduces the risk of a malicious set up. However, Bulletproofs verification is computationally more intensive relative to the SNARK proof verification. Bulletproofs, in context to their computational intensity, have linear scaling, which is measured as the size of the arithmetic circuit.\\\\
+Bulletproofs are designed to enable efficient confidential transactions in Bitcoin and other cryptocurrencies. Every transaction contains a cryptographic proof which proves the validity of the spending transaction. Bulletproofs shrink the size of the cryptographic proofs from over 10kB to less than 1kB. To prevent overflows every confidential transaction must carry a proof that all amounts are positive and smaller than a threshold. Such range proofs are much smaller with Bulletproofs, this also allows for $m$ transactions to have valid range proofs. \\\\
+Bulletproofs have many other applications in cryptographic protocols, such as shortening proofs of solvency, short verifiable shuffles, confidential smart contracts, and as a general drop-in replacement for Sigma-protocols. \\\\
 Bulletproofs are an optimization to the \emph{Efficient Zero-Knowledge Arguments for
-Arithmetic Circuits in the Discrete Log Setting} paper proposal, which demonstrated the possibility of proving arithmetic circuit satisfiability in a discrete log setting. The aforementioned paper introduced a logarithmic-sized inner-product argument, as well as a technique to conversions from arithmetic circuits. The Bulletproofs paper optimizes the inner-product argument by a constant factor, and utilizes Pedersen commitments$[3]$ as inputs to the constraint system.\\\\
-R1CS represents a circuit format upon which Bulletproofs are built. The purpose for using the R1CS is that the discussed constraint system enables the expression of linear combinations of various variables and their multiplications in a systematic manner.\\
+Arithmetic Circuits in the Discrete Log Setting} paper. The aforementioned paper introduced an inner-product argument by the following diagram.
 \begin{center}
 \includegraphics[width=8.5cm]{images/circ.png}
 \end{center}
-The Bulletproof paper uses the following format for the constraint system: 
+The constraint system has the following format: 
 \begin{itemize}
     \item  An vector of $n$ multiplications that gives $3 \cdot n$ low-level variables: left, right and output
     \item An vector of $q$ linear constraints between these variables.
     \item Additional \emph{m high-level variables} that represent external facts.
 \end{itemize} 
-The downfall that Bulletproofs have is that they are not efficient with various elliptic curves and fields. Although Bulletproof implementation provides a solid means of creating fast proofs, the prior choice of curve is important to ensure that binary decomposition is not needed within the circuit for reduction. This reduction is negated as the curve is defined over the ristretto scalar field.  
+ Although Bulletproof implementation provides a solid means of creating fast proofs, the prior choice of curve is important to ensure that binary decomposition is not needed within the circuit for reduction. This reduction is negated as the curve is defined over the Ristretto scalar field.  
 
 \section{The Ristretto Scalar Field}
-Ristretto $[4]$ is a technique which constructs a prime-order elliptic curve groups, this construction stems from non prime-order Elliptic curves. The Ristretto scalar field builds upon the ideas of the Decaf paper$[5]$, which also constructs prime order curves but only those whose co-factor is equal to 4. Ristretto, on the other hand, is applicable to curves which have a co-factor equalling 8. The motive for this is to be able to avoid the drawbacks that are concurrent with a co-factor, whilst being able to capitalize on the robustness of an otherwise solid curve. In order for the reasoning behind this protocol to be shown, it is crucial that an understanding of co-factors and their potential pitfalls are given a contextual review. \\
-\begin{itemize}
-    \item Let be $G$ a group of prime order $q$ 
+Ristretto $[4]$ is a technique which constructs prime-order elliptic curve groups, this construction stems from non prime-order Elliptic curves. Ristretto builds upon the ideas of the Decaf paper$[5]$, which also constructs prime order curve groups but only those whose co-factor 4. Ristretto, on the other hand, is applicable to curve groups which have a co-factor 4 or 8. For use of the Ristretto scalar field in this implementation, any chosen curve needs to be defined over the Ristretto scalar field, for the prime-order group Ristretto255. This Ristretto scalar field provides a prime-order group of size $2^{252}$ $[4]$ by encoding group elements. The ristretto255 group will be implemented using points from the curve defined in the next section.  This protocol compresses the co-factor of a curve and the motive for this is to be able to avoid the drawbacks that are concurrent with a co-factor, whilst being able to capitalize on the robustness of an otherwise solid curve. Shown here:\\ If a curve given in standard ellitpic curve form, defines as \\
+\begin{itemize} 
+    \item $Y = X^3 + Ax + B$\\ 
+    then
+    \item Let be $G$ a group of prime order for the curve, denoted as $q$
     \item  A co-factor, denoted by h, exists such that the order of the curve is $h \cdot q$ for the large prime $q$ 
 \end{itemize} 
 \hfill \break
-For all curves, except for Hessian curves, the co-factor is divisible by 4. To become more useful to a broad spectrum of cryptography, Ristretto is apt for a large number of curves, which have a co-factor of 8 or 4. There are various advantages and disadvantages to having a co-factor larger than one, which means the purpose of the implementation and chosen operations must be outlined in advance so that it is known whether co-factor manipulation is needed. In this case of set inclusion, having a co-factor larger than one will hinder the curve operations, specifically relating to the scalar base operations. In reference to the need for subset proofs, the goal is obstructed where the co-factor is not compressed, which leads to non-injective behaviour between the groups. Non-injective functions in set mappings, which is just a relation that each element of a given set is shown with an element of another set, affects the operations in proving subsets exists within sets. \\
-For elliptic curves, any scalar multiplication is a 1 to 1 mapping if the group order is prime. The ability to choose a random scalar for the operation is from the range from 1 to $q-1$, is only valid in a prime-order group. Whereas in a non prime-order group, the adding of a small element can lead to a small subgroup confinement attack$[6]$, which makes it possible to present the same result from different inputs, hence nullifying a 1 to 1 operation. When the removal of these co-factor pitfalls is possible, a much larger selection of curves are available which can better suit the purpose of the overall implementation. When implemented, Ristretto here acts as a thin layer, which provides a protocol that allows for the construction of a prime order group.  \\\\
-For the curve to be embedded into this prime field, the definition that an embedded curve L, is a curve whose base field is defined by the scalar field of another curve, M. In this case, the doppio curve, which will be eluded to shortly, has a base field which is equal to the scalar field defined by Ristretto255. To visualise how this protocol is performed, when the curve is embedded into the Ristretto scalar field - two arbitrary Edwards points, $P$ and $Q$, may be represented as the equivalent Ristretto points. Which as a method of creating parallels, is not dissimilar to how $X$, $Y$, and $Z$ projective coordinates can represent the same $P$ and $Q$ Edwards points.
+There are various advantages and disadvantages to having a co-factor larger than one, which means the purpose of the implementation and chosen operations must be outlined in advance so that it is known whether co-factor manipulation is needed. For all curves, except for Hessian curves, the co-factor is divisible by 4. To become more useful to a broad spectrum of cryptography, Ristretto is apt for a large number of curves, which have a co-factor of 8 or 4. When the co-factor is greater than 1 multiple operations can be hindered. In this case of set inclusion, having a co-factor larger than one will hinder the curve operations, specifically relating to the scalar base operations. In reference to the need for subset proofs, the goal is obstructed where the co-factor is not compressed, which leads to non-injective behaviour between the groups. Non-injective functions in set mappings, which is just a relation that each element of a given set is shown with an element of another set, affects the operations in proving subsets exists within sets. \\
+For elliptic curves, any scalar multiplication is a 1 to 1 mapping if the group order is prime. The ability to choose a random scalar for the operation is from the range from 1 to $q-1$, is only valid in a prime-order group. Whereas in a non prime-order group, the adding of a small element can lead to a small subgroup confinement attack$[6]$, which makes it possible to present the same result from different inputs. When implemented, Ristretto here acts as a thin layer, which provides a protocol that allows for the construction of a prime order group.  \\
+For the curve to be embedded into a prime field, the definition that an embedded curve L, is a curve whose base field is defined by the scalar field of another curve, M. In this case, the Doppio curve, which will be eluded to shortly, has a base field which is equal to the scalar field defined by Ristretto255. To visualise how this protocol is performed, when the curve is embedded into the Ristretto scalar field - two arbitrary Edwards points, $P$ and $Q$, may be represented as the equivalent Ristretto points in the Ristretto scalar field. This happens because the Edwards curve is defined over said field. As a method of creating equivalent points, is not dissimilar to how $X$, $Y$, and $Z$ projective coordinates can represent the same $P$ and $Q$ Edwards points for a given Edwards curve. The elements of the created prime-order group, ristretto255, are not curve points, they are simply represented by curve points. For computation understanding, it must be noted that not this prime-order group is not a subgroup of the curve and that there is an unequivocal distinction between the curve points and group elements. 
 \section{Equations}
 \subsection{Twisted Edwards and Montgomery Forms}
-In order for a selected elliptic curve to be successful, it needs to be twist secure and Ristretto-ready. The doppio curve has been chosen for the reasons highlighted above. \\\\
+In order for a selected elliptic align with the goals defined in this paper, it needs to be both twist secure and Ristretto-ready. The Doppio curve has been chosen for the reasons highlighted above. \\\\
 Which is defined as follows: \\\\
 \noindent\fbox{%
     \parbox{\textwidth}{%
         \begin{itemize}
-    \item Curve equation $$ -x^2+y^2=1-\frac{86649}{86650}x^2y^2 $$ Which is Twisted Edwards.
-    \item $Cofactor: h = 8$
+    \item Curve equation $$ -x^2+y^2=1-\frac{86649}{86650}x^2y^2 $$ Which is Twisted Edwards and used to implement Ristretto255.
     \item $a= -1$
     \item $d= \frac{86649}{86650}$
     \item $Basepoint: Y = \frac{8}{9}$\\
     \item Montgomery form equivalent: $$ y^2=x^3+346598x^2+x $$
     \item $A = 346598 $
     \item $Basepoint: X = 17$\\
-    \item The number of points on the curve is $$ 2^{252}-121160309657751286123858757838224683208 $$      
-    \item The prime order of the subgroup is $$ 2^{249}-15145038707218910765482344729778085401 $$       \item The prime order of the Ristretto scalar field is  $$ 2^{252} + 27742317777372353535851937790883648493 $$
+    \item The number of points on the curve, G, is $$ 2^{252}-121160309657751286123858757838224683208 $$      
+    \item The prime order of the subgroup, q, is $$ 2^{249}-15145038707218910765482344729778085401 $$       \item The prime order of the Ristretto scalar field, l, is  $$ 2^{252} + 27742317777372353535851937790883648493 $$
+    \item $Cofactor: h =\frac{G}{q} = 8$
 \end{itemize}.
     }%
 }
@@ -114,22 +114,22 @@ Which is defined as follows: \\\\
 \end{itemize}
     }%
 }\\\\\\
-The computation of the Weierstrass form is made to prove point addition to be correct in the simplest possible form because this underlines all of the current elliptic curve operations. These initial operations on the field elements are inline, which is made to ensure the most efficient computation possible.\\
+The computation of the Weierstrass form is made to prove point addition in the simplest possible form because this underlines all of the current elliptic curve operations. These initial operations on the field elements are inline, which is made to ensure the most efficient computation possible.\\
 
-To better contextualise this curve to a use case within the Dusk Foundation, the bidding process can be used, as this connects several of the sections from this paper. The bidding process uses the arithmetic of the curve to perform operations, as well as the set inclusion principles to the properties of the bid. It is first necessary to show that your bid lies in the list of valid bids, I.e. is a subset of all valid bids. This is done by set membership to see if an element is part of the total set or by showing that the element is linear in N, where N is the size of the group. Then the necessary requirements for your bid are proven, which is making sure it hashes to the correct values. Following this, the bid is added to a vector of valid bids. A binary vector, which is a vector that compactly stores bits, needs to be created and this vector must be the same length as the vector of valid bids plus the created bid. In this binary format, a one is indicative of the position of your bid, and zero is indicative of the other bids.
+To better contextualise this curve to a use case within the Dusk Foundation, the bidding process can be used, as this connects several of the sections in this paper . The bidding process uses the arithmetic of the curve to perform operations, as well as the set inclusion principles to the properties of the bid. It is first necessary to show that your bid lies in the list of valid bids, I.e. is a subset of all valid bids. This is done by set membership to see if an element is part of the total set or by showing that the element is linear in N, where N is the size of the group. Then the necessary requirements for your bid are proven, which is making sure it hashes to the correct values. Following this, the bid is added to a vector of valid bids. A binary vector, which is a vector that compactly stores bits, needs to be created and this vector must be the same length as the vector of valid bids plus the created bid. In this binary format, a one is indicative of the position of your bid, and zero is indicative of the other bids.
 
 \section{Field Elements}
-For successful curve arithmetic to be performed, it is imperative to have a solid implementation. This allows for a basis on which the most primary operations can be carried out, the crucial nature of these operations stems from the ability to perform multiple cryptographic functions from only a few fundamental operations. \\\\
+For curve arithmetic to be performed, it is imperative to first have a solid implementation. This allows for a basis on which the most primary operations can be carried out, the crucial nature of these operations stems from the ability to perform multiple cryptographic functions from only a few fundamental operations. \\\\
 It is standard when implementing curves from their field elements, that point addition is the first function to be defined, as it is the foundation on which the rest of the operations stand, as described in the previous paragraph. Point addition is simply adding points to one another along the elliptic curve.\\\\
 The points which are defined by $x$ and $y$, in Cartesian form, lie upon the elliptic curve and are all multiples of the generator point, which tend to infinity until they give you the order of the curve. Setting the prime field, over which the curve is defined, aside for a moment allows for more clear mental imagery of how point addition works. The image below depicts point addition on a standard elliptic curve, with good visual aids. The generator point, denoted as $G$, is the point from which the addition is begun until the next generator point is reached. This is done by taking a tangent to the Generator point and then reflecting it on the x-axis, because of the mirror symmetry properties$[7]$, which gives the next point. The image below provides the reader with a visual understanding of how the point addition can be performed:
 \begin{center}
 \includegraphics[width=8.5 cm]{images/ygncy.png}
 \end{center}
-Point addition varies from curve to curve and optimizations are continually performed whilst the field elements are created. The main rationale behind the need for optimization is to keep the operations time constant. The field elements are represented in bit terms, which are commonly converted to \texttt{u64} arrays. Unfortunately, the aforementioned formatting can lead to problems with the arithmetic in programming. The issue arises when using 32-byte arrays in addition, which impacts the overall performance as the operation leaves remainders due to the bit-carrying.\\\\
+Point addition varies from curve to curve and optimizations are continually performed whilst the field elements are created. The main rationale behind the need for optimization is to keep the operations time constant. The field elements are represented in bit terms, which are commonly converted to \texttt{u64} arrays. Unfortunately, the aforementioned formatting can lead to problems with the arithmetic in programming. These issues are often centred around overspill, which occurs when making computations that have bit carrying. Such issues arises when using 32-byte arrays in addition, which impacts the overall performance as the operation leaves remainders due to the bit-carrying.\\\\
 In order to avoid the issues mentioned above, radix representations of the field elements are utilized in order to avoid this bit-carrying as well as to eliminate any potential overflows created during addition, which makes the implementation more efficient. Every \textit{field element} has to be represented as an array of five \texttt{u64}'s (in a concrete radix representation), which enables the computation of the product in the form \texttt{u64} $\cdot$ \texttt{u64} = \texttt{u128}\footnote{Please note that the Corretto implementation is taking advantage of the Rust Programming Language support for 128-unsigned integer operations.}.
 \\\\
 To achieve this, the chosen radix is $2^{52}$, which is optimal for dealing with overspill. An issue which arises from the use of bit terms is the computational speed of the field arithmetic operations. \\\\
-In this case, it is known that the most expensive CPU operation is the integer division. In order to avoid the operation highlighted above, an implemention all of the curve arithmetics is combined with bit-shifting techniques$[8]$. Bit-shifting is simply done by moving a series of bits to the left or right to achieve greater efficiency in a mathematical operation. When dealing with radices, there is always a need to add an integer so that the another module can be achieved, this integer is what is used for bit-shifting. The selection of this integer is a simple arithmetic operation on the defined prime of the field. 
+In this case, it is known that the most expensive CPU operation is the integer division. In order to avoid the operation highlighted above, an implementation all of the curve arithmetics is combined with bit-shifting techniques$[8]$. Bit-shifting is simply done by moving a series of bits to the left or right to achieve greater efficiency in a mathematical operation. When dealing with radices, there is always a need to add an integer so that the another module can be achieved, this integer is what is used for bit-shifting. The selection of this integer is a simple arithmetic operation on the defined prime of the field. 
 If we let $x$ be the remainder of the prime field, as shown below:
 $$ l = 2^{252}+x $$
 The value of the integer $x$ can be proven:
@@ -148,9 +148,11 @@ From this point addition, many of the further operations are made elementary as 
 \begin{thebibliography}{99}
 
 \bibitem{c1} Stanford University, University College London and BlockStream, Benedikt Bünz, Johnathan Bootle, Dan Boneh, Andrew Polestra, Pieter Wuille and Greg Maxwell. Bulletproofs: Short Proofs for Confidential Transactions and More.\\ https://eprint.iacr.org/2017/1066.pdf
-\bibitem{c2} Nir Bitansky , Ran Canetti , Alessandro Chiesa , Eran Tromer, From extractable collision resistance to succinct non-interactive arguments of knowledge, and back again, Proceedings of the 3rd Innovations in Theoretical Computer Science Conference, p.326-349, January 08-10, 2012, Cambridge, Massachusetts
+\bibitem{c2} Shafi Goldwasser, Silvio Micali, and Charles Rackoff. The knowledge complexity of interactive
+proof-systems (extended abstract). In 17th Annual ACM Symposium on Theory of Computing
+(STOC’85), pages 291–304, 1985."
 \bibitem{c3} Pedersen T.P. (1992) Non-Interactive and Information-Theoretic Secure Verifiable Secret Sharing. In: Feigenbaum J. (eds) Advances in Cryptology — CRYPTO ’91. CRYPTO 1991. Lecture Notes in Computer Science, vol 576. Springer, Berlin, Heidelberg
-\bibitem{c4} Isis Lovecruft and Henry de Valence. Ristretto. https://ristretto.group/ristretto.html
+\bibitem{c4} Isis Lovecruft and Henry de Valence. Ristretto. https://Ristretto.group/Ristretto.html
 \bibitem{c5} Mike Hamburg : Deacaf. November, 2015. https://eprint.iacr.org/2015/673.pdf
 \bibitem{c6} Feng Hao, Thales E-Security, Cambridge, UK https://eprint.iacr.org/2010/149.pdf
 \bibitem{c7}Robert Dijkgraaf: Mirror Symmetry and Elliptic Curves, university of Amsterdam, November 15, 2002
@@ -162,3 +164,4 @@ From this point addition, many of the further operations are made elementary as 
 
 
 \end{document}
+
