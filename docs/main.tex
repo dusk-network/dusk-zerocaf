@@ -27,8 +27,6 @@
 
 \begin{abstract}
 Corretto is a library, within which a protocol for using zero-knowledge proofs to show the existence of a private key within one of many key. For this, there will be an elliptic curve defined over a Ristretto scalar field which enables the use of Ristretto in Bulletproofs while simultaneously abstracting the computationally intensive conversion within Rank-1 Constraint System from co-factor 8 scalar field into a co-factor 1 Ristretto field. This paper provides an explanation of the current Corretto curve development, as well as a contextual understanding of how this curve implementation is one of the aspects within the Dusk network protocol.
-
-
 \end{abstract}
 
 \newpage
@@ -52,7 +50,9 @@ It is also important to note that if: $$ B={1,3,5} $$ then \textbf{\textit{B} wo
     \item From this, operations can be performed to that particular subset which can be used to show properties and create proofs of the larger subset without the extra expense as the whole set is not being used.
 \end{itemize}
 A full comprehension of this subset rule is very helpful, as well as largely applicable to the defined curve. \\\\
+
 For the current set inclusion use case, due to the set elements being public keys and the input being a secret key, there needs to be a $ScalarBaseMult (P=x\cdot G)$ operation.
+
 \section{Bulletproofs and Rank 1 Constraint Circuits} 
 Bulletproofs[1] are short non-interactive zero-knowledge proofs[2]. For example, Bulletproofs can be used to prove that an encrypted number is in a given range, without leaking any information about the number. Compared to SNARKs$[2]$, Bulletproofs require no trusted setup, which further reduces the risk of a malicious set up. However, Bulletproofs verification is computationally more intensive relative to the SNARK proof verification. Bulletproofs, in context to their computational intensity, have linear scaling, which is measured as the size of the arithmetic circuit.\\\\
 Bulletproofs are designed to enable efficient confidential transactions in Bitcoin and other cryptocurrencies. Every transaction contains a cryptographic proof which proves the validity of the spending transaction. Bulletproofs shrink the size of the cryptographic proofs from over 10kB to less than 1kB. To prevent overflows every confidential transaction must carry a proof that all amounts are positive and smaller than a threshold. Such range proofs are much smaller with Bulletproofs, this also allows for $m$ transactions to have valid range proofs. \\\\
@@ -71,7 +71,9 @@ The constraint system has the following format:
  Although Bulletproof implementation provides a solid means of creating fast proofs, the prior choice of curve is important to ensure that binary decomposition is not needed within the circuit for reduction. This reduction is negated as the curve is defined over the Ristretto scalar field.  
 
 \section{The Ristretto Scalar Field}
+
 Ristretto $[4]$ is a technique which constructs prime-order elliptic curve groups, this construction stems from non prime-order Elliptic curves. Ristretto builds upon the ideas of the Decaf paper$[5]$, which also constructs prime order curve groups but only those whose co-factor 4. Ristretto, on the other hand, is applicable to curve groups which have a co-factor 4 or 8. For use of the Ristretto scalar field in this implementation, any chosen curve needs to be defined over the Ristretto scalar field, for the prime-order group Ristretto255. This Ristretto scalar field provides a prime-order group of size $2^{252}$ $[4]$ by encoding group elements. The ristretto255 group will be implemented using points from the curve defined in the next section.  This protocol compresses the co-factor of a curve and the motive for this is to be able to avoid the drawbacks that are concurrent with a co-factor, whilst being able to capitalize on the robustness of an otherwise solid curve. Shown here:\\ If a curve given in standard ellitpic curve form, defines as \\
+
 \begin{itemize} 
     \item $Y = X^3 + Ax + B$\\ 
     then
@@ -115,9 +117,7 @@ Which is defined as follows: \\\\
     }%
 }\\\\\\
 The computation of the Weierstrass form is made to prove point addition in the simplest possible form because this underlines all of the current elliptic curve operations. These initial operations on the field elements are inline, which is made to ensure the most efficient computation possible.\\
-
 To better contextualise this curve to a use case within the Dusk Foundation, the bidding process can be used, as this connects several of the sections in this paper . The bidding process uses the arithmetic of the curve to perform operations, as well as the set inclusion principles to the properties of the bid. It is first necessary to show that your bid lies in the list of valid bids, I.e. is a subset of all valid bids. This is done by set membership to see if an element is part of the total set or by showing that the element is linear in N, where N is the size of the group. Then the necessary requirements for your bid are proven, which is making sure it hashes to the correct values. Following this, the bid is added to a vector of valid bids. A binary vector, which is a vector that compactly stores bits, needs to be created and this vector must be the same length as the vector of valid bids plus the created bid. In this binary format, a one is indicative of the position of your bid, and zero is indicative of the other bids.
-
 \section{Field Elements}
 For curve arithmetic to be performed, it is imperative to first have a solid implementation. This allows for a basis on which the most primary operations can be carried out, the crucial nature of these operations stems from the ability to perform multiple cryptographic functions from only a few fundamental operations. \\\\
 It is standard when implementing curves from their field elements, that point addition is the first function to be defined, as it is the foundation on which the rest of the operations stand, as described in the previous paragraph. Point addition is simply adding points to one another along the elliptic curve.\\\\
