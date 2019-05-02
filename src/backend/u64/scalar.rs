@@ -65,7 +65,7 @@ impl<'b> Sub<&'b Scalar> for Scalar {
             difference[i] = borrow & mask;
         }
 
-        // conditionally add `r` if the difference is negative.
+        // conditionally add `l` if the difference is negative.
         // Note that here borrow tells us the Most Signif Bit of the last limb so then we know if it's greater than `l`.
         let underflow_mask = ((borrow >> 63) ^ 1).wrapping_sub(1); // If isn't greater, we will not add it as XOR = 0.
         let mut carry: u64 = 0;
