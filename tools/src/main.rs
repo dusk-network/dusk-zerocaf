@@ -5,6 +5,8 @@ use num_bigint::BigUint;
 use num::{Zero, One, Integer, Num};
 use std::str::FromStr;
 use num_traits::cast::ToPrimitive;
+use num_traits::pow;
+
 
 
 fn main() {
@@ -25,17 +27,24 @@ fn main() {
     let x2 = BigUint::from_str("515692107665463680305819378593").unwrap();
 
     reduction(m, x1, x2).unwrap();
+    
+
+    let x = to_scalar_base_52("1809251394333065553493296640760748560207343510400633813116524750123642650623");
+    println!("R: {:?}", x);
+    let y = to_scalar_base_52("6145104759870991071742105800796537629880401874866217824609283457819451087098");
+    println!("R: {:?}", y);
+    let x_y_mont = to_scalar_base_52("532695731852302855127194384594826090862673352940952884676179882511233227548");
+    println!("R: {:?}", x_y_mont);
+    let x_y = to_scalar_base_52("890263784947025690345271110799906008759402458672628420828189878638015362081");
+    println!("R: {:?}", x_y);
+    let mont_x = to_scalar_base_52("658448296334113745583381664921721413881518248721417041768778176391714104386");
+    println!("{:?}", mont_x);
     */
-    let a = to_scalar_base_52("182687704666362864775460604089535377456991567872");
-    let b = to_scalar_base_52("904625697166532776746648320197686575422163851717637391703244652875051672039");
-    let b_minus_a = to_scalar_base_52("904625697166532776746648320014998870755800986942176787613709275418060104167");
-    let a_minus_b = to_scalar_base_52("365375409332725729550921208179070754913983135744");
-
-    println!("A: {:?}\nB: {:?}\nA - B: {:?}\nB - A: {:?}\n",a, b, a_minus_b, b_minus_a);
-
-    let r = to_scalar_base_52("904625697166532776746648320380374280088526716493097995792780030332043239911");
-    println!("R: {:?}", r);
-
+   
+    //let _ = from_scalar_base_52(&[1682248870925813, 4078880264703668, 2289123149127681, 4169238435752846, 2104335664921]);
+    
+    let x = to_scalar_base_52("904625697166532776746648320380374280088526716493097995792780030332043239911");
+    println!("{:?}", x);
 }
 
 /// The num has to be positive! Otherways it will fail
@@ -86,6 +95,17 @@ pub fn to_scalar_base_52(num: &str) -> [u64; 5] {
     let mut res2: Vec<u64> = response.iter().map(|x| u64::from_str(&x.to_str_radix(10u32)).unwrap()).collect();
     resp_as_array.swap_with_slice(&mut res2);
     resp_as_array
+}
+
+/// Gets a Scalar in base 52 and transforms it into a normal representation
+pub fn from_scalar_base_52(limbs: &[u64; 5]) -> () {
+    let mut res: BigUint = BigUint::zero();
+    let two_pow_52 = BigUint::from_str("4503599627370496").unwrap();
+    for i in 0..5 {
+        res = res + (pow(two_pow_52.clone(), i) * limbs[i]);
+    }
+    println!("{}", res);
+    ()
 }
 
 /// Montgomery struct
