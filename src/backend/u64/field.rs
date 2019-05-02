@@ -60,6 +60,7 @@ impl<'a, 'b> Sub<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
     fn sub(self, b: &'b FieldElement) -> FieldElement {
     unimplemented!()    
+    }
 }
 
 
@@ -104,46 +105,18 @@ impl FieldElement {
         FieldElement([ 1, 0, 0, 0, 0 ])
     }
 
-    /// Construct -1.
+    /// Construct -1 (mod l).
     pub fn minus_one() -> FieldElement {
-        FieldElement([ 671914833335276, 1077929209154306, 5471207, 0, 281474976710656 ])
+        FieldElement([671914833335276, 3916664325105025, 1367801, 0, 17592186044416])
     }
 
-    /// Given 64-bit input limbs, reduce to enforce the bound 2^(51 + epsilon).
-    #[inline(always)]
-    fn reduce(mut limbs: [u64; 5]) -> FieldElement {
-        const LOW_51_BIT_MASK: u64 = (1u64 << 51) - 1;
-
-        // Since the input limbs are bounded by 2^64, the biggest
-        // carry-out is bounded by 2^13.
-        //
-        // The biggest carry-in is c4 * 19, resulting in
-        //
-        // 2^51 + 19*2^13 < 2^51.0000000001
-        //
-        // Because we don't need to canonicalize, only to reduce the
-        // limb sizes, it's OK to do a "weak reduction", where we
-        // compute the carry-outs in parallel.
-
-        let c0 = limbs[0] >> 51;
-        let c1 = limbs[1] >> 51;
-        let c2 = limbs[2] >> 51;
-        let c3 = limbs[3] >> 51;
-        let c4 = limbs[4] >> 51;
-
-        limbs[0] &= LOW_51_BIT_MASK;    
-        limbs[1] &= LOW_51_BIT_MASK;
-        limbs[2] &= LOW_51_BIT_MASK;
-        limbs[3] &= LOW_51_BIT_MASK;
-        limbs[4] &= LOW_51_BIT_MASK;
-
-        // @TODO: Figure out how to build c0 with our -27742317777372353535851937790883648493 mod p
-        unimplemented!()
-    }
 
     /// Load a `FieldElement` from the low 253b   bits of a 256-bit
-    /// input.
+    /// input. So Little Endian representation in bytes of a FieldElement.
+    // @TODO: Macro for Inline load8 function as has variadic arguments.
+    #[warn(dead_code)]
     fn from_bytes(bytes: &[u8;32]) -> Self {
+
         let load8 = |input: &[u8]| -> u64 {
                (input[0] as u64)
             | ((input[1] as u64) << 8)
@@ -155,19 +128,19 @@ impl FieldElement {
             | ((input[7] as u64) << 56)
         };
 
-        let low_51_bit_mask = (1u64 << 51) - 1;
+        let low_52_bit_mask = (1u64 << 52) - 1;
         
         FieldElement(
         // load bits [  0, 64), no shift
-        [  load8(&bytes[ 0..])        & low_51_bit_mask
-        // load bits [ 48,112), shift to [ 51,112)
-        , (load8(&bytes[ 6..]) >>  3) & low_51_bit_mask
-        // load bits [ 96,160), shift to [102,160)
-        , (load8(&bytes[12..]) >>  6) & low_51_bit_mask
-        // load bits [152,216), shift to [153,216)
-        , (load8(&bytes[19..]) >>  1) & low_51_bit_mask
-        // load bits [192,256), shift to [204,112)
-        , (load8(&bytes[24..]) >> 12) & low_51_bit_mask
+        [  load8(&bytes[ 0..])        & low_52_bit_mask
+        // load bits [ 48,112), shift to [ 52,112)
+        , (load8(&bytes[ 6..]) >>  4) & low_52_bit_mask
+        // load bits [ 96,160), shift to [104,160)
+        , (load8(&bytes[12..]) >>  8) & low_52_bit_mask
+        // load bits [152,216), shift to [156,216)
+        , (load8(&bytes[19..]) >>  4) & low_52_bit_mask
+        // load bits [192,256), shift to [208,256)
+        , (load8(&bytes[24..]) >> 16) & low_52_bit_mask
         ])
     }
 
@@ -224,13 +197,39 @@ impl FieldElement {
 
 
 
+pub mod tests {
 
-#[test]
-#[ignore]
-    fn it_adds_correctly() {
-    let a = FieldElement([929955233495203, 466365720129213, 1662059464998953, 2033849074728123, 1442794654840575]);
-    let a_2 = FieldElement([1859910466990425, 932731440258426, 1072319116312658, 1815898335770999, 633789495995903]);
-    let res = &a + &a;
-    assert_eq!(res.to_bytes(), a_2.to_bytes());
+    use crate::backend::u64::field::FieldElement;
+    use crate::backend::u64::constants;
+
+    /// Bytes representation of `-1 (mod l) = 7237005577332262213973186563042994240857116359379907606001950938285454250988`
+    pub(crate) static MINUS_ONE_BYTES: [u8; 32] = [236, 211, 245, 92, 26, 99, 18, 88, 214, 156, 247, 162, 222, 249, 222, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16];
+
+    #[test]
+    #[ignore]
+        fn it_adds_correctly() {
+        let a = FieldElement([929955233495203, 466365720129213, 1662059464998953, 2033849074728123, 1442794654840575]);
+        let a_2 = FieldElement([1859910466990425, 932731440258426, 1072319116312658, 1815898335770999, 633789495995903]);
+        let res = &a + &a;
+        assert_eq!(res.to_bytes(), a_2.to_bytes());
+    }
+
+    #[test]
+    fn from_bytes_conversion() {
+        let num = FieldElement::from_bytes(&MINUS_ONE_BYTES);
+        for i in 0..5 {
+            assert!(num[i] == FieldElement::minus_one()[i]);
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn to_bytes_conversion() {
+        let bytes = FieldElement::minus_one().to_bytes();
+        println!("{:?}", bytes);
+        for i in 0..32 {
+            assert!(bytes[i] == MINUS_ONE_BYTES[i]);
+        }
+    }
+
 }
-
