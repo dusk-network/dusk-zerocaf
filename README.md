@@ -81,15 +81,7 @@ from_radix_to_radix_10("1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0
 
 Note: the refactoring relations are expressed as indentations
 
-- [ ] Create FieldElement Struct and implement the basic operations we need on a u64 backend.
-  - [x] Find the proper radix value for FieldElement.
-  - [ ] Add basic and needed constants.
-  - [ ] Implement Reduce function to make the FieldElements fit on a 5 u64-bit limbs.
-    - [x] Implement Addition.
-    - [ ] Implement Subtraction.
-    - [x] Implement Byte-encoding/decoding.
-    - [x] Implement Multiplication on u64-backend with u128 usage.
-  - [ ] Add proper tests for every function.
+
 - [x] Build Scalar Arithmetics and Scalar Struct definition.
     - [x] Find the proper radix value for FieldElement.
     - [x] Add the required constants for computation.
@@ -103,5 +95,23 @@ Note: the refactoring relations are expressed as indentations
         - [x] Implement Montgomery_Squaring.
         - [x] Implement tests of Montgomery Arithmetics. (under revision)
 - [ ] Create Conversions from Montgomery points to Weierstrass ones. 
+- [ ] Create FieldElement Struct and implement the basic operations we need on a u64 backend.
+  - [x] Find the proper radix value for FieldElement.
+  - [ ] Add basic and needed constants.
+  - [ ] Implement Reduce function to make the FieldElements fit on a 5 u64-bit limbs.
+    - [x] Implement Addition.
+    - [ ] Implement Subtraction.
+    - [x] Implement Byte-encoding/decoding.
+    - [x] Implement Multiplication on u64-backend with u128 usage.
+  - [ ] Add proper tests for every function.
+- [ ] Implement Edwards points
+      - [ ] Create projective co-ordiantes
+      - [ ] Implement from byte conversions
+      - [ ] Implement to byte conversions
+      - [ ] Implement compressed Edwards point Y-coordinate 
+      - [ ] Implement multiplication for scalar with Edwards basepoint
+    - [ ] Represent Edwards points as Ristretto points using wrapping fucntion (research)
+
+  
 
 > Operations with large numbers are recommended to be done in `SageMath`, where they can be converted in a continuous format into rust and easily compiled each time. 
