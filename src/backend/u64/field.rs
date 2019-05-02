@@ -3,19 +3,21 @@
 
 use core::fmt::Debug;
 use core::ops::Neg;
+use core::ops::{Index, IndexMut};
 use core::ops::{Add, AddAssign};
 use core::ops::{Sub, SubAssign};
 use core::ops::{Mul, MulAssign};
+use crate::backend::u64::constants;
 
 
 /// A `FieldElement` represents an element into the field 
 /// `2^252 + 27742317777372353535851937790883648493`
 /// 
 /// In the 64-bit backend implementation, the `FieldElement is 
-/// represented in radix `2^51`
+/// represented in radix `2^52`
 
 #[derive(Copy, Clone)]
-pub struct FieldElement(pub(crate) [u64;5] );
+pub struct FieldElement(pub [u64;5] );
 
 impl Debug for FieldElement {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
@@ -23,52 +25,41 @@ impl Debug for FieldElement {
     }
 }
 
-impl<'b> AddAssign<&'b FieldElement> for FieldElement {
-    fn add_assign(&mut self, _rhs: &'b FieldElement) {
-        for i in 0..5 {
-            self.0[i] += _rhs.0[i];
-        }
+impl Index<usize> for FieldElement {
+    type Output = u64;
+    fn index(&self, _index: usize) -> &u64 {
+        &(self.0[_index])
+    }
+}
+
+impl IndexMut<usize> for FieldElement {
+    fn index_mut(&mut self, _index: usize) -> &mut u64 {
+        &mut (self.0[_index])
     }
 }
 
 impl<'a, 'b> Add<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
-    fn add(self, _rhs: &'b FieldElement) -> FieldElement {
-        let mut output = *self;
-        output += _rhs;
-        output
+    /// Compute `a + b` (mod l)
+    fn add(self, b: &'b FieldElement) -> FieldElement {
+        let mut sum = FieldElement::zero();
+        let mask = (1u64 << 52) - 1;
+
+        // a + b
+        let mut carry: u64 = 0;
+        for i in 0..5 {
+            carry = self.0[i] + b[i] + (carry >> 52);
+            sum[i] = carry & mask;
+        }
+        // subtract r if the sum is >= l
+        sum.sub(&constants::FIELD_L)
     }
 }
-
-impl<'b> SubAssign<&'b FieldElement> for FieldElement {
-    fn sub_assign(&mut self, _rhs: &'b FieldElement) {
-        let result = (self as &FieldElement) - _rhs;
-        self.0 = result.0;
-    }
-}
-
 
 impl<'a, 'b> Sub<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
-    fn sub(self, _rhs: &'b FieldElement) -> FieldElement {
-        // To avoid underflow, first add a multiple of p.
-        // Choose 16*p = p << 4 to be larger than 54-bit _rhs.
-        //
-        // If we could statically track the bitlengths of the limbs
-        // of every FieldElement, we could choose a multiple of p
-        // just bigger than _rhs and avoid having to do a reduction.
-        //
-        // Since we don't yet have type-level integers to do this, we
-        // have to add an explicit reduction call here.
-        FieldElement::reduce([
-            (self.0[0] + 36028797018963664u64) - _rhs.0[0],
-            (self.0[1] + 36028797018963952u64) - _rhs.0[1],
-            (self.0[2] + 36028797018963952u64) - _rhs.0[2],
-            (self.0[3] + 36028797018963952u64) - _rhs.0[3],
-            (self.0[4] + 36028797018963952u64) - _rhs.0[4], 
-        ]);
-        unimplemented!()
-    }
+    fn sub(self, b: &'b FieldElement) -> FieldElement {
+    unimplemented!()    
 }
 
 
