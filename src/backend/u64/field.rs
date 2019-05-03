@@ -55,12 +55,30 @@ impl<'a, 'b> Add<&'b FieldElement> for &'a FieldElement {
         sum.sub(&constants::FIELD_L)
     }
 }
-
+ 
 impl<'a, 'b> Sub<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
+    /// Compute `a - b (mod l)` 
     fn sub(self, b: &'b FieldElement) -> FieldElement {
-    unimplemented!()    
-    }
+        let mut sub = 0u64; 
+        let mut difference: FieldElement = FieldElement::zero(); 
+        let mask = (1u64 << 52) - 1;
+        // Save wrapping_sub result. Store as a reminder on the next limb.
+        for i in 0..5 { 
+            sub = self.0[i].wrapping_sub(b[i] + (sub >> 63));  
+            difference[i] = sub & mask;
+        }
+        // Conditionaly add l, if difference is negative.
+        // Be aware that here `sub` tells us the most significant bit of the last limb
+        // so then we know if it is greater than `l` or not.
+        let underflow_mask = ((sub >> 63) ^ 1).wrapping_sub(1);
+        let mut carry = 0u64;
+        for i in 0..5 {
+            carry = (carry >> 52) + difference[i] + (constants::FIELD_L[i] & underflow_mask);
+            difference[i] = carry & mask;
+        } 
+        difference 
+    }   
 }
 
 
@@ -276,7 +294,7 @@ pub mod tests {
         let res = &a + &a;
         assert_eq!(res.to_bytes(), a_2.to_bytes());
     }
-
+ 
     #[test]
     fn from_bytes_conversion() {
         let num = FieldElement::from_bytes(&MINUS_ONE_BYTES);
