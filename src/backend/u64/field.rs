@@ -296,7 +296,7 @@ pub mod tests {
     pub static A_MINUS_B: FieldElement = FieldElement([2409288332882438, 4182428486726422, 2114509, 4, 15393162788864]);
 
     /// `B - A (mod l) = 904625697166532776746648320014998870755800986942176787613709275418060104167`
-    pub static B_MINUSA: FieldElement = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370491, 2199023255551]);  
+    pub static B_MINUS_A: FieldElement = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370491, 2199023255551]);  
     
     #[test]
     #[ignore]
@@ -312,6 +312,22 @@ pub mod tests {
         let res = &A - &B;
         for i in 0..5 {
             assert!(res[i] == A_MINUS_B[i]);
+        }
+    }
+
+    #[test]
+    fn subtraction_without_mod() {
+        let res = &B - &A;
+        for i in 0..5 {
+            assert!(res[i] == B_MINUS_A[i]);
+        }
+    }
+
+    #[test]
+    fn subtract_equals() {
+        let res = &B - &B;
+        for i in 0..5 {
+            assert!(res[i] == FieldElement::zero()[i]);
         }
     }
  
