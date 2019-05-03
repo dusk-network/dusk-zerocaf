@@ -51,7 +51,7 @@ impl<'a, 'b> Add<&'b FieldElement> for &'a FieldElement {
             carry = self.0[i] + b[i] + (carry >> 52);
             sum[i] = carry & mask;
         }
-        // subtract r if the sum is >= l
+        // subtract l if the sum is >= l
         sum.sub(&constants::FIELD_L)
     }
 }
@@ -86,6 +86,12 @@ impl<'a, 'b> Mul<&'b FieldElement> for &'a FieldElement {
     fn mul(self, _rhs: &'b FieldElement) -> FieldElement {
         unimplemented!()
     }
+}
+
+/// u64 * u64 = u128 inline func multiply helper
+#[inline]
+fn m(x: u64, y: u64) -> u128 {
+    (x as u128) * (y as u128)
 }
 
 
@@ -192,6 +198,63 @@ impl FieldElement {
         debug_assert!((s[31] & 0b1000_0000u8) == 0u8);
 
         s
+    }
+
+    /// Compute `a * b` with the function multiplying helper
+    #[inline]
+    pub fn mul_internal(a: &FieldElement, b: &FieldElement) -> [u128; 9] {
+        let mut res = [0u128; 9];
+        // Note that this is just the normal way of performing a product.
+        // We need to store the results on u128 as otherwise we'll end
+        // up having overflowings.
+        res[0] = m(a[0],b[0]);
+        res[1] = m(a[0],b[1]) + m(a[1],b[0]);
+        res[2] = m(a[0],b[2]) + m(a[1],b[1]) + m(a[2],b[0]);
+        res[3] = m(a[0],b[3]) + m(a[1],b[2]) + m(a[2],b[1]) + m(a[3],b[0]);
+        res[4] = m(a[0],b[4]) + m(a[1],b[3]) + m(a[2],b[2]) + m(a[3],b[1]) + m(a[4],b[0]);
+        res[5] =                m(a[1],b[4]) + m(a[2],b[3]) + m(a[3],b[2]) + m(a[4],b[1]);
+        res[6] =                               m(a[2],b[4]) + m(a[3],b[3]) + m(a[4],b[2]);
+        res[7] =                                              m(a[3],b[4]) + m(a[4],b[3]);
+        res[8] =                                                             m(a[4],b[4]);
+
+        res
+    }
+
+    /// Compute `limbs/R` (mod l), where R is the Montgomery modulus 2^260
+    #[inline]
+    pub (crate) fn montgomery_reduce(limbs: &[u128; 9]) -> FieldElement {
+
+        #[inline]
+        fn adjustment_fact(sum: u128) -> (u128, u64) {
+            let p = (sum as u64).wrapping_mul(constants::LFACTOR_FIELD) & ((1u64 << 52) - 1);
+            ((sum + m(p,constants::L[0])) >> 52, p)
+        }
+
+        #[inline]
+        fn montg_red_res(sum: u128) -> (u128, u64) {
+            let w = (sum as u64) & ((1u64 << 52) - 1);
+            (sum >> 52, w)
+        }
+
+        // FIELD_L[3] = 0 so we can skip these products.
+        let l = &constants::FIELD_L;
+        
+        // the first half computes the Montgomery adjustment factor n, and begins adding n*l to make limbs divisible by R
+        let (carry, n0) = adjustment_fact(        limbs[0]);
+        let (carry, n1) = adjustment_fact(carry + limbs[1] + m(n0,l[1]));
+        let (carry, n2) = adjustment_fact(carry + limbs[2] + m(n0,l[2]) + m(n1,l[1]));
+        let (carry, n3) = adjustment_fact(carry + limbs[3]              + m(n1,l[2]) + m(n2,l[1]));
+        let (carry, n4) = adjustment_fact(carry + limbs[4] + m(n0,l[4])              + m(n2,l[2]) + m(n3,l[1]));
+
+        // limbs is divisible by R now, so we can divide by R by simply storing the upper half as the result
+        let (carry, r0) = montg_red_res(carry + limbs[5]              + m(n1,l[4])              + m(n3,l[2]) + m(n4,l[1]));
+        let (carry, r1) = montg_red_res(carry + limbs[6]                           + m(n2,l[4])              + m(n4,l[2]));
+        let (carry, r2) = montg_red_res(carry + limbs[7]                                        + m(n3,l[4])             );
+        let (carry, r3) = montg_red_res(carry + limbs[8]                                                     + m(n4,l[4]));
+        let         r4 = carry as u64;
+
+        // result may be >= r, so attempt to subtract l
+        FieldElement([r0,r1,r2,r3,r4]).sub(l)
     }
 }
 
