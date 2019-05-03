@@ -100,7 +100,7 @@ Note: the refactoring relations are expressed as indentations
   - [ ] Add basic and needed constants.
   - [ ] Implement Reduce function to make the FieldElements fit on a 5 u64-bit limbs.
     - [x] Implement Addition.
-    - [ ] Implement Subtraction.
+    - [x] Implement Subtraction.
     - [x] Implement Byte-encoding/decoding.
     - [x] Implement Multiplication on u64-backend with u128 usage.
   - [ ] Add proper tests for every function.
