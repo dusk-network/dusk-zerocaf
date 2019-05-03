@@ -105,13 +105,13 @@ Note: the refactoring relations are expressed as indentations
     - [x] Implement Multiplication on u64-backend with u128 usage.
   - [ ] Add proper tests for every function.
 - [ ] Implement Edwards points
-      - [ ] Create projective co-ordiantes
-      - [ ] Implement from byte conversions
-      - [ ] Implement to byte conversions
-      - [ ] Implement compressed Edwards point Y-coordinate 
-      - [ ] Implement multiplication for scalar with Edwards basepoint
+     - [ ] Create projective co-ordiantes
+     - [ ] Implement from byte conversions
+     - [ ] Implement to byte conversions
+     - [ ] Implement compressed Edwards point Y-coordinate 
+     - [ ] Implement multiplication for scalar with Edwards basepoint
     - [ ] Represent Edwards points as Ristretto points using wrapping fucntion (research)
 
   
 
-> Operations with large numbers are recommended to be done in `SageMath`, where they can be converted in a continuous format into rust and easily compiled each time. 
+> Operations with large numbers are recommended to be done in `SageMath`, from which they can be converted in a continuous format with rust and compiled easily after each computation. 
