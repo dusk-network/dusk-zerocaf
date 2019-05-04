@@ -292,6 +292,9 @@ pub mod tests {
     /// B = 904625697166532776746648320197686575422163851717637391703244652875051672039
     pub static B: FieldElement = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370493, 2199023255551]);
 
+    /// `A + B (mod l) = 904625697166532776746648320380374280088526716493097995792780030332043239911`
+    pub static A_PLUS_B: FieldElement = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370495, 2199023255551]); 
+
     /// `A - B (mod l) = 6332379880165729437226538243027995370101315372437730818388241662867394146822`
     pub static A_MINUS_B: FieldElement = FieldElement([2409288332882438, 4182428486726422, 2114509, 4, 15393162788864]);
 
@@ -299,12 +302,19 @@ pub mod tests {
     pub static B_MINUS_A: FieldElement = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370491, 2199023255551]);  
     
     #[test]
-    #[ignore]
-        fn it_adds_correctly() {
-        let a = FieldElement([929955233495203, 466365720129213, 1662059464998953, 2033849074728123, 1442794654840575]);
-        let a_2 = FieldElement([1859910466990425, 932731440258426, 1072319116312658, 1815898335770999, 633789495995903]);
-        let res = &a + &a;
-        assert_eq!(res.to_bytes(), a_2.to_bytes());
+    fn addition_with_modulo() {
+        let res = &FieldElement::minus_one() + &FieldElement::one();
+        for i in 0..5 {
+            assert!(res[i] == FieldElement::zero()[i]);
+        }
+    }
+
+    #[test]
+    fn addition_without_modulo() {
+        let res = &A + &B;
+        for i in 0..5 {
+            assert!(res[i] == A_PLUS_B[i]);
+        }
     }
 
     #[test]
