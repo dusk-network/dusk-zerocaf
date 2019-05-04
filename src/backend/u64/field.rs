@@ -172,50 +172,44 @@ impl FieldElement {
     /// encoding is canonical.
     pub fn to_bytes(self) -> [u8; 32] {
 
-        // @TODO: Get the part needed to implement, replace correct values and update it.
-        // Wee need to prepare the limbs and reduce them before we encode them as bytes.
+        let mut res = [0u8; 32];
 
-
-        let limbs = self.0;
-        // Now arrange the bits of the limbs.
-        let mut s = [0u8;32];
-        s[ 0] =   limbs[0]        as u8;
-        s[ 1] =  (limbs[0] >>  8) as u8;
-        s[ 2] =  (limbs[0] >> 16) as u8;
-        s[ 3] =  (limbs[0] >> 24) as u8;
-        s[ 4] =  (limbs[0] >> 32) as u8;
-        s[ 5] =  (limbs[0] >> 40) as u8;
-        s[ 6] = ((limbs[0] >> 48) | (limbs[1] << 3)) as u8;
-        s[ 7] =  (limbs[1] >>  5) as u8;
-        s[ 8] =  (limbs[1] >> 13) as u8;
-        s[ 9] =  (limbs[1] >> 21) as u8;
-        s[10] =  (limbs[1] >> 29) as u8;
-        s[11] =  (limbs[1] >> 37) as u8;
-        s[12] = ((limbs[1] >> 45) | (limbs[2] << 6)) as u8;
-        s[13] =  (limbs[2] >>  2) as u8;
-        s[14] =  (limbs[2] >> 10) as u8;
-        s[15] =  (limbs[2] >> 18) as u8;
-        s[16] =  (limbs[2] >> 26) as u8;
-        s[17] =  (limbs[2] >> 34) as u8;
-        s[18] =  (limbs[2] >> 42) as u8;
-        s[19] = ((limbs[2] >> 50) | (limbs[3] << 1)) as u8;
-        s[20] =  (limbs[3] >>  7) as u8;
-        s[21] =  (limbs[3] >> 15) as u8;
-        s[22] =  (limbs[3] >> 23) as u8;
-        s[23] =  (limbs[3] >> 31) as u8;
-        s[24] =  (limbs[3] >> 39) as u8;
-        s[25] = ((limbs[3] >> 47) | (limbs[4] << 4)) as u8;
-        s[26] =  (limbs[4] >>  4) as u8;
-        s[27] =  (limbs[4] >> 12) as u8;
-        s[28] =  (limbs[4] >> 20) as u8;
-        s[29] =  (limbs[4] >> 28) as u8;
-        s[30] =  (limbs[4] >> 36) as u8;
-        s[31] =  (limbs[4] >> 44) as u8;
+        res[0]  =  (self.0[0] >> 0)                        as u8;
+        res[1]  =  (self.0[0] >> 8)                        as u8;
+        res[2]  =  (self.0[0] >> 16)                       as u8;
+        res[3]  =  (self.0[0] >> 24)                       as u8;
+        res[4]  =  (self.0[0] >> 32)                       as u8;
+        res[5]  =  (self.0[0] >> 40)                       as u8;
+        res[6]  =  ((self.0[0] >> 48) | (self.0[1] << 4))  as u8;
+        res[7]  =  (self.0[1] >> 4)                        as u8;
+        res[8]  =  (self.0[1] >> 12)                       as u8;
+        res[9]  =  (self.0[ 1] >> 20)                      as u8;
+        res[10] =  (self.0[ 1] >> 28)                      as u8;
+        res[11] =  (self.0[ 1] >> 36)                      as u8;
+        res[12] =  (self.0[ 1] >> 44)                      as u8;
+        res[13] =  (self.0[ 2] >>  0)                      as u8;
+        res[14] =  (self.0[ 2] >>  8)                      as u8;
+        res[15] =  (self.0[ 2] >> 16)                      as u8;
+        res[16] =  (self.0[ 2] >> 24)                      as u8;
+        res[17] =  (self.0[ 2] >> 32)                      as u8;
+        res[18] =  (self.0[ 2] >> 40)                      as u8;
+        res[19] = ((self.0[ 2] >> 48) | (self.0[ 3] << 4)) as u8;
+        res[20] =  (self.0[ 3] >>  4)                      as u8;
+        res[21] =  (self.0[ 3] >> 12)                      as u8;
+        res[22] =  (self.0[ 3] >> 20)                      as u8;
+        res[23] =  (self.0[ 3] >> 28)                      as u8;
+        res[24] =  (self.0[ 3] >> 36)                      as u8;
+        res[25] =  (self.0[ 3] >> 44)                      as u8;
+        res[26] =  (self.0[ 4] >>  0)                      as u8;
+        res[27] =  (self.0[ 4] >>  8)                      as u8;
+        res[28] =  (self.0[ 4] >> 16)                      as u8;
+        res[29] =  (self.0[ 4] >> 24)                      as u8;
+        res[30] =  (self.0[ 4] >> 32)                      as u8;
+        res[31] =  (self.0[ 4] >> 40)                      as u8;
 
         // High bit should be zero.
-        debug_assert!((s[31] & 0b1000_0000u8) == 0u8);
-
-        s
+        debug_assert!((res[31] & 0b1000_0000u8) == 0u8);
+        res
     }
 
     /// Compute `a * b` with the function multiplying helper
@@ -350,7 +344,6 @@ pub mod tests {
     }
 
     #[test]
-    #[ignore]
     fn to_bytes_conversion() {
         let bytes = FieldElement::minus_one().to_bytes();
         println!("{:?}", bytes);
