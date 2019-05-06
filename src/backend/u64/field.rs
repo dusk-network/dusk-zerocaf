@@ -2,12 +2,12 @@
 //! using 64-bit limbs with 128-bit products
 
 use core::fmt::Debug;
-use core::ops::Neg;
 use core::ops::{Index, IndexMut};
-use core::ops::{Add, AddAssign};
-use core::ops::{Sub, SubAssign};
-use core::ops::{Mul, MulAssign};
+use core::ops::Add;
+use core::ops::Sub;
+use core::ops::Mul;
 use crate::backend::u64::constants;
+use crate::backend::u64::scalar;
 
 
 /// A `FieldElement` represents an element into the field 
@@ -81,28 +81,12 @@ impl<'a, 'b> Sub<&'b FieldElement> for &'a FieldElement {
     }   
 }
 
-
-
-impl<'a> Neg for &'a FieldElement {
-    type Output = FieldElement;
-    fn neg(self) -> FieldElement {
-        let mut output = *self;
-        output.negate();
-        output
-    }
-}
-
-impl<'b> MulAssign<&'b FieldElement> for FieldElement {
-    fn mul_assign(&mut self, _rhs: &'b FieldElement) {
-        let result = (self as &FieldElement) * _rhs;
-        self.0 = result.0;
-    }
-}
-
 impl<'a, 'b> Mul<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
     fn mul(self, _rhs: &'b FieldElement) -> FieldElement {
-        unimplemented!()
+        let prod = FieldElement::montgomery_reduce(&FieldElement::mul_internal(self, _rhs)); 
+        println!("MUL BEFORE SECOND REDUCE {:?}", prod); 
+        FieldElement::montgomery_reduce(&FieldElement::mul_internal(&prod, &constants::RR_FIELD))
     }
 }
 
@@ -114,10 +98,6 @@ fn m(x: u64, y: u64) -> u128 {
 
 
 impl FieldElement {
-    /// Invert the sign of this field element
-    pub fn negate(&mut self) {
-        unimplemented!()
-    }
 
     /// Construct zero.
     pub fn zero() -> FieldElement {
@@ -133,7 +113,6 @@ impl FieldElement {
     pub fn minus_one() -> FieldElement {
         FieldElement([671914833335276, 3916664325105025, 1367801, 0, 17592186044416])
     }
-
 
     /// Load a `FieldElement` from the low 253b   bits of a 256-bit
     /// input. So Little Endian representation in bytes of a FieldElement.
@@ -180,6 +159,7 @@ impl FieldElement {
         res[3]  =  (self.0[0] >> 24)                       as u8;
         res[4]  =  (self.0[0] >> 32)                       as u8;
         res[5]  =  (self.0[0] >> 40)                       as u8;
+        // Satisfy radix 52 with the next limb value shifted according the needs
         res[6]  =  ((self.0[0] >> 48) | (self.0[1] << 4))  as u8;
         res[7]  =  (self.0[1] >> 4)                        as u8;
         res[8]  =  (self.0[1] >> 12)                       as u8;
@@ -239,7 +219,7 @@ impl FieldElement {
         #[inline]
         fn adjustment_fact(sum: u128) -> (u128, u64) {
             let p = (sum as u64).wrapping_mul(constants::LFACTOR_FIELD) & ((1u64 << 52) - 1);
-            ((sum + m(p,constants::L[0])) >> 52, p)
+            ((sum + m(p,constants::FIELD_L[0])) >> 52, p)
         }
 
         #[inline]
@@ -280,11 +260,14 @@ pub mod tests {
     /// Bytes representation of `-1 (mod l) = 7237005577332262213973186563042994240857116359379907606001950938285454250988`
     pub(crate) static MINUS_ONE_BYTES: [u8; 32] = [236, 211, 245, 92, 26, 99, 18, 88, 214, 156, 247, 162, 222, 249, 222, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16];
     
-    /// A = 182687704666362864775460604089535377456991567872
+    /// `A = 182687704666362864775460604089535377456991567872`
     pub static A: FieldElement = FieldElement([0, 0, 0, 2, 0]);
  
-    /// B = 904625697166532776746648320197686575422163851717637391703244652875051672039
+    /// `B = 904625697166532776746648320197686575422163851717637391703244652875051672039`
     pub static B: FieldElement = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370493, 2199023255551]);
+
+    /// `C = 2009874587549`
+    pub static C: FieldElement = FieldElement([2009874587549, 0, 0, 0, 0]);
 
     /// `A + B (mod l) = 904625697166532776746648320380374280088526716493097995792780030332043239911`
     pub static A_PLUS_B: FieldElement = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370495, 2199023255551]); 
@@ -295,6 +278,12 @@ pub mod tests {
     /// `B - A (mod l) = 904625697166532776746648320014998870755800986942176787613709275418060104167`
     pub static B_MINUS_A: FieldElement = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370491, 2199023255551]);  
     
+    /// `A * B (mod l) = 918847811638530094170030839746468112210851935758749834752998326598248143582`
+    pub static A_TIMES_B: FieldElement = FieldElement([2201910185007838, 1263014888683320, 1977367609994094, 4238575041099341, 2233595300724]);
+
+    /// `A * C (mod l) = 367179375066579585494548942140953299433414959963106839625728`
+    pub static A_TIMES_C: FieldElement = FieldElement([0, 0, 0, 4019749175098, 0]);
+
     #[test]
     fn addition_with_modulo() {
         let res = &FieldElement::minus_one() + &FieldElement::one();
@@ -334,6 +323,22 @@ pub mod tests {
             assert!(res[i] == FieldElement::zero()[i]);
         }
     }
+
+    #[test]
+    fn mul_with_modulo() {
+        let res = &A * &B;
+        for i in 0..5 {
+            assert!(res[i] == A_TIMES_B[i]);
+        }
+    }
+
+    #[test]
+    fn mul_without_modulo() {
+        let res = &A * &C;
+        for i in 0..5 {
+            assert!(res[i] == A_TIMES_C[i]);
+        }
+    }
  
     #[test]
     fn from_bytes_conversion() {
@@ -346,7 +351,6 @@ pub mod tests {
     #[test]
     fn to_bytes_conversion() {
         let bytes = FieldElement::minus_one().to_bytes();
-        println!("{:?}", bytes);
         for i in 0..32 {
             assert!(bytes[i] == MINUS_ONE_BYTES[i]);
         }
