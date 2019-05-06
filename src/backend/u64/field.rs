@@ -7,8 +7,6 @@ use core::ops::Add;
 use core::ops::Sub;
 use core::ops::Mul;
 use crate::backend::u64::constants;
-use crate::backend::u64::scalar;
-
 
 /// A `FieldElement` represents an element into the field 
 /// `2^252 + 27742317777372353535851937790883648493`
@@ -85,7 +83,6 @@ impl<'a, 'b> Mul<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
     fn mul(self, _rhs: &'b FieldElement) -> FieldElement {
         let prod = FieldElement::montgomery_reduce(&FieldElement::mul_internal(self, _rhs)); 
-        println!("MUL BEFORE SECOND REDUCE {:?}", prod); 
         FieldElement::montgomery_reduce(&FieldElement::mul_internal(&prod, &constants::RR_FIELD))
     }
 }
