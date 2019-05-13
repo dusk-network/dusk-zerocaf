@@ -96,10 +96,22 @@ impl Default for FieldElement {
     }
 }
 
-impl From<Ristretto255Scalar> for FieldElement {
-    fn from(origin: Ristretto255Scalar) -> FieldElement {
+impl<'a> From<&'a Ristretto255Scalar> for FieldElement {
+    /// Given a Ristretto255Scalar on canonical bytes representation
+    /// get it's FieldElement equivalent value as 5 limbs and 
+    /// radix-52.
+    fn from(origin: &'a Ristretto255Scalar) -> FieldElement {
         let origin_bytes = origin.to_bytes();
         FieldElement::from_bytes(&origin_bytes)
+    }
+}
+
+impl Into<Ristretto255Scalar> for FieldElement {
+    /// Given a FieldElement reference get it's
+    /// Ristretto255Scalar Equivalent on it's 
+    /// canonical bytes representation.
+    fn into(self) -> Ristretto255Scalar {
+        Ristretto255Scalar::from_canonical_bytes(self.to_bytes()).unwrap()
     }
 }
 
@@ -269,7 +281,7 @@ pub mod tests {
 
     use crate::backend::u64::field::FieldElement;
     use crate::backend::u64::constants;
-    use curve25519_dalek::scalar::Scalar as Scalar;
+    use crate::scalar::Ristretto255Scalar;
 
     /// Bytes representation of `-1 (mod l) = 7237005577332262213973186563042994240857116359379907606001950938285454250988`
     pub(crate) static MINUS_ONE_BYTES: [u8; 32] = [236, 211, 245, 92, 26, 99, 18, 88, 214, 156, 247, 162, 222, 249, 222, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16];
@@ -373,17 +385,31 @@ pub mod tests {
     #[test]
     fn from_ristretto255scalar() {
         // a = `2238329342913194256032495932344128051776374960164957527413114840482143558222` = res.
-        let a: Scalar = Scalar::from_canonical_bytes([0x4e, 0x5a, 0xb4, 0x34, 0x5d, 0x47, 0x08, 0x84,
+        let a: Ristretto255Scalar = Ristretto255Scalar::from_canonical_bytes([0x4e, 0x5a, 0xb4, 0x34, 0x5d, 0x47, 0x08, 0x84,
                                                       0x59, 0x13, 0xb4, 0x64, 0x1b, 0xc2, 0x7d, 0x52,
                                                       0x52, 0xa5, 0x85, 0x10, 0x1b, 0xcc, 0x42, 0x44,
                                                       0xd4, 0x49, 0xf4, 0xa8, 0x79, 0xd9, 0xf2, 0x04]).unwrap();
-        let a_conv = FieldElement::from(a);
+        let a_conv = FieldElement::from(&a);
         let res = FieldElement([2330265455450702, 481909309544512, 146945097235906, 1298816433963441, 5441077225716]);
 
         for i in 0..5 {
             assert!(a_conv[i] == res[i]);
         }
-        
     }
+
+    #[test]
+    fn into_ristretto255scalar() {
+        // a = `2238329342913194256032495932344128051776374960164957527413114840482143558222` = res.
+        let a: Ristretto255Scalar = Ristretto255Scalar::from_canonical_bytes([0x4e, 0x5a, 0xb4, 0x34, 0x5d, 0x47, 0x08, 0x84,
+                                                      0x59, 0x13, 0xb4, 0x64, 0x1b, 0xc2, 0x7d, 0x52,
+                                                      0x52, 0xa5, 0x85, 0x10, 0x1b, 0xcc, 0x42, 0x44,
+                                                      0xd4, 0x49, 0xf4, 0xa8, 0x79, 0xd9, 0xf2, 0x04]).unwrap();
+        let res: Ristretto255Scalar = FieldElement([2330265455450702, 481909309544512, 146945097235906, 1298816433963441, 5441077225716]).into();
+
+        for i in 0..32 {
+            assert!(a[i] == res[i]);
+        }
+    }
+
 
 }
