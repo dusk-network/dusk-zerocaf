@@ -2,6 +2,7 @@
 
 use crate::field::FieldElement;
 use crate::scalar::Scalar;
+use crate::montgomery::MontgomeryPoint;
 
 use subtle::Choice;
 use subtle::ConditionallyNegatable;
@@ -36,7 +37,7 @@ impl CompressedEdwardsY {
     ///
     /// Returns `Err` if the input is not the \\(y\\)-coordinate of a
     /// curve point.
-    pub fn decompress(&self) -> Result<EdwardsPoint> {
+    pub fn decompress(&self) -> Option<EdwardsPoint> {
         unimplemented!();
     }
 }
@@ -109,7 +110,20 @@ impl<'a> Neg for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Negates an `EdwardsPoint` giving it as a result
     fn neg(self) -> EdwardsPoint {
-        unimplemented!()
+        EdwardsPoint{
+            X: -(&self.X),
+            Y:  self.Y,
+            Z:  self.Z,
+            T: -(&self.T),
+        }
+    }
+}
+
+impl Neg for EdwardsPoint {
+    type Output = EdwardsPoint;
+    /// Negates an `EdwardsPoint` giving it as a result
+    fn neg(self) -> EdwardsPoint {
+        -&self
     }
 }
 
