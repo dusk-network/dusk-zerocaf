@@ -2,11 +2,13 @@
 //! using 64-bit limbs with 128-bit products
 
 use core::fmt::Debug;
+use std::default::Default;
 use core::ops::{Index, IndexMut};
 use core::ops::Add;
 use core::ops::Sub;
 use core::ops::Mul;
 use crate::backend::u64::constants;
+use crate::scalar::Ristretto255Scalar;
 
 /// A `FieldElement` represents an element into the field 
 /// `2^252 + 27742317777372353535851937790883648493`
@@ -84,6 +86,20 @@ impl<'a, 'b> Mul<&'b FieldElement> for &'a FieldElement {
     fn mul(self, _rhs: &'b FieldElement) -> FieldElement {
         let prod = FieldElement::montgomery_reduce(&FieldElement::mul_internal(self, _rhs)); 
         FieldElement::montgomery_reduce(&FieldElement::mul_internal(&prod, &constants::RR_FIELD))
+    }
+}
+
+impl Default for FieldElement {
+    ///Returns the default value for a FieldElement = Zero.
+    fn default() -> FieldElement {
+        FieldElement::zero()
+    }
+}
+
+impl From<Ristretto255Scalar> for FieldElement {
+    fn from(origin: Ristretto255Scalar) -> FieldElement {
+        let origin_bytes = origin.to_bytes();
+        FieldElement::from_bytes(&origin_bytes)
     }
 }
 
@@ -253,6 +269,7 @@ pub mod tests {
 
     use crate::backend::u64::field::FieldElement;
     use crate::backend::u64::constants;
+    use curve25519_dalek::scalar::Scalar as Scalar;
 
     /// Bytes representation of `-1 (mod l) = 7237005577332262213973186563042994240857116359379907606001950938285454250988`
     pub(crate) static MINUS_ONE_BYTES: [u8; 32] = [236, 211, 245, 92, 26, 99, 18, 88, 214, 156, 247, 162, 222, 249, 222, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16];
@@ -351,6 +368,22 @@ pub mod tests {
         for i in 0..32 {
             assert!(bytes[i] == MINUS_ONE_BYTES[i]);
         }
+    }
+
+    #[test]
+    fn from_ristretto255scalar() {
+        // a = `2238329342913194256032495932344128051776374960164957527413114840482143558222` = res.
+        let a: Scalar = Scalar::from_canonical_bytes([0x4e, 0x5a, 0xb4, 0x34, 0x5d, 0x47, 0x08, 0x84,
+                                                      0x59, 0x13, 0xb4, 0x64, 0x1b, 0xc2, 0x7d, 0x52,
+                                                      0x52, 0xa5, 0x85, 0x10, 0x1b, 0xcc, 0x42, 0x44,
+                                                      0xd4, 0x49, 0xf4, 0xa8, 0x79, 0xd9, 0xf2, 0x04]).unwrap();
+        let a_conv = FieldElement::from(a);
+        let res = FieldElement([2330265455450702, 481909309544512, 146945097235906, 1298816433963441, 5441077225716]);
+
+        for i in 0..5 {
+            assert!(a_conv[i] == res[i]);
+        }
+        
     }
 
 }
