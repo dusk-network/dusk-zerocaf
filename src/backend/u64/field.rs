@@ -59,7 +59,8 @@ impl<'a, 'b> Add<&'b FieldElement> for &'a FieldElement {
 impl<'a, 'b> Sub<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
     fn sub(self, b: &'b FieldElement) -> FieldElement {
-    unimplemented!()    
+    unimplemented!()
+    }    
 }
 
 
@@ -220,17 +221,5 @@ impl FieldElement {
 
         s
     }
-}
-
-
-
-
-#[test]
-#[ignore]
-    fn it_adds_correctly() {
-    let a = FieldElement([929955233495203, 466365720129213, 1662059464998953, 2033849074728123, 1442794654840575]);
-    let a_2 = FieldElement([1859910466990425, 932731440258426, 1072319116312658, 1815898335770999, 633789495995903]);
-    let res = &a + &a;
-    assert_eq!(res.to_bytes(), a_2.to_bytes());
 }
 
