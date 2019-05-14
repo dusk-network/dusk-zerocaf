@@ -2,11 +2,10 @@
 
 #[macro_use]
 extern crate criterion;
-extern crate corretto;
+
 
 use criterion::{Criterion, Benchmark};
 
-use corretto::backend::u64::constants;
 use corretto::backend::u64::scalar::Scalar;
 
 

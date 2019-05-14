@@ -101,7 +101,6 @@ impl PartialEq for EdwardsPoint {
     }
 }
 
-<<<<<<< HEAD
 impl Default for EdwardsPoint {
     /// Returns the default EdwardsPoint Coordinates: (0, 1, 1, 0). 
     fn default() -> EdwardsPoint {
@@ -118,12 +117,7 @@ impl<'a> Neg for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Negates an `EdwardsPoint` giving it as a result
     fn neg(self) -> EdwardsPoint {
-        EdwardsPoint{
-            X: -(&self.X),
-            Y:  self.Y,
-            Z:  self.Z,
-            T: -(&self.T),
-        }
+       unimplemented!()
     }
 }
 
@@ -135,6 +129,7 @@ impl Neg for EdwardsPoint {
     }
 }
 
+#[allow(non_snake_case)]
 impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Add two EdwardsPoints and give the resulting `EdwardsPoint`.
@@ -142,13 +137,13 @@ impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
     /// Cost: 9M + 1*a + 6add dependent upon the first point.
     /// Source: 2008 Hisil–Wong–Carter–Dawson, http://eprint.iacr.org/2008/522, Section 3.1.
     fn add(self, other: &'b EdwardsPoint) -> EdwardsPoint {
-        let A: FieldElement = (self.X * other.X);
-        let B: FieldElement = (self.Y * other.Y);
-        let C: FieldElement = (self.Z * other.T);
-        let D: FieldElement = (self.T * other.Z);
+        let A: FieldElement = &self.X * &other.X;
+        let B: FieldElement = &self.Y * &other.Y;
+        let C: FieldElement = &self.Z * &other.T;
+        let D: FieldElement = &self.T * &other.Z;
         let E: FieldElement = &D + &C;
-        let F: FieldElement = &((self.X - self.Y) * (other.X + other.Y)) + &B - &A;
-        let G: FieldElement = &B + &(&(constants::EDWARDS_A)) * &A;
+        let F: FieldElement = &(&(&(&self.X - &self.Y) * &(&other.X - &other.Y)) + &A) + &B;
+        let G: FieldElement = &(&B + &constants::EDWARDS_A) * &A;
         let H: FieldElement = &D - &C;
 
         EdwardsPoint{
@@ -168,17 +163,6 @@ impl<'a, 'b> Sub<&'b EdwardsPoint> for &'a EdwardsPoint {
     }
 }
 
-<<<<<<< HEAD
-=======
-impl<'a> Neg for &'a EdwardsPoint {
-    type Output = EdwardsPoint;
-    /// Negates an `EdwardsPoint` giving it as a result
-    fn neg(self) -> EdwardsPoint {
-        unimplemented!()
-    }
-}
-
->>>>>>> origin/master
 impl<'a, 'b> Mul<&'b Scalar> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Scalar multiplication: compute `scalar * self`.
@@ -199,23 +183,6 @@ impl<'a, 'b> Mul<&'b EdwardsPoint> for &'a Scalar {
 
 
 impl EdwardsPoint {
-<<<<<<< HEAD
-    
-=======
-    /// Convert to a ProjectiveNielsPoint
-    pub(crate) fn to_projective_niels(&self) -> ProjectiveNielsPoint {
-        unimplemented!()
-        }
-    }
-
-    /// Convert the representation of this point from extended
-    /// coordinates to projective coordinates.
-    pub(crate) fn to_projective(&self) -> ProjectivePoint {
-        unimplemented!()
-    }
-
-
->>>>>>> origin/master
     /// Convert this `EdwardsPoint` on the Edwards model to the
     /// corresponding `MontgomeryPoint` on the Montgomery model.
     pub fn to_montgomery(&self) -> MontgomeryPoint {
@@ -237,11 +204,14 @@ impl EdwardsPoint {
         unimplemented!()
     }
 }
-<<<<<<< HEAD
 
 pub mod tests {
     use super::*;
+    use constants::*;
+
+    #[test]
+    fn point_addition() {
+        unimplemented!();
+    }
 
 }
-=======
->>>>>>> origin/master
