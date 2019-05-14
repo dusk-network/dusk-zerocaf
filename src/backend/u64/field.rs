@@ -144,7 +144,7 @@ impl FieldElement {
 
     /// Load a `FieldElement` from the low 253b   bits of a 256-bit
     /// input.
-    fn from_bytes(bytes: &[u8;32]) -> Self {
+    pub fn from_bytes(bytes: &[u8;32]) -> Self {
         let load8 = |input: &[u8]| -> u64 {
                (input[0] as u64)
             | ((input[1] as u64) << 8)
