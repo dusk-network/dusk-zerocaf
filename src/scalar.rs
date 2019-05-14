@@ -8,3 +8,6 @@ use crate::backend;
 /// module.
 #[cfg(feature = "u64_backend")]
 pub type Scalar = backend::u64::scalar::Scalar;
+
+/// This is a type alias for the Scalar type in the `curve25519-dalek` lib.
+pub type Ristretto255Scalar = curve25519_dalek::scalar::Scalar;
