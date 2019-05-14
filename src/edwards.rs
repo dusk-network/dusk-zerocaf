@@ -3,11 +3,17 @@
 use crate::field::FieldElement;
 use crate::scalar::Scalar;
 use crate::montgomery::MontgomeryPoint;
+use crate::constants;
 
 use subtle::Choice;
 use subtle::ConditionallyNegatable;
 use subtle::ConditionallySelectable;
 use subtle::ConstantTimeEq;
+
+use std::default::Default;
+use std::ops::{Add, Sub, Mul, Neg};
+use std::fmt::Debug;
+
 
 /// The first 255 bits of a `CompressedEdwardsY` represent the
 /// \\(y\\)-coordinate.  The high bit of the 32nd byte gives the sign of \\(x\\).
@@ -90,19 +96,15 @@ impl PartialEq for EdwardsPoint {
     }
 }
 
-impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
-    type Output = EdwardsPoint;
-    /// Add two EdwardsPoints and give the resulting `EdwardsPoint`
-    fn add(self, other: &'b EdwardsPoint) -> EdwardsPoint {
-        unimplemented!()
-    }
-}
-
-impl<'a, 'b> Sub<&'b EdwardsPoint> for &'a EdwardsPoint {
-    type Output = EdwardsPoint;
-    /// Substract two EdwardsPoints and give the resulting `EdwardsPoint`
-    fn sub(self, other: &'b EdwardsPoint) -> EdwardsPoint {
-        unimplemented!()
+impl Default for EdwardsPoint {
+    /// Returns the default EdwardsPoint Coordinates: (0, 1, 1, 0). 
+    fn default() -> EdwardsPoint {
+        EdwardsPoint {
+            X: FieldElement::zero(),
+            Y: FieldElement::one(),
+            Z: FieldElement::one(),
+            T: FieldElement::zero()
+        }
     }
 }
 
@@ -124,6 +126,33 @@ impl Neg for EdwardsPoint {
     /// Negates an `EdwardsPoint` giving it as a result
     fn neg(self) -> EdwardsPoint {
         -&self
+    }
+}
+
+impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
+    type Output = EdwardsPoint;
+    /// Add two EdwardsPoints and give the resulting `EdwardsPoint`.
+    /// Cost: 9M + 1*a + 7add.
+    /// Cost: 9M + 1*a + 6add dependent upon the first point.
+    /// Source: 2008 Hisil–Wong–Carter–Dawson, http://eprint.iacr.org/2008/522, Section 3.1.
+    fn add(self, other: &'b EdwardsPoint) -> EdwardsPoint {
+        let A: FieldElement = (self.X * other.X);
+        let B: FieldElement = (self.Y * other.Y);
+        let C: FieldElement = (self.Z * other.T);
+        let D: FieldElement = (self.T * other.Z);
+        let E: FieldElement = &D + &C;
+        let F: FieldElement = &((self.X - self.Y) * (other.X + other.Y)) + &B - &A;
+        let G: FieldElement = &B + &(constants::EDWARDS_A) * &A;
+
+
+    }
+}
+
+impl<'a, 'b> Sub<&'b EdwardsPoint> for &'a EdwardsPoint {
+    type Output = EdwardsPoint;
+    /// Substract two EdwardsPoints and give the resulting `EdwardsPoint`
+    fn sub(self, other: &'b EdwardsPoint) -> EdwardsPoint {
+        unimplemented!()
     }
 }
 
@@ -150,7 +179,6 @@ impl EdwardsPoint {
     /// Convert to a ProjectiveNielsPoint
     pub(crate) fn to_projective_niels(&self) -> ProjectiveNielsPoint {
         unimplemented!()
-        }
     }
 
     /// Convert the representation of this point from extended
