@@ -22,13 +22,13 @@ pub struct CompressedEdwardsY(pub [u8; 32]);
 
 impl ConstantTimeEq for CompressedEdwardsY {
     fn ct_eq(&self, other: &CompressedEdwardsY) -> Choice {
-        self.as_bytes().ct_eq(other.as_bytes())
+        self.to_bytes().ct_eq(&other.to_bytes())
     }
 }
 
 impl Debug for CompressedEdwardsY {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
-        write!(f, "CompressedEdwardsY: {:?}", self.as_bytes())
+        write!(f, "CompressedEdwardsY: {:?}", self.to_bytes())
     }
 }
 
@@ -47,7 +47,7 @@ impl CompressedEdwardsY {
         unimplemented!();
     }
 }
-
+/* Need to implement Identity trait.
 impl Identity for CompressedEdwardsY {
     fn identity() -> CompressedEdwardsY {
         CompressedEdwardsY([1, 0, 0, 0, 0, 0, 0, 0,
@@ -61,7 +61,7 @@ impl Default for CompressedEdwardsY {
     fn default() -> CompressedEdwardsY {
         CompressedEdwardsY::identity()
     }
-}
+}*/
 
 impl CompressedEdwardsY {
     /// Construct a `CompressedEdwardsY` from a slice of bytes.
@@ -142,9 +142,15 @@ impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
         let D: FieldElement = (self.T * other.Z);
         let E: FieldElement = &D + &C;
         let F: FieldElement = &((self.X - self.Y) * (other.X + other.Y)) + &B - &A;
-        let G: FieldElement = &B + &(constants::EDWARDS_A) * &A;
+        let G: FieldElement = &B + &(&(constants::EDWARDS_A)) * &A;
+        let H: FieldElement = &D - &C;
 
-
+        EdwardsPoint{
+            X: &E * &F,
+            Y: &G * &H,
+            Z: &F * &G,
+            T: &E * &H
+        }
     }
 }
 
@@ -176,18 +182,7 @@ impl<'a, 'b> Mul<&'b EdwardsPoint> for &'a Scalar {
 
 
 impl EdwardsPoint {
-    /// Convert to a ProjectiveNielsPoint
-    pub(crate) fn to_projective_niels(&self) -> ProjectiveNielsPoint {
-        unimplemented!()
-    }
-
-    /// Convert the representation of this point from extended
-    /// coordinates to projective coordinates.
-    pub(crate) fn to_projective(&self) -> ProjectivePoint {
-        unimplemented!()
-    }
-
-
+    
     /// Convert this `EdwardsPoint` on the Edwards model to the
     /// corresponding `MontgomeryPoint` on the Montgomery model.
     pub fn to_montgomery(&self) -> MontgomeryPoint {
@@ -208,4 +203,9 @@ impl EdwardsPoint {
     pub(crate) fn mul_by_pow_2(&self, k: u32) -> EdwardsPoint {
         unimplemented!()
     }
+}
+
+pub mod tests {
+    use super::*;
+
 }
