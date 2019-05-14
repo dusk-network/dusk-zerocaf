@@ -1,8 +1,8 @@
 /// Implementation for Montgomery Points for the Doppio curve.
 
-use edwards::{CompressedEdwardsY, EdwardsPoint};
-use field::FieldElement;
-use scalar::Scalar;
+use crate::edwards::{CompressedEdwardsY, EdwardsPoint};
+use crate::field::FieldElement;
+use crate::scalar::Scalar;
 
 use subtle::Choice;
 use subtle::ConditionallySelectable;
