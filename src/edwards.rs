@@ -5,6 +5,7 @@ use crate::scalar::Scalar;
 use crate::montgomery::MontgomeryPoint;
 use crate::constants;
 
+
 use subtle::Choice;
 use subtle::ConditionallyNegatable;
 use subtle::ConditionallySelectable;
@@ -13,7 +14,6 @@ use subtle::ConstantTimeEq;
 use std::default::Default;
 use std::ops::{Add, Sub, Mul, Neg};
 use std::fmt::Debug;
-
 
 /// The first 255 bits of a `CompressedEdwardsY` represent the
 /// \\(y\\)-coordinate.  The high bit of the 32nd byte gives the sign of \\(x\\).
@@ -48,6 +48,11 @@ impl CompressedEdwardsY {
     }
 }
 /* Need to implement Identity trait.
+    pub fn decompress(&self) -> Result<EdwardsPoint> {
+        unimplemented!();
+    }
+}
+
 impl Identity for CompressedEdwardsY {
     fn identity() -> CompressedEdwardsY {
         CompressedEdwardsY([1, 0, 0, 0, 0, 0, 0, 0,
@@ -96,6 +101,7 @@ impl PartialEq for EdwardsPoint {
     }
 }
 
+<<<<<<< HEAD
 impl Default for EdwardsPoint {
     /// Returns the default EdwardsPoint Coordinates: (0, 1, 1, 0). 
     fn default() -> EdwardsPoint {
@@ -162,6 +168,17 @@ impl<'a, 'b> Sub<&'b EdwardsPoint> for &'a EdwardsPoint {
     }
 }
 
+<<<<<<< HEAD
+=======
+impl<'a> Neg for &'a EdwardsPoint {
+    type Output = EdwardsPoint;
+    /// Negates an `EdwardsPoint` giving it as a result
+    fn neg(self) -> EdwardsPoint {
+        unimplemented!()
+    }
+}
+
+>>>>>>> origin/master
 impl<'a, 'b> Mul<&'b Scalar> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Scalar multiplication: compute `scalar * self`.
@@ -182,7 +199,23 @@ impl<'a, 'b> Mul<&'b EdwardsPoint> for &'a Scalar {
 
 
 impl EdwardsPoint {
+<<<<<<< HEAD
     
+=======
+    /// Convert to a ProjectiveNielsPoint
+    pub(crate) fn to_projective_niels(&self) -> ProjectiveNielsPoint {
+        unimplemented!()
+        }
+    }
+
+    /// Convert the representation of this point from extended
+    /// coordinates to projective coordinates.
+    pub(crate) fn to_projective(&self) -> ProjectivePoint {
+        unimplemented!()
+    }
+
+
+>>>>>>> origin/master
     /// Convert this `EdwardsPoint` on the Edwards model to the
     /// corresponding `MontgomeryPoint` on the Montgomery model.
     pub fn to_montgomery(&self) -> MontgomeryPoint {
@@ -204,8 +237,11 @@ impl EdwardsPoint {
         unimplemented!()
     }
 }
+<<<<<<< HEAD
 
 pub mod tests {
     use super::*;
 
 }
+=======
+>>>>>>> origin/master

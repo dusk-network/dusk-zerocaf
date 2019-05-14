@@ -110,7 +110,7 @@ Note: the refactoring relations are expressed as indentations
      - [ ] Implement to byte conversions
      - [ ] Implement compressed Edwards point Y-coordinate 
      - [ ] Implement multiplication for scalar with Edwards basepoint
-    - [ ] Represent Edwards points as Ristretto points using wrapping fucntion (research)
+    - [x] Represent Edwards points as Ristretto points using wrapping function (research)
 
   
 
