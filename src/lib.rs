@@ -4,6 +4,9 @@ extern crate subtle;
 
 
 pub mod backend;
-pub mod weierstrass;
+pub mod constants;
+pub mod edwards;
 pub mod field;
+pub mod montgomery;
 pub mod scalar;
+pub mod weierstrass;
