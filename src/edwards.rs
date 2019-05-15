@@ -209,9 +209,5 @@ pub mod tests {
     use super::*;
     use constants::*;
 
-    #[test]
-    fn point_addition() {
-        unimplemented!();
-    }
 
 }
