@@ -1,0 +1,20 @@
+language: rust
+branches: 
+  only:
+  - master
+  - edwards
+
+cache: cargo
+
+matrix:
+  fast_finish: false
+  include:
+  - rust: stable
+  - rust: beta
+  - rust: nightly
+
+script:
+  - cargo check
+  - cargo build --release --verbose --all
+  - cargo test --verbose --all
+  - cargo bench --verbose --all
