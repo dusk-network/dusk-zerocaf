@@ -15,6 +15,6 @@ matrix:
 
 script:
   - cargo check
-  - cargo build --release --verbose --all
+  - cargo build --release --no-default-features --features "u64_backend" --verbose --all
   - cargo test --verbose --all
-  - cargo bench --verbose --all
+
