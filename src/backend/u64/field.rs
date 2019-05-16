@@ -3,10 +3,14 @@
 
 use core::fmt::Debug;
 use std::default::Default;
+
 use core::ops::{Index, IndexMut};
 use core::ops::Add;
 use core::ops::Sub;
 use core::ops::Mul;
+
+use num::Integer;
+
 use crate::backend::u64::constants;
 use crate::scalar::Ristretto255Scalar;
 
@@ -16,7 +20,7 @@ use crate::scalar::Ristretto255Scalar;
 /// In the 64-bit backend implementation, the `FieldElement is 
 /// represented in radix `2^52`
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialOrd)]
 pub struct FieldElement(pub [u64;5] );
 
 impl Debug for FieldElement {
@@ -137,6 +141,11 @@ impl FieldElement {
     /// Construct -1 (mod l).
     pub fn minus_one() -> FieldElement {
         FieldElement([671914833335276, 3916664325105025, 1367801, 0, 17592186044416])
+    }
+
+    /// Evaluate if a `FieldElement` is even or not.
+    pub fn is_even(self) -> bool {
+        self.0[0].is_even() 
     }
 
     /// Load a `FieldElement` from the low 253b   bits of a 256-bit
@@ -272,6 +281,70 @@ impl FieldElement {
 
         // result may be >= r, so attempt to subtract l
         FieldElement([r0,r1,r2,r3,r4]).sub(l)
+    }
+
+    /// Compute `a^-1 (mod l)` using the The Montgomery Modular Inverse - Revisited
+    /// E. Sava¸s, C¸. K. Ko¸: https://ieeexplore.ieee.org/document/863048
+    #[inline]
+    pub (crate) fn inverse(a: &FieldElement) -> FieldElement {
+        
+        #[inline]
+        fn phase1(a: &FieldElement) -> (FieldElement, u64) {
+            // Declare L = 2^252 + 27742317777372353535851937790883648493
+            let p = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370495, 2199023255551]);
+            let mut u = p.clone();
+            let mut v = a.clone();
+            let mut r = FieldElement::zero();
+            let mut s = FieldElement::one();
+            let two = FieldElement([2, 0, 0, 0, 0]);
+            let mut k = 0u64;
+
+            while v > FieldElement::zero() {
+                match(u.is_even(), v.is_even(), u > v, v > u) {
+                    // u is even
+                    (true, _, _, _) => {
+                        for i in 0..5 {
+                            u[i] = u[i] >> 1;
+                        };
+                        s = &s * &two;
+                    },
+                    // u isn't even but v is even
+                    (false, true, _, _) => {
+                        for i in 0..5 {
+                            v[i] = v[i] >> 1;
+                        };
+                        r = &r * &two;
+                    },
+                    // u and v aren't even and u > v
+                    (false, false, true, _) => {
+                        u = &u - &v;
+                        for i in 0..5 {
+                            u[i] = u[i] >> 1;
+                        };
+                        r = &r + &s;
+                        s = &s * &two;
+                    },
+                    // u and v aren't even and v > u
+                    (false, false, false, true) => {
+                        v = &v - &u;
+                        for i in 0..5 {
+                            v[i] = v[i] >> 1;
+                        };
+                        s = &r + &s;
+                        r = &r * &two;
+                    }, 
+                    (false, false, false, false) => panic!("InverseMod does not exist"),
+                }
+
+                k += 1u64;
+                if r >= p { r = &r - &p; }
+                }
+                (&p - &r, k)
+            }
+            
+        
+        
+        unimplemented!()
     }
 }
 
