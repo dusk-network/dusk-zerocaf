@@ -342,7 +342,11 @@ impl FieldElement {
                 (&p - &r, k)
             }
             
-        
+        #[inline]
+        fn phase2(r: &FieldElement, k: &u64) -> FieldElement {
+            
+            unimplemented!()
+        }
         
         unimplemented!()
     }
