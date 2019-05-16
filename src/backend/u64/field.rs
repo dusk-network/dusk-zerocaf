@@ -345,6 +345,9 @@ impl FieldElement {
         #[inline]
         fn phase2(r: &FieldElement, k: &u64) -> FieldElement {
             
+            for i in 0..(k-252) {
+
+            }
             unimplemented!()
         }
         
