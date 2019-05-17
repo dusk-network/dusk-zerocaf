@@ -344,13 +344,27 @@ impl FieldElement {
             
         #[inline]
         fn phase2(r: &FieldElement, k: &u64) -> FieldElement {
-            
-            for i in 0..(k-252) {
+            let mut rr = r.clone();
+            let mut p = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370495, 2199023255551]);
 
+            // Maybe 253, need to review it since it's the result of the log(base 2) of `FIELD_L`
+            for i in 1..(k-252) {
+                match rr.is_even() {
+                    true => {
+                        for i in 0..5 {
+                            rr[i] = rr[i] >> 1;
+                        };
+                    },
+                    false => {
+                        rr = &rr + &p;
+                        for i in 0..5 {
+                            rr[i] = rr[i] >> 1;
+                        };
+                    }
+                }
             }
-            unimplemented!()
+            rr
         }
-        
         unimplemented!()
     }
 }
@@ -360,7 +374,6 @@ impl FieldElement {
 pub mod tests {
 
     use crate::backend::u64::field::FieldElement;
-    use crate::backend::u64::constants;
     use crate::scalar::Ristretto255Scalar;
 
     /// Bytes representation of `-1 (mod l) = 7237005577332262213973186563042994240857116359379907606001950938285454250988`
