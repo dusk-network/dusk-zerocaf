@@ -226,6 +226,38 @@ impl FieldElement {
         res
     }
 
+    /// Given a `k`: u64, compute `2^k` giving the resulting result
+    /// as a `FieldElement`.
+    /// Note that the input must be between the range => 0..253. 
+    pub fn two_pow_k(exp: &u64) -> FieldElement {
+        let mut res = FieldElement::zero();
+        
+        // Check that exp has to be less than 253. 
+        // Note that a FieldElement can be as much 
+        // `2^252 + 27742317777372353535851937790883648493` so we pick
+        // 253 knowing that 252 will be less than `FIELD_L`.
+        debug_assert!(exp < &253u64);
+        match exp {
+            0...51 => {
+               res[0]  = 1u64 << exp;
+            },
+            52...103 => {
+                res[1] = 1u64 << exp;
+            },
+            104...155 => {
+                res[2] = 1u64 << exp;
+            },
+            156...207 => {
+                res[3] = 1u64 << exp;
+            },
+            _ => {
+                res[4] = 1u64 << exp;
+            }
+        }
+        
+        res
+    }
+
     /// Compute `a * b` with the function multiplying helper
     #[inline]
     pub fn mul_internal(a: &FieldElement, b: &FieldElement) -> [u128; 9] {
