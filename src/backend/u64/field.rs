@@ -365,6 +365,21 @@ impl FieldElement {
             }
             rr
         }
+
+        // Implementation of McIvor, Corinne & Mcloone, Maire & Mccanny, J.V.. (2004). 
+        //Improved Montgomery modular inverse algorithm. 
+        //Electronics Letters. 40. 1110 - 1112. 10.1049/el:20045610. 
+        
+        let (mut r, mut z) = phase1(&a.clone());
+        if z == 52u64 {
+            return FieldElement::montgomery_reduce(&FieldElement::mul_internal(&r, &FieldElement::one()));
+        } else {
+            let exp = &(2u64 * 52u64) - &z;
+
+            r = FieldElement::montgomery_reduce(&FieldElement::mul_internal(&r, &FieldElement::one()));
+        }
+
+
         unimplemented!()
     }
 }
