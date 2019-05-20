@@ -242,16 +242,16 @@ impl FieldElement {
                res[0]  = 1u64 << exp;
             },
             52...103 => {
-                res[1] = 1u64 << exp;
+                res[1] = 1u64 << (exp - 52);
             },
             104...155 => {
-                res[2] = 1u64 << exp;
+                res[2] = 1u64 << (exp - 104);
             },
             156...207 => {
-                res[3] = 1u64 << exp;
+                res[3] = 1u64 << (exp - 156);
             },
             _ => {
-                res[4] = 1u64 << exp;
+                res[4] = 1u64 << (exp - 208);
             }
         }
         
@@ -450,6 +450,15 @@ pub mod tests {
     /// `A * C (mod l) = 367179375066579585494548942140953299433414959963106839625728`
     pub static A_TIMES_C: FieldElement = FieldElement([0, 0, 0, 4019749175098, 0]);
 
+    /// `2^197 (mod l) = 200867255532373784442745261542645325315275374222849104412672`  
+    pub static TWO_POW_197: FieldElement = FieldElement([0, 0, 0, 2199023255552, 0]);
+
+    /// `2^252 (mod l) = 7237005577332262213973186563042994240829374041602535252466099000494570602496`  
+    pub static TWO_POW_252: FieldElement = FieldElement([0, 0, 0, 0, 17592186044416]);
+
+    /// `2^104 (mod l) = 20282409603651670423947251286016`
+    pub static TWO_POW_104: FieldElement = FieldElement([0, 0, 1, 0, 0]);
+
     #[test]
     fn addition_with_modulo() {
         let res = &FieldElement::minus_one() + &FieldElement::one();
@@ -548,6 +557,33 @@ pub mod tests {
 
         for i in 0..32 {
             assert!(a[i] == res[i]);
+        }
+    }
+
+    #[test]
+    fn two_pow_k() {
+        // Check for 0 value
+        let zero = FieldElement::two_pow_k(&0u64);
+        for i in 0..5 {
+            assert!(zero[i] == FieldElement::one()[i]);
+        }
+
+        // Check for MAX value
+        let max = FieldElement::two_pow_k(&252u64);
+        for i in 0..5 {
+            assert!(max[i] == TWO_POW_252[i]);
+        }
+
+        // Check for non 52-multiple `k` values
+        let non_multiple = FieldElement::two_pow_k(&197u64);
+        for i in 0..5 {
+            assert!(non_multiple[i] == TWO_POW_197[i]);
+        }
+
+        // Check for 52-multiple `k` values
+        let non_multiple = FieldElement::two_pow_k(&104u64);
+        for i in 0..5 {
+            assert!(non_multiple[i] == TWO_POW_104[i]);
         }
     }
 
