@@ -404,15 +404,14 @@ impl FieldElement {
         
         let (mut r, mut z) = phase1(&a.clone());
         if z == 52u64 {
-            return FieldElement::montgomery_reduce(&FieldElement::mul_internal(&r, &FieldElement::one()));
+            r = FieldElement::montgomery_reduce(&FieldElement::mul_internal(&r, &FieldElement::one()));
         } else {
             let exp = &(2u64 * 52u64) - &z;
-
+            r = FieldElement::montgomery_reduce(&FieldElement::mul_internal(&r, &FieldElement::two_pow_k(&exp)));
             r = FieldElement::montgomery_reduce(&FieldElement::mul_internal(&r, &FieldElement::one()));
         }
 
-
-        unimplemented!()
+        r
     }
 }
 
