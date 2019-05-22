@@ -622,10 +622,4 @@ pub mod tests {
         assert!(&FieldElement([0, 0, 0, 0, 1]) > &FieldElement([0, 2498436546, 6587652167965486, 0, 0]));
         assert!(&FieldElement([0, 1, 2, 3, 4]) == &FieldElement([0, 1, 2, 3, 4]));
     }
-
-    #[test]
-    fn grewdgbrew() {
-        let res = FieldElement::inverse(&C);
-        println!("{:?}", res);
-    }
 }
