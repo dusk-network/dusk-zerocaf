@@ -3,6 +3,7 @@
 
 use core::fmt::Debug;
 use std::default::Default;
+use std::cmp::{PartialOrd, Ordering, Ord};
 
 use core::ops::{Index, IndexMut};
 use core::ops::Add;
@@ -20,7 +21,7 @@ use crate::scalar::Ristretto255Scalar;
 /// In the 64-bit backend implementation, the `FieldElement is 
 /// represented in radix `2^52`
 
-#[derive(Copy, Clone, PartialOrd)]
+#[derive(Copy, Clone, Eq)] 
 pub struct FieldElement(pub [u64;5] );
 
 impl Debug for FieldElement {
@@ -39,6 +40,25 @@ impl Index<usize> for FieldElement {
 impl IndexMut<usize> for FieldElement {
     fn index_mut(&mut self, _index: usize) -> &mut u64 {
         &mut (self.0[_index])
+    }
+}
+
+impl PartialOrd for FieldElement {
+    fn partial_cmp(&self, other: &FieldElement) -> Option<Ordering> {
+        Some(self.cmp(&other))
+    }
+}
+
+impl Ord for FieldElement {
+    fn cmp(&self, other: &Self) -> Ordering {
+        for i in (0..5).rev() {
+            if self[i] > other[i] {
+                return Ordering::Greater;
+            }else if self[i] < other[i] {
+                return Ordering::Less;
+            }
+        }
+        Ordering::Equal
     }
 }
 
@@ -328,13 +348,17 @@ impl FieldElement {
             let mut v = a.clone();
             let mut r = FieldElement::zero();
             let mut s = FieldElement::one();
-            let two = FieldElement([2, 0, 0, 0, 0]);
+            let two = FieldElement([2, 0, 0, 0, 0]); // Need two on Montgomery domain.
             let mut k = 0u64;
-
-            while v > FieldElement::zero() {
-                match(u.is_even(), v.is_even(), u > v, v > u) {
+            // Need to check when v < 0. But as we work on a modular 
+            // field, we can check the next assumption to do the same
+            // with sense.
+            // while v < (&v + &FieldElement::one()) {
+            while v > FieldElement::zero() {    
+                match(u.is_even(), v.is_even(), u > v, v >= u) {
                     // u is even
                     (true, _, _, _) => {
+                        
                         for i in 0..5 {
                             u[i] = u[i] >> 1;
                         };
@@ -342,10 +366,12 @@ impl FieldElement {
                     },
                     // u isn't even but v is even
                     (false, true, _, _) => {
+                       
                         for i in 0..5 {
                             v[i] = v[i] >> 1;
                         };
                         r = &r * &two;
+                        println!("Iteration on case 2: r = {:?}, v = {:?}",r, v);
                     },
                     // u and v aren't even and u > v
                     (false, false, true, _) => {
@@ -355,6 +381,7 @@ impl FieldElement {
                         };
                         r = &r + &s;
                         s = &s * &two;
+                        println!("U value on iteration: {:?} = {:?}",k, u);
                     },
                     // u and v aren't even and v > u
                     (false, false, false, true) => {
@@ -367,20 +394,18 @@ impl FieldElement {
                     }, 
                     (false, false, false, false) => panic!("InverseMod does not exist"),
                 }
-
                 k += 1u64;
-                if r >= p { r = &r - &p; }
-                }
-                (&p - &r, k)
             }
+
+            (&p - &r, k)
+        }
             
         #[inline]
         fn phase2(r: &FieldElement, k: &u64) -> FieldElement {
             let mut rr = r.clone();
             let mut p = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370495, 2199023255551]);
 
-            // Maybe 253, need to review it since it's the result of the log(base 2) of `FIELD_L`
-            for i in 1..(k-252) {
+            for i in 1..(k-253 ) {
                 match rr.is_even() {
                     true => {
                         for i in 0..5 {
@@ -399,17 +424,22 @@ impl FieldElement {
         }
 
         // Implementation of McIvor, Corinne & Mcloone, Maire & Mccanny, J.V.. (2004). 
-        //Improved Montgomery modular inverse algorithm. 
-        //Electronics Letters. 40. 1110 - 1112. 10.1049/el:20045610. 
-        
+        // Improved Montgomery modular inverse algorithm. 
+        // Electronics Letters. 40. 1110 - 1112. 10.1049/el:20045610. 
+        println!("Variable declaration");
         let (mut r, mut z) = phase1(&a.clone());
+        println!("r: {:?}, z: {:?}", r, z);
+        r = phase2(&r, &z);
+        println!("Phase II r: {:?}", r);
         if z == 52u64 {
-            r = FieldElement::montgomery_reduce(&FieldElement::mul_internal(&r, &FieldElement::one()));
+            r = FieldElement::montgomery_reduce(&FieldElement::mul_internal(&r, &constants::RR_FIELD));
         } else {
-            let exp = &(2u64 * 52u64) - &z;
+            let exp = &(2u64 * 260u64) - &z;
             r = FieldElement::montgomery_reduce(&FieldElement::mul_internal(&r, &FieldElement::two_pow_k(&exp)));
-            r = FieldElement::montgomery_reduce(&FieldElement::mul_internal(&r, &FieldElement::one()));
+            r = FieldElement::montgomery_reduce(&FieldElement::mul_internal(&r, &constants::RR_FIELD));
         }
+
+
 
         r
     }
@@ -586,5 +616,16 @@ pub mod tests {
         }
     }
 
+    #[test]
+    fn ord_impl() {
+        assert!(&FieldElement([2, 0, 0, 0, 0]) < &FieldElement([0, 2, 0, 0, 0]));
+        assert!(&FieldElement([0, 0, 0, 0, 1]) > &FieldElement([0, 2498436546, 6587652167965486, 0, 0]));
+        assert!(&FieldElement([0, 1, 2, 3, 4]) == &FieldElement([0, 1, 2, 3, 4]));
+    }
 
+    #[test]
+    fn grewdgbrew() {
+        let res = FieldElement::inverse(&C);
+        println!("{:?}", res);
+    }
 }
