@@ -168,6 +168,29 @@ impl FieldElement {
         self.0[0].is_even() 
     }
 
+    /// Give the half of the FieldElement value (mod l).
+    pub fn half(&self) -> FieldElement {
+        let mut res = self.clone();
+        let mut remainder = 0u64;
+        for i in (0..5).rev() {
+            res[i] = res[i] + remainder;
+            match(res[i] == 1, res[i].is_even()){
+                (true, _) => {
+                    remainder = 4503599627370496u64;
+                }
+                (_, false) => {
+                    res[i] = res[i] - 1u64;
+                    remainder = 4503599627370496u64; 
+                }
+                (_, true) => {
+                    remainder = 0;
+                }
+            }
+        res[i] = res[i] >> 1;
+        };
+        res
+    }
+
     /// Load a `FieldElement` from the low 253b   bits of a 256-bit
     /// input. So Little Endian representation in bytes of a FieldElement.
     // @TODO: Macro for Inline load8 function as has variadic arguments.
@@ -341,6 +364,12 @@ impl FieldElement {
         FieldElement::montgomery_reduce(&FieldElement::mul_internal(a, b))
     }
 
+    /// Puts a Scalar into Montgomery form, i.e. computes `a*R (mod l)`
+    #[inline]
+    pub fn to_montgomery(&self) -> FieldElement {
+        FieldElement::montgomery_mul(self, &constants::RR_FIELD)
+    }
+
     /// Compute `a^-1 (mod l)` using the The Montgomery Modular Inverse - Revisited
     /// E. Sava¸s, C¸. K. Ko¸: https://ieeexplore.ieee.org/document/863048
     #[inline]
@@ -356,10 +385,7 @@ impl FieldElement {
             let mut s = FieldElement::one();
             let two = FieldElement([2, 0, 0, 0, 0]); // Need two on Montgomery domain.
             let mut k = 0u64;
-            // Need to check when v < 0. But as we work on a modular 
-            // field, we can check the next assumption to do the same
-            // with sense.
-            // while v < (&v + &FieldElement::one()) {
+            
             while v > FieldElement::zero() {    
                 match(u.is_even(), v.is_even(), u > v, v >= u) {
                     // u is even
@@ -369,6 +395,7 @@ impl FieldElement {
                             u[i] = u[i] >> 1;
                         };
                         s = &s * &two;
+                        println!("U value on iteration: {:?} = {:?}",k, u);
                     },
                     // u isn't even but v is even
                     (false, true, _, _) => {
@@ -377,7 +404,7 @@ impl FieldElement {
                             v[i] = v[i] >> 1;
                         };
                         r = &r * &two;
-                        println!("Iteration on case 2: r = {:?}, v = {:?}",r, v);
+                        println!("U value on iteration: {:?} = {:?}",k, v);
                     },
                     // u and v aren't even and u > v
                     (false, false, true, _) => {
@@ -397,6 +424,7 @@ impl FieldElement {
                         };
                         s = &r + &s;
                         r = &r * &two;
+                        println!("U value on iteration: {:?} = {:?}",k, v);
                     }, 
                     (false, false, false, false) => panic!("InverseMod does not exist"),
                 }
@@ -438,11 +466,11 @@ impl FieldElement {
         r = phase2(&r, &z);
         println!("Phase II r: {:?}", r);
         if z == 52u64 {
-            r = FieldElement::montgomery_reduce(&FieldElement::mul_internal(&r, &constants::RR_FIELD));
+            r = FieldElement::montgomery_mul(&r, &constants::RR_FIELD);
         } else {
             let exp = &(2u64 * 260u64) - &z;
-            r = FieldElement::montgomery_reduce(&FieldElement::mul_internal(&r, &FieldElement::two_pow_k(&exp)));
-            r = FieldElement::montgomery_reduce(&FieldElement::mul_internal(&r, &constants::RR_FIELD));
+            r = FieldElement::montgomery_mul(&r, &FieldElement::two_pow_k(&exp));
+            r = FieldElement::montgomery_mul(&r, &constants::RR_FIELD);
         }
 
 
@@ -475,6 +503,9 @@ pub mod tests {
 
     /// `A - B (mod l) = 6332379880165729437226538243027995370101315372437730818388241662867394146822`
     pub static A_MINUS_B: FieldElement = FieldElement([2409288332882438, 4182428486726422, 2114509, 4, 15393162788864]);
+
+    /// `(A - B) / 2 (mod l) = 3166189940082864718613269121513997685050657686218865409194120831433697073411`
+    pub static A_MINUS_B_HALF: FieldElement = FieldElement([1204644166441219, 4343014057048459, 1057254, 2, 7696581394432]);
 
     /// `B - A (mod l) = 904625697166532776746648320014998870755800986942176787613709275418060104167`
     pub static B_MINUS_A: FieldElement = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370491, 2199023255551]);  
@@ -627,5 +658,32 @@ pub mod tests {
         assert!(&FieldElement([2, 0, 0, 0, 0]) < &FieldElement([0, 2, 0, 0, 0]));
         assert!(&FieldElement([0, 0, 0, 0, 1]) > &FieldElement([0, 2498436546, 6587652167965486, 0, 0]));
         assert!(&FieldElement([0, 1, 2, 3, 4]) == &FieldElement([0, 1, 2, 3, 4]));
+    }
+
+    #[test]
+    fn montgomery_inverse_mod() {
+        let res = FieldElement::to_montgomery(&FieldElement::inverse(&FieldElement::one()));
+        println!("{:?}", res);
+    }
+
+    #[test]
+    fn half() {
+        let two_pow_52: FieldElement = FieldElement([0, 1, 0, 0, 0]);
+        let half: FieldElement = FieldElement([2251799813685248, 0, 0, 0, 0]);
+
+        let comp_half = two_pow_52.half();
+        for i in 0..5 {
+            assert!(comp_half[i] == half[i])
+        }
+
+        let a_minus_b_half_comp = A_MINUS_B.half();
+        println!("{:?}", A_MINUS_B);
+        println!("{:?}", a_minus_b_half_comp);
+        println!("{:?}", A_MINUS_B_HALF);
+        for i in 0..5 {
+            assert!(a_minus_b_half_comp[i] == A_MINUS_B_HALF[i]);
+        }
+
+
     }
 }
