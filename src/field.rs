@@ -18,7 +18,6 @@ pub use backend::u64::field::*;
 #[cfg(feature = "u64_backend")]
 pub type FieldElement = backend::u64::field::FieldElement;
 
-impl Eq for FieldElement {}
 
 impl PartialEq for FieldElement {
     fn eq(&self, other: &FieldElement) -> bool {
