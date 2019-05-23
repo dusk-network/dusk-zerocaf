@@ -391,27 +391,22 @@ impl FieldElement {
                     // u is even
                     (true, _, _, _) => {
                         
-                        for i in 0..5 {
-                            u[i] = u[i] >> 1;
-                        };
+                        u = u.half();
                         s = &s * &two;
                         println!("U value on iteration: {:?} = {:?}",k, u);
                     },
                     // u isn't even but v is even
                     (false, true, _, _) => {
                        
-                        for i in 0..5 {
-                            v[i] = v[i] >> 1;
-                        };
+                        v = v.half();
                         r = &r * &two;
                         println!("U value on iteration: {:?} = {:?}",k, v);
                     },
                     // u and v aren't even and u > v
                     (false, false, true, _) => {
                         u = &u - &v;
-                        for i in 0..5 {
-                            u[i] = u[i] >> 1;
-                        };
+                        
+                        u = u.half();
                         r = &r + &s;
                         s = &s * &two;
                         println!("U value on iteration: {:?} = {:?}",k, u);
@@ -419,9 +414,8 @@ impl FieldElement {
                     // u and v aren't even and v > u
                     (false, false, false, true) => {
                         v = &v - &u;
-                        for i in 0..5 {
-                            v[i] = v[i] >> 1;
-                        };
+                        
+                        v = v.half();
                         s = &r + &s;
                         r = &r * &two;
                         println!("U value on iteration: {:?} = {:?}",k, v);
@@ -437,7 +431,7 @@ impl FieldElement {
         #[inline]
         fn phase2(r: &FieldElement, k: &u64) -> FieldElement {
             let mut rr = r.clone();
-            let mut p = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370495, 2199023255551]);
+            let p = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370495, 2199023255551]);
 
             for i in 1..(k-253 ) {
                 match rr.is_even() {
@@ -661,12 +655,6 @@ pub mod tests {
     }
 
     #[test]
-    fn montgomery_inverse_mod() {
-        let res = FieldElement::to_montgomery(&FieldElement::inverse(&FieldElement::one()));
-        println!("{:?}", res);
-    }
-
-    #[test]
     fn half() {
         let two_pow_52: FieldElement = FieldElement([0, 1, 0, 0, 0]);
         let half: FieldElement = FieldElement([2251799813685248, 0, 0, 0, 0]);
@@ -677,13 +665,8 @@ pub mod tests {
         }
 
         let a_minus_b_half_comp = A_MINUS_B.half();
-        println!("{:?}", A_MINUS_B);
-        println!("{:?}", a_minus_b_half_comp);
-        println!("{:?}", A_MINUS_B_HALF);
         for i in 0..5 {
             assert!(a_minus_b_half_comp[i] == A_MINUS_B_HALF[i]);
         }
-
-
     }
 }
