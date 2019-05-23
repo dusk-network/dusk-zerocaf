@@ -335,6 +335,12 @@ impl FieldElement {
         FieldElement([r0,r1,r2,r3,r4]).sub(l)
     }
 
+    /// Compute `(a * b) / R` (mod l), where R is the Montgomery modulus 2^260
+    #[inline]
+    pub fn montgomery_mul(a: &FieldElement, b: &FieldElement) -> FieldElement {
+        FieldElement::montgomery_reduce(&FieldElement::mul_internal(a, b))
+    }
+
     /// Compute `a^-1 (mod l)` using the The Montgomery Modular Inverse - Revisited
     /// E. Sava¸s, C¸. K. Ko¸: https://ieeexplore.ieee.org/document/863048
     #[inline]
