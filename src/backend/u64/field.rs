@@ -387,10 +387,21 @@ impl FieldElement {
     #[inline]
     pub (crate) fn inverse(a: &FieldElement) -> FieldElement {
 
+        /// This Phase I indeed is the Binary GCD algorithm , a version o Stein's algorithm
+        /// which tries to remove the expensive division operation away from the Classical
+        /// Euclidean GDC algorithm replacing it for Bit-shifting, subtraction and comparaison.
+        /// 
+        /// Stein, J.: Computational problems associated with Racah algebra.J. Comput. Phys.1, 397–405 (1967)
+        /// 
+        /// 
+        /// Mentioned on: SPECIAL ISSUE ON MONTGOMERY ARITHMETIC. 
+        /// Montgomery inversion - Erkay Sava ̧s & Çetin Kaya Koç
+        /// J Cryptogr Eng (2018) 8:201–210
+        /// https://doi.org/10.1007/s13389-017-0161-x
         #[inline]
         fn phase1(a: &FieldElement) -> (FieldElement, u64) {
             // Declare L = 2^252 + 27742317777372353535851937790883648493
-            let p = FieldElement::minus_one();//([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370495, 2199023255551]);
+            let p = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370495, 2199023255551]);
             let mut u = p.clone();
             let mut v = a.clone();
             let mut r = FieldElement::zero();
@@ -431,7 +442,6 @@ impl FieldElement {
                     (false, false, false, false) => panic!("InverseMod does not exist"),
                 }
                 k += 1;
-                println!("{:?}", r);
             }
             if r >= p {
                 return (&r -&p, k);
@@ -669,5 +679,11 @@ pub mod tests {
         for i in 0..5 {
             assert!(a_minus_b_half_comp[i] == A_MINUS_B_HALF[i]);
         }
+    }
+
+    #[test]
+    fn mont_inverse() {
+        let res = FieldElement::inverse(&FieldElement::minus_one());
+        println!("{:?}", res.from_montgomery());
     }
 }
