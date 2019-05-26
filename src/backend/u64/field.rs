@@ -358,27 +358,30 @@ impl FieldElement {
         FieldElement([r0,r1,r2,r3,r4]).sub(l)
     }
 
-    /// Compute `(a * b) / R` (mod l), where R is the Montgomery modulus 2^260
+    //--------------------InverseModMontgomery tools-----------------------//
+
+    /// Compute `(a * b) / R` (mod l), where R is the Montgomery modulus 2^253
     #[inline]
-    pub fn montgomery_mul(a: &FieldElement, b: &FieldElement) -> FieldElement {
+    pub fn inv_montgomery_mul(a: &FieldElement, b: &FieldElement) -> FieldElement {
         FieldElement::montgomery_reduce(&FieldElement::mul_internal(a, b))
     }
 
     /// Puts a Scalar into Montgomery form, i.e. computes `a*R (mod l)`
     #[inline]
-    pub fn to_montgomery(&self) -> FieldElement {
-        FieldElement::montgomery_mul(self, &constants::RR_FIELD)
+    pub fn inv_to_montgomery(&self) -> FieldElement {
+        FieldElement::inv_montgomery_mul(self, &constants::INV_RR)
     }
 
     /// Takes a FieldElement out of Montgomery form, i.e. computes `a/R (mod l)`
     #[inline]
-    pub fn from_montgomery(&self) -> FieldElement {
+    pub fn inv_from_montgomery(&self) -> FieldElement {
         let mut limbs = [0u128; 9];
         for i in 0..5 {
             limbs[i] = self[i] as u128;
         }
         FieldElement::montgomery_reduce(&limbs)
     }
+
 
     /// Compute `a^-1 (mod l)` using the The Montgomery Modular Inverse.
     /// Implementation of McIvor, Corinne & Mcloone, Maire & Mccanny, J.V.. (2004).
@@ -475,11 +478,11 @@ impl FieldElement {
         r = phase2(&r, &z);
         println!("Phase II r: {:?}", r);
         if z >= 253 && z <= 260 {
-            r = FieldElement::montgomery_mul(&r, &constants::RR_FIELD);
+            r = FieldElement::inv_montgomery_mul(&r, &constants::INV_RR);
             z = z + 260;
         }
-        r = FieldElement::montgomery_mul(&r, &constants::RR_FIELD);
-        r = FieldElement::montgomery_mul(&r, &FieldElement::two_pow_k(&(512 - z)));
+        r = FieldElement::inv_montgomery_mul(&r, &constants::INV_RR);
+        r = FieldElement::inv_montgomery_mul(&r, &FieldElement::two_pow_k(&(512 - z)));
         r
     }
 }
@@ -679,11 +682,5 @@ pub mod tests {
         for i in 0..5 {
             assert!(a_minus_b_half_comp[i] == A_MINUS_B_HALF[i]);
         }
-    }
-
-    #[test]
-    fn mont_inverse() {
-        let res = FieldElement::inverse(&FieldElement::minus_one());
-        println!("{:?}", res.from_montgomery());
     }
 }
