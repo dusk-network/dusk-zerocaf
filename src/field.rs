@@ -1,7 +1,5 @@
-use core::cmp::{Eq, PartialEq};
+use core::cmp::PartialEq;
 
-use subtle::ConditionallySelectable;
-use subtle::ConditionallyNegatable;
 use subtle::Choice;
 use subtle::ConstantTimeEq;
 
