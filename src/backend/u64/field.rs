@@ -366,19 +366,19 @@ impl FieldElement {
 
     /// Compute `(a * b) / R` (mod l), where R is the Montgomery modulus 2^253
     #[inline]
-    pub fn inv_montgomery_mul(a: &FieldElement, b: &FieldElement) -> FieldElement {
+    pub fn montgomery_mul(a: &FieldElement, b: &FieldElement) -> FieldElement {
         FieldElement::montgomery_reduce(&FieldElement::mul_internal(a, b))
     }
 
     /// Puts a Scalar into Montgomery form, i.e. computes `a*R (mod l)`
     #[inline]
-    pub fn inv_to_montgomery(&self) -> FieldElement {
-        FieldElement::inv_montgomery_mul(self, &constants::INV_RR)
+    pub fn to_montgomery(&self) -> FieldElement {
+        FieldElement::montgomery_mul(self, &constants::RR_FIELD)
     }
 
     /// Takes a FieldElement out of Montgomery form, i.e. computes `a/R (mod l)`
     #[inline]
-    pub fn inv_from_montgomery(&self) -> FieldElement {
+    pub fn from_montgomery(&self) -> FieldElement {
         let mut limbs = [0u128; 9];
         for i in 0..5 {
             limbs[i] = self[i] as u128;
@@ -481,12 +481,11 @@ impl FieldElement {
         println!("r: {:?}, z: {:?}", r, z);
         r = phase2(&r, &z);
         println!("Phase II r: {:?}", r);
-        if z >= 253 && z <= 260 {
-            r = FieldElement::inv_montgomery_mul(&r, &constants::INV_RR);
-            z = z + 260;
+        if z > 260 {
+            r = FieldElement::montgomery_mul(&r, &FieldElement::one());
+            z = z - 260;
         }
-        r = FieldElement::inv_montgomery_mul(&r, &constants::INV_RR);
-        r = FieldElement::inv_montgomery_mul(&r, &FieldElement::two_pow_k(&(512 - z)));
+        r = FieldElement::montgomery_mul(&r, &FieldElement::two_pow_k(&(260 - z)));
         r
     }
 }
@@ -503,6 +502,9 @@ pub mod tests {
 
     /// `A = 182687704666362864775460604089535377456991567872`
     pub static A: FieldElement = FieldElement([0, 0, 0, 2, 0]);
+
+    /// A on Montgomery domain = `(A * R (mod l)) = 474213518376757474787523690767343130291324218287585596341053150401850043342`.
+    pub static INV_MONT_A: FieldElement = FieldElement([2317332620045262, 1576144597389635, 2025859686448975, 2756776639866422, 1152749206963]);
 
     /// `(A ^ (-1)) (mod l) = 7155219595916845557842258654134856828180378438239419449390401977965479867845`.
     pub static INV_MOD_A: FieldElement = FieldElement([1289905446467013, 1277206401232501, 2632844239031511, 61125669693438, 17393375336657]);
@@ -692,9 +694,25 @@ pub mod tests {
     }
 
     #[test]
+    fn to_montgomery_conv() {
+        let mont_a = &A.to_montgomery();
+        for i in 0..5 {
+            assert!(mont_a[i] == INV_MONT_A[i])
+        }
+    }
+
+    #[test]
+    fn from_montgomery_conv() {
+        let out_mont_a = &INV_MONT_A.from_montgomery();
+        for i in 0..5 {
+            assert!(out_mont_a[i] == A[i]);
+        }
+    }
+
+    #[test]
     fn montgomery_inverse() {
         let res  = FieldElement::inverse(&A);
-        println!("Result of INV_MOD_A vs REAL RESULT -> \n {:?} \n {:?}", res.inv_from_montgomery(), INV_MOD_A);
+        println!("Result of INV_MOD_A vs REAL RESULT -> \n {:?} \n {:?}", res, INV_MOD_A);
         for i in 0..5 {
             assert!(res[i] == INV_MOD_A[i]);
         }
