@@ -413,7 +413,7 @@ impl FieldElement {
             let mut v = a.clone();
             let mut r = FieldElement::zero();
             let mut s = FieldElement::one();
-            let two = FieldElement([2, 0, 0, 0, 0]); // Need two on Montgomery domain.
+            let two = FieldElement([2, 0, 0, 0, 0]); // Need two on Montgomery domain??
             let mut k = 0u64;
 
             while v > FieldElement::zero() {
@@ -503,6 +503,9 @@ pub mod tests {
 
     /// `A = 182687704666362864775460604089535377456991567872`
     pub static A: FieldElement = FieldElement([0, 0, 0, 2, 0]);
+
+    /// `(A ^ (-1)) (mod l) = 7155219595916845557842258654134856828180378438239419449390401977965479867845`.
+    pub static INV_MOD_A: FieldElement = FieldElement([1289905446467013, 1277206401232501, 2632844239031511, 61125669693438, 17393375336657]);
 
     /// `B = 904625697166532776746648320197686575422163851717637391703244652875051672039`
     pub static B: FieldElement = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370493, 2199023255551]);
@@ -685,6 +688,15 @@ pub mod tests {
         let a_minus_b_half_comp = A_MINUS_B.half();
         for i in 0..5 {
             assert!(a_minus_b_half_comp[i] == A_MINUS_B_HALF[i]);
+        }
+    }
+
+    #[test]
+    fn montgomery_inverse() {
+        let res  = FieldElement::inverse(&A);
+        println!("Result of INV_MOD_A vs REAL RESULT -> \n {:?} \n {:?}", res.inv_from_montgomery(), INV_MOD_A);
+        for i in 0..5 {
+            assert!(res[i] == INV_MOD_A[i]);
         }
     }
 }
