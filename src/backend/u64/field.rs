@@ -413,7 +413,7 @@ impl FieldElement {
             let mut v = a.clone();
             let mut r = FieldElement::zero();
             let mut s = FieldElement::one();
-            let two = FieldElement([2, 0, 0, 0, 0]); // Need two on Montgomery domain??
+            let two = FieldElement([2, 0, 0, 0, 0]); 
             let mut k = 0u64;
 
             while v > FieldElement::zero() {
@@ -461,7 +461,7 @@ impl FieldElement {
             let mut rr = r.clone();
             let p = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370495, 2199023255551]);
 
-            for i in 1..(k-253 ) {
+            for _i in 0..(k-253) {
                 match rr.is_even() {
                     true => {
                         rr = rr.half();
@@ -478,13 +478,14 @@ impl FieldElement {
 
         println!("Variable declaration");
         let (mut r, mut z) = phase1(&a.clone());
-        println!("r: {:?}, z: {:?}", r, z);
+        println!("Phase I r: {:?}, z: {:?}", r, z);
         r = phase2(&r, &z);
         println!("Phase II r: {:?}", r);
         if z > 260 {
             r = FieldElement::montgomery_mul(&r, &FieldElement::one());
             z = z - 260;
         }
+        println!("Z after if statement: {:?}", z);
         r = FieldElement::montgomery_mul(&r, &FieldElement::two_pow_k(&(260 - z)));
         r
     }
@@ -706,15 +707,6 @@ pub mod tests {
         let out_mont_a = &INV_MONT_A.from_montgomery();
         for i in 0..5 {
             assert!(out_mont_a[i] == A[i]);
-        }
-    }
-
-    #[test]
-    fn montgomery_inverse() {
-        let res  = FieldElement::inverse(&A);
-        println!("Result of INV_MOD_A vs REAL RESULT -> \n {:?} \n {:?}", res, INV_MOD_A);
-        for i in 0..5 {
-            assert!(res[i] == INV_MOD_A[i]);
         }
     }
 }
