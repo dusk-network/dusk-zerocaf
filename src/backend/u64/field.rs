@@ -387,16 +387,18 @@ impl FieldElement {
     }
 
 
-    /// Compute `a^-1 (mod l)` using the The Montgomery Modular Inverse.
-    /// Implementation of McIvor, Corinne & Mcloone, Maire & Mccanny, J.V.. (2004).
-    /// Improved Montgomery modular inverse algorithm.
-    /// Electronics Letters. 40. 1110 - 1112. 10.1049/el:20045610.
+    /// Compute `a^-1 (mod l)` using the the Kalinski implementation
+    /// of the Montgomery Modular Inverse algorithm.
+    /// B. S. Kaliski Jr. - The  Montgomery  inverse  and  its  applica-tions.
+    /// IEEE Transactions on Computers, 44(8):1064–1065, August-1995
     #[inline]
-    pub (crate) fn inverse(a: &FieldElement) -> FieldElement {
+    pub (crate) fn kalinski_inverse(a: &FieldElement) -> FieldElement {
 
         /// This Phase I indeed is the Binary GCD algorithm , a version o Stein's algorithm
         /// which tries to remove the expensive division operation away from the Classical
         /// Euclidean GDC algorithm replacing it for Bit-shifting, subtraction and comparaison.
+        /// 
+        /// Output = `a^(-1) * 2^k (mod l)
         /// 
         /// Stein, J.: Computational problems associated with Racah algebra.J. Comput. Phys.1, 397–405 (1967)
         /// 
@@ -456,6 +458,10 @@ impl FieldElement {
             (&p - &r, k)
         }
 
+        /// Phase II performs some adjustments to obtain
+        /// the Montgomery inverse.
+        /// 
+        /// Output: `a^(-1) * 2^n  (mod l)`  where `n = 253 = log2(p) = log2(FIELD_L)`
         #[inline]
         fn phase2(r: &FieldElement, k: &u64) -> FieldElement {
             let mut rr = r.clone();
@@ -475,19 +481,17 @@ impl FieldElement {
             rr
         }
 
-
-        println!("Variable declaration");
         let (mut r, mut z) = phase1(&a.clone());
-        println!("Phase I r: {:?}, z: {:?}", r, z);
         r = phase2(&r, &z);
-        println!("Phase II r: {:?}", r);
-        if z > 260 {
-            r = FieldElement::montgomery_mul(&r, &FieldElement::one());
-            z = z - 260;
-        }
-        println!("Z after if statement: {:?}", z);
-        r = FieldElement::montgomery_mul(&r, &FieldElement::two_pow_k(&(260 - z)));
-        r
+        // Since the output of the Phase II is multiplied by `2^n`
+        // We can multiply it by the two power needed to achive the 
+        // Montgomery modulus value and then convert it back to the 
+        // normal FieldElement domain.
+        //
+        // In this case: `R = 2^260` & `n = 2^253`. 
+        // So we multiply `r * 2^7` to get R on the Montgomery domain.
+        r = &r * &FieldElement::two_pow_k(&7);
+        r.from_montgomery()
     }
 }
 
@@ -707,6 +711,14 @@ pub mod tests {
         let out_mont_a = &INV_MONT_A.from_montgomery();
         for i in 0..5 {
             assert!(out_mont_a[i] == A[i]);
+        }
+    }
+
+    #[test]
+    fn montgomery_inverse() {
+        let res  = FieldElement::kalinski_inverse(&A);
+        for i in 0..5 {
+            assert!(res[i] == INV_MOD_A[i]);
         }
     }
 }
