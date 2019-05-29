@@ -10,7 +10,7 @@ Safe Curve criteria checklist:
 - [x] There must be an explanation of how the curve constants were derived
 - [x] The curve must admit a Montgomery ladder; this effectively restricts the shape to Montgomery or [twisted] Edwards 
 - [ ] The security against "combined attacks" on the twist, which is the a generalisation of rho security, must be > 2^100 
-- [x] The curve must admit a simple complete addition law; this further restricts which Montgomery and Edwards curves are admitted (https://safecurves.cr.yp.to/complete.html)
+- [x] The curve must admit a simple complete addition law; this further restricts which Montgomery and Edwards curves are admitted 
 - [ ] The Elligator 2 algorithm for hashing to the curve must work 
 - [x] There is proven birationality between the Edwards and Montgomery forms of the cuvre
 
