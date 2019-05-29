@@ -493,6 +493,89 @@ impl FieldElement {
         r = &r * &FieldElement::two_pow_k(&7);
         r.from_montgomery()
     }
+    /// Implementation of the Montgomery inversion - Erkay Sava ̧s & Çetin Kaya Koç
+    /// J Cryptogr Eng (2018) 8:201–210
+    /// https://doi.org/10.1007/s13389-017-0161-x
+    /// 
+    /// Algorithm 3 of the paper: 
+    /// Improved Montgomery modularinverse algorithm
+    /// C. McIvor, M. McLoone and J.V. McCanny
+    /// 
+    /// The main gola is to substitute the loop on Phase II
+    /// for one or two Montgomery Multiplication operations.
+    /// 
+    /// We implemented this since the Algorithm #4 which uses
+    /// imputs on the Montgomery domain, requires always one
+    /// more multiplication operation than the third algorithm.
+    pub (crate) fn savas_koc_inverse(a: &FieldElement) -> FieldElement {
+
+        /// This Phase I indeed is the Binary GCD algorithm , a version o Stein's algorithm
+        /// which tries to remove the expensive division operation away from the Classical
+        /// Euclidean GDC algorithm replacing it for Bit-shifting, subtraction and comparaison.
+        /// 
+        /// Output = `a^(-1) * 2^k (mod l)
+        /// 
+        /// Stein, J.: Computational problems associated with Racah algebra.J. Comput. Phys.1, 397–405 (1967)
+        /// 
+        /// 
+        /// Mentioned on: SPECIAL ISSUE ON MONTGOMERY ARITHMETIC. 
+        /// Montgomery inversion - Erkay Sava ̧s & Çetin Kaya Koç
+        /// J Cryptogr Eng (2018) 8:201–210
+        /// https://doi.org/10.1007/s13389-017-0161-x
+        #[inline]
+        fn phase1(a: &FieldElement) -> (FieldElement, u64) {
+            // Declare L = 2^252 + 27742317777372353535851937790883648493
+            let p = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370495, 2199023255551]);
+            let mut u = p.clone();
+            let mut v = a.clone();
+            let mut r = FieldElement::zero();
+            let mut s = FieldElement::one();
+            let two = FieldElement([2, 0, 0, 0, 0]); 
+            let mut k = 0u64;
+
+            while v > FieldElement::zero() {
+                match(u.is_even(), v.is_even(), u > v, v >= u) {
+                    // u is even
+                    (true, _, _, _) => {
+
+                        u = u.half();
+                        s = &s * &two;
+                    },
+                    // u isn't even but v is even
+                    (false, true, _, _) => {
+
+                        v = v.half();
+                        r = &r * &two;
+                    },
+                    // u and v aren't even and u > v
+                    (false, false, true, _) => {
+
+                        u = &u - &v;
+                        u = u.half();
+                        r = &r + &s;
+                        s = &s * &two;
+                    },
+                    // u and v aren't even and v > u
+                    (false, false, false, true) => {
+
+                        v = &v - &u;
+                        v = v.half();
+                        s = &r + &s;
+                        r = &r * &two;
+                    },
+                    (false, false, false, false) => panic!("InverseMod does not exist"),
+                }
+                k += 1;
+            }
+            if r >= p {
+                return (&r -&p, k);
+            }
+            (&p - &r, k)
+        }
+
+        let (mut r, mut z) = phase1(&a.clone());
+        r.from_montgomery()
+    }
 }
 
 
