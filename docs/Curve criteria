@@ -1,0 +1,19 @@
+### Documentation of save curve criteria for Doppio
+
+Safe Curve criteria checklist:
+
+- [x] The curve must be defined over a prime field F_p 
+- [x] The conditions on the curve constants for the relevant curve shape must be met 
+- [ ] The cost of a rho attack must be > 2^100 
+- [x] Let l be the large prime factor of the group order. l must be relatively prime to p, and the embedding degree must be at least (l-1)/100 
+- [x] The CM discriminant must be > 2^100 
+- [x] There must be an explanation of how the curve constants were derived
+- [x] The curve must admit a Montgomery ladder; this effectively restricts the shape to Montgomery or [twisted] Edwards 
+- [ ] The security against "combined attacks" on the twist, which is the a generalisation of rho security, must be > 2^100 
+- [x] The curve must admit a simple complete addition law; this further restricts which Montgomery and Edwards curves are admitted (https://safecurves.cr.yp.to/complete.html)
+- [ ] The Elligator 2 algorithm for hashing to the curve must work 
+- [x] There is proven birationality between the Edwards and Montgomery forms of the cuvre
+
+The factors to document against can be found at https://safecurves.cr.yp.to/
+
+
