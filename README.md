@@ -94,10 +94,10 @@ Note: the refactoring relations are expressed as indentations
         - [x] Implement Montgomery_Muliplication.
         - [x] Implement Montgomery_Squaring.
         - [x] Implement tests of Montgomery Arithmetics. (under revision)
-- [ ] Create Conversions from Montgomery points to Weierstrass ones. 
+- [x] Create Conversions from Montgomery points to Weierstrass ones. 
 - [ ] Create FieldElement Struct and implement the basic operations we need on a u64 backend.
   - [x] Find the proper radix value for FieldElement.
-  - [ ] Add basic and needed constants.
+  - [x] Add basic and needed constants.
   - [ ] Implement Reduce function to make the FieldElements fit on a 5 u64-bit limbs.
     - [x] Implement Addition.
     - [x] Implement Subtraction.
@@ -118,6 +118,12 @@ Note: the refactoring relations are expressed as indentations
     - [ ] Cargo doc testing and improvement
     - [ ] Re-define Edwards point struct
     - [ ] Decide the best use cases of the various Edwards coordinate types (compressed, standard, extended, projective)
+    - [ ] Benchmark different implementations and algorithms
+    - [ ] Create About Niels and ProjectiveNiels coordinates usage
+    - [ ] Implement Montgomery and Edwards operations & functions
+    - [ ] Implement Ristretto Mapping
+    - [ ] Build and test torsion points
+   
 
 
 
