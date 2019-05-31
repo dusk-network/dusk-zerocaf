@@ -76,7 +76,7 @@ impl<'a, 'b> Add<&'b FieldElement> for &'a FieldElement {
             sum[i] = carry & mask;
         }
         // subtract l if the sum is >= l
-        sum.sub(&constants::FIELD_L)
+        &sum - &constants::FIELD_L
     }
 }
 
@@ -366,19 +366,19 @@ impl FieldElement {
 
     /// Compute `(a * b) / R` (mod l), where R is the Montgomery modulus 2^253
     #[inline]
-    pub fn inv_montgomery_mul(a: &FieldElement, b: &FieldElement) -> FieldElement {
+    pub fn montgomery_mul(a: &FieldElement, b: &FieldElement) -> FieldElement {
         FieldElement::montgomery_reduce(&FieldElement::mul_internal(a, b))
     }
 
     /// Puts a Scalar into Montgomery form, i.e. computes `a*R (mod l)`
     #[inline]
-    pub fn inv_to_montgomery(&self) -> FieldElement {
-        FieldElement::inv_montgomery_mul(self, &constants::INV_RR)
+    pub fn to_montgomery(&self) -> FieldElement {
+        FieldElement::montgomery_mul(self, &constants::RR_FIELD)
     }
 
     /// Takes a FieldElement out of Montgomery form, i.e. computes `a/R (mod l)`
     #[inline]
-    pub fn inv_from_montgomery(&self) -> FieldElement {
+    pub fn from_montgomery(&self) -> FieldElement {
         let mut limbs = [0u128; 9];
         for i in 0..5 {
             limbs[i] = self[i] as u128;
@@ -387,16 +387,18 @@ impl FieldElement {
     }
 
 
-    /// Compute `a^-1 (mod l)` using the The Montgomery Modular Inverse.
-    /// Implementation of McIvor, Corinne & Mcloone, Maire & Mccanny, J.V.. (2004).
-    /// Improved Montgomery modular inverse algorithm.
-    /// Electronics Letters. 40. 1110 - 1112. 10.1049/el:20045610.
+    /// Compute `a^-1 (mod l)` using the the Kalinski implementation
+    /// of the Montgomery Modular Inverse algorithm.
+    /// B. S. Kaliski Jr. - The  Montgomery  inverse  and  its  applica-tions.
+    /// IEEE Transactions on Computers, 44(8):1064–1065, August-1995
     #[inline]
-    pub (crate) fn inverse(a: &FieldElement) -> FieldElement {
+    pub (crate) fn kalinski_inverse(a: &FieldElement) -> FieldElement {
 
         /// This Phase I indeed is the Binary GCD algorithm , a version o Stein's algorithm
         /// which tries to remove the expensive division operation away from the Classical
         /// Euclidean GDC algorithm replacing it for Bit-shifting, subtraction and comparaison.
+        /// 
+        /// Output = `a^(-1) * 2^k (mod l)
         /// 
         /// Stein, J.: Computational problems associated with Racah algebra.J. Comput. Phys.1, 397–405 (1967)
         /// 
@@ -408,15 +410,16 @@ impl FieldElement {
         #[inline]
         fn phase1(a: &FieldElement) -> (FieldElement, u64) {
             // Declare L = 2^252 + 27742317777372353535851937790883648493
-            let p = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370495, 2199023255551]);
+            let p = FieldElement([517551446070577, 842026395247552, 136780, 0, 17592186044416]);
             let mut u = p.clone();
             let mut v = a.clone();
             let mut r = FieldElement::zero();
             let mut s = FieldElement::one();
-            let two = FieldElement([2, 0, 0, 0, 0]); // Need two on Montgomery domain??
+            let two = FieldElement([2, 0, 0, 0, 0]); 
             let mut k = 0u64;
 
             while v > FieldElement::zero() {
+                k += 1;
                 match(u.is_even(), v.is_even(), u > v, v >= u) {
                     // u is even
                     (true, _, _, _) => {
@@ -448,20 +451,26 @@ impl FieldElement {
                     },
                     (false, false, false, false) => panic!("InverseMod does not exist"),
                 }
-                k += 1;
+                println!("Values on iteration: {}: \nr = {:?}\ns = {:?}\nv = {:?}\nu = {:?}\n", k, &r, &s,&v, &u);
             }
             if r >= p {
+                println!("Inside if: {:?}", &r - &p);
                 return (&r -&p, k);
             }
+            println!("Outside if: {:?}", &p - &r);
             (&p - &r, k)
         }
 
+        /// Phase II performs some adjustments to obtain
+        /// the Montgomery inverse.
+        /// 
+        /// Output: `a^(-1) * 2^n  (mod l)`  where `n = 253 = log2(p) = log2(FIELD_L)`
         #[inline]
         fn phase2(r: &FieldElement, k: &u64) -> FieldElement {
             let mut rr = r.clone();
-            let p = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370495, 2199023255551]);
+            let p = &constants::FIELD_L;
 
-            for i in 1..(k-253 ) {
+            for _i in 1..(k-253) {
                 match rr.is_even() {
                     true => {
                         rr = rr.half();
@@ -469,27 +478,30 @@ impl FieldElement {
                     false => {
                         rr = &rr + &p;
                         rr = rr.half();
+                        
                     }
                 }
+                println!("Value on iter: {} = {:?}", _i, rr);
             }
             rr
         }
 
-
-        println!("Variable declaration");
         let (mut r, mut z) = phase1(&a.clone());
-        println!("r: {:?}, z: {:?}", r, z);
+
         r = phase2(&r, &z);
-        println!("Phase II r: {:?}", r);
-        if z >= 253 && z <= 260 {
-            r = FieldElement::inv_montgomery_mul(&r, &constants::INV_RR);
-            z = z + 260;
-        }
-        r = FieldElement::inv_montgomery_mul(&r, &constants::INV_RR);
-        r = FieldElement::inv_montgomery_mul(&r, &FieldElement::two_pow_k(&(512 - z)));
-        r
+        // Since the output of the Phase II is multiplied by `2^n`
+        // We can multiply it by the two power needed to achive the 
+        // Montgomery modulus value and then convert it back to the 
+        // normal FieldElement domain.
+        //
+        // In this case: `R = 2^260` & `n = 2^253`. 
+        // So we multiply `r * 2^7` to get R on the Montgomery domain.
+        println!("Output fase 2: {:?}", r);
+        r = &r * &FieldElement::two_pow_k(&7);
+        r.from_montgomery()
     }
 }
+    
 
 
 
@@ -504,8 +516,14 @@ pub mod tests {
     /// `A = 182687704666362864775460604089535377456991567872`
     pub static A: FieldElement = FieldElement([0, 0, 0, 2, 0]);
 
+    /// A on Montgomery domain = `(A * R (mod l)) = 474213518376757474787523690767343130291324218287585596341053150401850043342`.
+    pub static INV_MONT_A: FieldElement = FieldElement([2317332620045262, 1576144597389635, 2025859686448975, 2756776639866422, 1152749206963]);
+
     /// `(A ^ (-1)) (mod l) = 7155219595916845557842258654134856828180378438239419449390401977965479867845`.
     pub static INV_MOD_A: FieldElement = FieldElement([1289905446467013, 1277206401232501, 2632844239031511, 61125669693438, 17393375336657]);
+
+    /// gerhre
+    pub static INV_MOD_B: FieldElement = FieldElement([3843051553829520, 3394345223148522, 3244765182786547, 3746084408926180, 12088264794607]);
 
     /// `B = 904625697166532776746648320197686575422163851717637391703244652875051672039`
     pub static B: FieldElement = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370493, 2199023255551]);
@@ -553,6 +571,14 @@ pub mod tests {
         let res = &A + &B;
         for i in 0..5 {
             assert!(res[i] == A_PLUS_B[i]);
+        }
+    }
+
+    #[test]
+    fn addition_mod_0() {
+        let res = &FieldElement::minus_one() + &FieldElement::one();
+        for i in 0..5 {
+            assert!(res[i] == FieldElement::zero()[i]);
         }
     }
 
@@ -692,9 +718,25 @@ pub mod tests {
     }
 
     #[test]
+    fn to_montgomery_conv() {
+        let mont_a = &A.to_montgomery();
+        for i in 0..5 {
+            assert!(mont_a[i] == INV_MONT_A[i])
+        }
+    }
+
+    #[test]
+    fn from_montgomery_conv() {
+        let out_mont_a = &INV_MONT_A.from_montgomery();
+        for i in 0..5 {
+            assert!(out_mont_a[i] == A[i]);
+        }
+    }
+
+    #[test]
     fn montgomery_inverse() {
-        let res  = FieldElement::inverse(&A);
-        println!("Result of INV_MOD_A vs REAL RESULT -> \n {:?} \n {:?}", res.inv_from_montgomery(), INV_MOD_A);
+        let res  = FieldElement::kalinski_inverse(&A);
+        println!("res = {:?}", res);
         for i in 0..5 {
             assert!(res[i] == INV_MOD_A[i]);
         }

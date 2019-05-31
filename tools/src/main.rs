@@ -42,9 +42,15 @@ fn main() {
     */
    
     //let _ = from_scalar_base_52(&[1682248870925813, 4078880264703668, 2289123149127681, 4169238435752846, 2104335664921]);
-    
-    let x = to_scalar_base_52("904625697166532776746648320380374280088526716493097995792780030332043239911");
+    //let mut x = from_scalar_base_52(&[0, 1, 0, 0, 0]);
+    //let x = from_scalar_base_52(&[0, 0, 0, 0, 2199023255552]);
+
+    let x = to_scalar_base_52("79228162514264337593543950336");
     println!("{:?}", x);
+
+    //let res = phase1(&BigUint::from_str("182687704666362864775460604089535377456991567872").unwrap());
+    //println!("res: {} as FieldELEM: {:?}", res, to_scalar_base_52(&res.to_str_radix(10)));
+
 }
 
 /// The num has to be positive! Otherways it will fail
@@ -171,3 +177,54 @@ pub fn reduction(m: BigUint, x1: BigUint, x2: BigUint) -> Result<(), &'static st
 
     Ok(())
 }
+
+pub fn phase1(input: &BigUint) -> BigUint {
+    let p = BigUint::from_str("7237005577332262213973186563042994240832148273380272487819684194273658967345").unwrap();
+    let mut u = p.clone();
+    let mut v = input.clone();
+    let mut r = BigUint::zero();
+    let mut s = BigUint::one();
+    let two = &s + &s;
+    let mut k = 0u64;
+    while v > BigUint::zero() {
+        k+=1;
+        match(u.is_even(), v.is_even(), u > v, v >= u) {
+            // u is even
+            (true, _, _, _) => {
+
+                u = &u / &two;
+                s = (&s * &two) % &p;
+            },
+            // u isn't even but v is even
+            (false, true, _, _) => {
+
+                v = &v / &two;
+                r = (&r * &two) % &p;
+            },
+            // u and v aren't even and u > v
+            (false, false, true, _) => {
+
+                u = (&u - &v) % &p;
+                u = &u / &two;
+                r = (&r + &s) % &p;
+                s = (&s * &two) % &p;
+            },
+            // u and v aren't even and v > u
+            (false, false, false, true) => {
+
+                v = (&v - &u) % &p;
+                v = &v / &two;
+                s = (&r + &s) % &p;
+                r = (&r * &two) % &p;
+            },
+            (false, false, false, false) => panic!("InverseMod does not exist"),
+        }
+        println!("Values on iteration: {}: \nr = {:?}\ns = {:?}\nv = {:?}\nu = {:?}", k, to_scalar_base_52(&r.to_str_radix(10)), to_scalar_base_52(&s.to_str_radix(10)),to_scalar_base_52(&v.to_str_radix(10)),to_scalar_base_52(&u.to_str_radix(10)));
+    }
+    if r >= p {
+        println!("Inside if: {:?}", to_scalar_base_52(&(&r - &p).to_str_radix(10)));
+        return &r - &p;
+    }
+    println!("Outside if: {:?}", to_scalar_base_52(&(&p - &r).to_str_radix(10)));
+    &p - &r
+ }
