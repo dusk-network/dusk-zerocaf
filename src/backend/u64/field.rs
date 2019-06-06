@@ -736,10 +736,4 @@ pub mod tests {
             assert!(out_mont_a[i] == A[i]);
         }
     }
-
-    #[test]
-    fn simple() {
-        let b = FieldElement([15, 0 ,0 ,0 ,0]);
-        println!("{:?}", &b + &constants::FIELD_L);
-    }
 }
