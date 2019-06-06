@@ -195,8 +195,7 @@ impl FieldElement {
     /// input. So Little Endian representation in bytes of a FieldElement.
     // @TODO: Macro for Inline load8 function as has variadic arguments.
     #[warn(dead_code)]
-    fn from_bytes(bytes: &[u8;32]) -> Self {
-
+    pub fn from_bytes(bytes: &[u8;32]) -> Self {
         let load8 = |input: &[u8]| -> u64 {
                (input[0] as u64)
             | ((input[1] as u64) << 8)
@@ -703,6 +702,7 @@ pub mod tests {
             assert!(max[i] == TWO_POW_252[i]);
         }
 
+      
         // Check for non 52-multiple `k` values
         let non_multiple = FieldElement::two_pow_k(&197u64);
         for i in 0..5 {
