@@ -7,8 +7,6 @@ use crate::constants;
 
 
 use subtle::Choice;
-use subtle::ConditionallyNegatable;
-use subtle::ConditionallySelectable;
 use subtle::ConstantTimeEq;
 
 use std::default::Default;
@@ -129,13 +127,14 @@ impl Neg for EdwardsPoint {
     }
 }
 
-#[allow(non_snake_case)]
 impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Add two EdwardsPoints and give the resulting `EdwardsPoint`.
     /// Cost: 9M + 1*a + 7add.
     /// Cost: 9M + 1*a + 6add dependent upon the first point.
+    /// This implementation is speciffic for curves with `a = -1` as Doppio is.
     /// Source: 2008 Hisil–Wong–Carter–Dawson, http://eprint.iacr.org/2008/522, Section 3.1.
+    #[inline]
     fn add(self, other: &'b EdwardsPoint) -> EdwardsPoint {
         let A: FieldElement = &self.X * &other.X;
         let B: FieldElement = &self.Y * &other.Y;
