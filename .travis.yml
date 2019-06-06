@@ -1,0 +1,18 @@
+language: rust
+branches: 
+  only:
+  - master
+
+cache: cargo
+
+matrix:
+  fast_finish: false
+  include:
+  - rust: stable
+  - rust: beta
+  - rust: nightly
+
+script:
+  - cargo check
+  - cargo build --release --no-default-features --features "u64_backend" --verbose --all
+  - cargo test --verbose --all
