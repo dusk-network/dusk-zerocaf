@@ -454,10 +454,10 @@ impl FieldElement {
                 println!("Values on iteration: {}: \nr = {:?}\ns = {:?}\nv = {:?}\nu = {:?}\n", k, &r, &s,&v, &u);
             }
             if r >= p {
-                println!("Inside if: {:?}", &r - &p);
-                return (&r -&p, k);
+                println!("Inside if: {:?} {}", &r - &p, k);
+                r = &r - &p;
             }
-            println!("Outside if: {:?}", &p - &r);
+            println!("Outside if: {:?} {}", &p - &r, k);
             (&p - &r, k)
         }
 
@@ -470,20 +470,20 @@ impl FieldElement {
             let mut rr = r.clone();
             let p = &constants::FIELD_L;
 
-            for _i in 1..(k-253) {
+            for _i in 1..=(k-253) {
                 match rr.is_even() {
                     true => {
                         rr = rr.half();
                     },
                     false => {
                         rr = &rr + &p;
+                        println!("Value on iter: {} after addition for p = {:?}", _i, rr);
                         rr = rr.half();
-                        
+                        println!("Value on iter: {} after performing half = {:?}", _i, rr);
                     }
                 }
-                println!("Value on iter: {} = {:?}", _i, rr);
             }
-            rr
+            rr 
         }
 
         let (mut r, mut z) = phase1(&a.clone());
@@ -496,7 +496,6 @@ impl FieldElement {
         //
         // In this case: `R = 2^260` & `n = 2^253`. 
         // So we multiply `r * 2^7` to get R on the Montgomery domain.
-        println!("Output fase 2: {:?}", r);
         r = &r * &FieldElement::two_pow_k(&7);
         r.from_montgomery()
     }
@@ -508,6 +507,7 @@ impl FieldElement {
 pub mod tests {
 
     use crate::backend::u64::field::FieldElement;
+    use crate::backend::u64::constants as constants;
     use crate::scalar::Ristretto255Scalar;
 
     /// Bytes representation of `-1 (mod l) = 7237005577332262213973186563042994240857116359379907606001950938285454250988`
@@ -522,7 +522,7 @@ pub mod tests {
     /// `(A ^ (-1)) (mod l) = 7155219595916845557842258654134856828180378438239419449390401977965479867845`.
     pub static INV_MOD_A: FieldElement = FieldElement([1289905446467013, 1277206401232501, 2632844239031511, 61125669693438, 17393375336657]);
 
-    /// gerhre
+    /// `(B ^ (-1)) (mod l) = 4972823702408169985605068068612629707457302171484944010058343536981337191056`.
     pub static INV_MOD_B: FieldElement = FieldElement([3843051553829520, 3394345223148522, 3244765182786547, 3746084408926180, 12088264794607]);
 
     /// `B = 904625697166532776746648320197686575422163851717637391703244652875051672039`
@@ -735,10 +735,17 @@ pub mod tests {
 
     #[test]
     fn montgomery_inverse() {
-        let res  = FieldElement::kalinski_inverse(&A);
-        println!("res = {:?}", res);
+        let res  = FieldElement::kalinski_inverse(&B);
+        println!("{:?}", res);
         for i in 0..5 {
-            assert!(res[i] == INV_MOD_A[i]);
+            assert!(res[i] == INV_MOD_B[i]);
         }
+    }
+
+    #[test]
+    fn simple() {
+        let a = FieldElement([3682047535687540, 713963971277339, 4135738758508313, 881179025816103, 11263772309182]);
+        let b = FieldElement([2, 0 ,0 ,0 ,0]);
+        println!("{:?}", &a * &b);
     }
 }
