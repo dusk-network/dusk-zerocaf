@@ -587,6 +587,15 @@ pub mod tests {
     }
 
     #[test]
+    fn add_L() {
+        let a: FieldElement = FieldElement([2, 0, 0, 0 ,0]);
+        let res = &a + &constants::FIELD_L;
+        for i in 0..5 {
+            assert!(res[i] == a[i]);
+        }
+    }
+
+    #[test]
     fn subtraction_with_mod() {
         let res = &A - &B;
         for i in 0..5 {
@@ -607,6 +616,15 @@ pub mod tests {
         let res = &B - &B;
         for i in 0..5 {
             assert!(res[i] == FieldElement::zero()[i]);
+        }
+    }
+
+    #[test]
+    fn subtract_L() {
+        let a: FieldElement = FieldElement([2, 0, 0, 0 ,0]);
+        let res = &a - &constants::FIELD_L;
+        for i in 0..5 {
+            assert!(res[i] == a[i]);
         }
     }
 
