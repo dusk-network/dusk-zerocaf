@@ -386,7 +386,10 @@ impl FieldElement {
         FieldElement::montgomery_reduce(&limbs)
     }
 
+    // We will leave Kalinski_inverse stoped until we can see if an addition
+    // chain method exists for Doppio or we can create it.
 
+    /*
     /// Compute `a^-1 (mod l)` using the the Kalinski implementation
     /// of the Montgomery Modular Inverse algorithm.
     /// B. S. Kaliski Jr. - The  Montgomery  inverse  and  its  applica-tions.
@@ -499,6 +502,7 @@ impl FieldElement {
         r = &r * &FieldElement::two_pow_k(&7);
         r.from_montgomery()
     }
+    */
 }
     
 
@@ -734,18 +738,8 @@ pub mod tests {
     }
 
     #[test]
-    fn montgomery_inverse() {
-        let res  = FieldElement::kalinski_inverse(&B);
-        println!("{:?}", res);
-        for i in 0..5 {
-            assert!(res[i] == INV_MOD_B[i]);
-        }
-    }
-
-    #[test]
     fn simple() {
-        let a = FieldElement([3682047535687540, 713963971277339, 4135738758508313, 881179025816103, 11263772309182]);
-        let b = FieldElement([2, 0 ,0 ,0 ,0]);
-        println!("{:?}", &a * &b);
+        let b = FieldElement([15, 0 ,0 ,0 ,0]);
+        println!("{:?}", &b + &constants::FIELD_L);
     }
 }
