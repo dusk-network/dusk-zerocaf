@@ -94,16 +94,17 @@ Note: the refactoring relations are expressed as indentations
         - [x] Implement Montgomery_Muliplication.
         - [x] Implement Montgomery_Squaring.
         - [x] Implement tests of Montgomery Arithmetics. (under revision)
-- [x] Create Conversions from Montgomery points to Weierstrass ones. 
 - [ ] Create FieldElement Struct and implement the basic operations we need on a u64 backend.
   - [x] Find the proper radix value for FieldElement.
   - [x] Add basic and needed constants.
-  - [ ] Implement Reduce function to make the FieldElements fit on a 5 u64-bit limbs.
+  - [x] Implement Reduce function to make the FieldElements fit on a 5 u64-bit limbs.
     - [x] Implement Addition.
     - [x] Implement Subtraction.
     - [x] Implement Byte-encoding/decoding.
     - [x] Implement Multiplication on u64-backend with u128 usage.
-  - [ ] Add proper tests for every function.
+    - [ ] Implement Modular inversion.
+    - [ ] Research about addition chains inversion methods.
+  - [x] Add proper tests for every function.
 - [ ] Implement Edwards points
      - [ ] Create projective co-ordiantes
      - [ ] Implement Point Addition for projective coordinates
@@ -113,8 +114,6 @@ Note: the refactoring relations are expressed as indentations
      - [ ] Implement compressed Edwards point Y-coordinate 
      - [ ] Implement multiplication for scalar with Edwards basepoint
     - [x] Represent Edwards points as Ristretto points using wrapping function (research)
-    - [ ] Complete the inverse Montgomery algorithm 
-        - [ ] Implement inverse for FieldElement
     - [ ] Cargo doc testing and improvement
     - [ ] Re-define Edwards point struct
     - [ ] Decide the best use cases of the various Edwards coordinate types (compressed, standard, extended, projective)
