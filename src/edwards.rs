@@ -2,11 +2,18 @@
 
 use crate::field::FieldElement;
 use crate::scalar::Scalar;
+use crate::montgomery::MontgomeryPoint;
+use crate::constants;
+
 
 use subtle::Choice;
 use subtle::ConditionallyNegatable;
 use subtle::ConditionallySelectable;
 use subtle::ConstantTimeEq;
+
+use std::default::Default;
+use std::ops::{Add, Sub, Mul, Neg};
+use std::fmt::Debug;
 
 /// The first 255 bits of a `CompressedEdwardsY` represent the
 /// \\(y\\)-coordinate.  The high bit of the 32nd byte gives the sign of \\(x\\).
@@ -15,13 +22,13 @@ pub struct CompressedEdwardsY(pub [u8; 32]);
 
 impl ConstantTimeEq for CompressedEdwardsY {
     fn ct_eq(&self, other: &CompressedEdwardsY) -> Choice {
-        self.as_bytes().ct_eq(other.as_bytes())
+        self.to_bytes().ct_eq(&other.to_bytes())
     }
 }
 
 impl Debug for CompressedEdwardsY {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
-        write!(f, "CompressedEdwardsY: {:?}", self.as_bytes())
+        write!(f, "CompressedEdwardsY: {:?}", self.to_bytes())
     }
 }
 
@@ -36,6 +43,11 @@ impl CompressedEdwardsY {
     ///
     /// Returns `Err` if the input is not the \\(y\\)-coordinate of a
     /// curve point.
+    pub fn decompress(&self) -> Option<EdwardsPoint> {
+        unimplemented!();
+    }
+}
+/* Need to implement Identity trait.
     pub fn decompress(&self) -> Result<EdwardsPoint> {
         unimplemented!();
     }
@@ -54,7 +66,7 @@ impl Default for CompressedEdwardsY {
     fn default() -> CompressedEdwardsY {
         CompressedEdwardsY::identity()
     }
-}
+}*/
 
 impl CompressedEdwardsY {
     /// Construct a `CompressedEdwardsY` from a slice of bytes.
@@ -89,19 +101,15 @@ impl PartialEq for EdwardsPoint {
     }
 }
 
-impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
-    type Output = EdwardsPoint;
-    /// Add two EdwardsPoints and give the resulting `EdwardsPoint`
-    fn add(self, other: &'b EdwardsPoint) -> EdwardsPoint {
-        unimplemented!()
-    }
-}
-
-impl<'a, 'b> Sub<&'b EdwardsPoint> for &'a EdwardsPoint {
-    type Output = EdwardsPoint;
-    /// Substract two EdwardsPoints and give the resulting `EdwardsPoint`
-    fn sub(self, other: &'b EdwardsPoint) -> EdwardsPoint {
-        unimplemented!()
+impl Default for EdwardsPoint {
+    /// Returns the default EdwardsPoint Coordinates: (0, 1, 1, 0). 
+    fn default() -> EdwardsPoint {
+        EdwardsPoint {
+            X: FieldElement::zero(),
+            Y: FieldElement::one(),
+            Z: FieldElement::one(),
+            T: FieldElement::zero()
+        }
     }
 }
 
@@ -109,6 +117,48 @@ impl<'a> Neg for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Negates an `EdwardsPoint` giving it as a result
     fn neg(self) -> EdwardsPoint {
+       unimplemented!()
+    }
+}
+
+impl Neg for EdwardsPoint {
+    type Output = EdwardsPoint;
+    /// Negates an `EdwardsPoint` giving it as a result
+    fn neg(self) -> EdwardsPoint {
+        -&self
+    }
+}
+
+#[allow(non_snake_case)]
+impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
+    type Output = EdwardsPoint;
+    /// Add two EdwardsPoints and give the resulting `EdwardsPoint`.
+    /// Cost: 9M + 1*a + 7add.
+    /// Cost: 9M + 1*a + 6add dependent upon the first point.
+    /// Source: 2008 Hisil–Wong–Carter–Dawson, http://eprint.iacr.org/2008/522, Section 3.1.
+    fn add(self, other: &'b EdwardsPoint) -> EdwardsPoint {
+        let A: FieldElement = &self.X * &other.X;
+        let B: FieldElement = &self.Y * &other.Y;
+        let C: FieldElement = &self.Z * &other.T;
+        let D: FieldElement = &self.T * &other.Z;
+        let E: FieldElement = &D + &C;
+        let F: FieldElement = &(&(&(&self.X - &self.Y) * &(&other.X - &other.Y)) + &A) + &B;
+        let G: FieldElement = &(&B + &constants::EDWARDS_A) * &A;
+        let H: FieldElement = &D - &C;
+
+        EdwardsPoint{
+            X: &E * &F,
+            Y: &G * &H,
+            Z: &F * &G,
+            T: &E * &H
+        }
+    }
+}
+
+impl<'a, 'b> Sub<&'b EdwardsPoint> for &'a EdwardsPoint {
+    type Output = EdwardsPoint;
+    /// Substract two EdwardsPoints and give the resulting `EdwardsPoint`
+    fn sub(self, other: &'b EdwardsPoint) -> EdwardsPoint {
         unimplemented!()
     }
 }
@@ -133,19 +183,6 @@ impl<'a, 'b> Mul<&'b EdwardsPoint> for &'a Scalar {
 
 
 impl EdwardsPoint {
-    /// Convert to a ProjectiveNielsPoint
-    pub(crate) fn to_projective_niels(&self) -> ProjectiveNielsPoint {
-        unimplemented!()
-        }
-    }
-
-    /// Convert the representation of this point from extended
-    /// coordinates to projective coordinates.
-    pub(crate) fn to_projective(&self) -> ProjectivePoint {
-        unimplemented!()
-    }
-
-
     /// Convert this `EdwardsPoint` on the Edwards model to the
     /// corresponding `MontgomeryPoint` on the Montgomery model.
     pub fn to_montgomery(&self) -> MontgomeryPoint {
@@ -166,4 +203,11 @@ impl EdwardsPoint {
     pub(crate) fn mul_by_pow_2(&self, k: u32) -> EdwardsPoint {
         unimplemented!()
     }
+}
+
+pub mod tests {
+    use super::*;
+    use constants::*;
+
+
 }
