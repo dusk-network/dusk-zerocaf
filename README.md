@@ -94,23 +94,37 @@ Note: the refactoring relations are expressed as indentations
         - [x] Implement Montgomery_Muliplication.
         - [x] Implement Montgomery_Squaring.
         - [x] Implement tests of Montgomery Arithmetics. (under revision)
-- [ ] Create Conversions from Montgomery points to Weierstrass ones. 
 - [ ] Create FieldElement Struct and implement the basic operations we need on a u64 backend.
   - [x] Find the proper radix value for FieldElement.
-  - [ ] Add basic and needed constants.
-  - [ ] Implement Reduce function to make the FieldElements fit on a 5 u64-bit limbs.
+  - [x] Add basic and needed constants.
+  - [x] Implement Reduce function to make the FieldElements fit on a 5 u64-bit limbs.
     - [x] Implement Addition.
     - [x] Implement Subtraction.
     - [x] Implement Byte-encoding/decoding.
     - [x] Implement Multiplication on u64-backend with u128 usage.
-  - [ ] Add proper tests for every function.
+    - [ ] Implement Modular inversion.
+    - [ ] Research about addition chains inversion methods.
+  - [x] Add proper tests for every function.
 - [ ] Implement Edwards points
      - [ ] Create projective co-ordiantes
-     - [ ] Implement from byte conversions
-     - [ ] Implement to byte conversions
+     - [ ] Implement Point Addition for projective coordinates
+     - [ ] Implement Point Subtraction for projective coordinates
+     - [x] Implement from byte conversions
+     - [x] Implement to byte conversions
      - [ ] Implement compressed Edwards point Y-coordinate 
      - [ ] Implement multiplication for scalar with Edwards basepoint
     - [x] Represent Edwards points as Ristretto points using wrapping function (research)
+    - [ ] Cargo doc testing and improvement
+    - [ ] Re-define Edwards point struct
+    - [ ] Decide the best use cases of the various Edwards coordinate types (compressed, standard, extended, projective)
+    - [ ] Benchmark different implementations and algorithms
+    - [ ] Create About Niels and ProjectiveNiels coordinates usage
+    - [ ] Implement Montgomery and Edwards operations & functions
+    - [ ] Implement Ristretto Mapping
+    - [ ] Build and test torsion points
+   
+
+
 
   
 

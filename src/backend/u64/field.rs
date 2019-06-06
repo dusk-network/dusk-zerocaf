@@ -1,22 +1,27 @@
-//! Field arithmetic modulo `2^252 + 27742317777372353535851937790883648493` 
+//! Field arithmetic modulo `2^252 + 27742317777372353535851937790883648493`
 //! using 64-bit limbs with 128-bit products
 
 use core::fmt::Debug;
 use std::default::Default;
+use std::cmp::{PartialOrd, Ordering, Ord};
+
 use core::ops::{Index, IndexMut};
 use core::ops::Add;
 use core::ops::Sub;
 use core::ops::Mul;
+
+use num::Integer;
+
 use crate::backend::u64::constants;
 use crate::scalar::Ristretto255Scalar;
 
-/// A `FieldElement` represents an element into the field 
+/// A `FieldElement` represents an element into the field
 /// `2^252 + 27742317777372353535851937790883648493`
-/// 
-/// In the 64-bit backend implementation, the `FieldElement is 
+///
+/// In the 64-bit backend implementation, the `FieldElement is
 /// represented in radix `2^52`
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq)]
 pub struct FieldElement(pub [u64;5] );
 
 impl Debug for FieldElement {
@@ -38,6 +43,25 @@ impl IndexMut<usize> for FieldElement {
     }
 }
 
+impl PartialOrd for FieldElement {
+    fn partial_cmp(&self, other: &FieldElement) -> Option<Ordering> {
+        Some(self.cmp(&other))
+    }
+}
+
+impl Ord for FieldElement {
+    fn cmp(&self, other: &Self) -> Ordering {
+        for i in (0..5).rev() {
+            if self[i] > other[i] {
+                return Ordering::Greater;
+            }else if self[i] < other[i] {
+                return Ordering::Less;
+            }
+        }
+        Ordering::Equal
+    }
+}
+
 impl<'a, 'b> Add<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
     /// Compute `a + b` (mod l)
@@ -52,20 +76,20 @@ impl<'a, 'b> Add<&'b FieldElement> for &'a FieldElement {
             sum[i] = carry & mask;
         }
         // subtract l if the sum is >= l
-        sum.sub(&constants::FIELD_L)
+        &sum - &constants::FIELD_L
     }
 }
- 
+
 impl<'a, 'b> Sub<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
-    /// Compute `a - b (mod l)` 
+    /// Compute `a - b (mod l)`
     fn sub(self, b: &'b FieldElement) -> FieldElement {
-        let mut sub = 0u64; 
-        let mut difference: FieldElement = FieldElement::zero(); 
+        let mut sub = 0u64;
+        let mut difference: FieldElement = FieldElement::zero();
         let mask = (1u64 << 52) - 1;
         // Save wrapping_sub result. Store as a reminder on the next limb.
-        for i in 0..5 { 
-            sub = self.0[i].wrapping_sub(b[i] + (sub >> 63));  
+        for i in 0..5 {
+            sub = self.0[i].wrapping_sub(b[i] + (sub >> 63));
             difference[i] = sub & mask;
         }
         // Conditionaly add l, if difference is negative.
@@ -76,15 +100,15 @@ impl<'a, 'b> Sub<&'b FieldElement> for &'a FieldElement {
         for i in 0..5 {
             carry = (carry >> 52) + difference[i] + (constants::FIELD_L[i] & underflow_mask);
             difference[i] = carry & mask;
-        } 
-        difference 
-    }   
+        }
+        difference
+    }
 }
 
 impl<'a, 'b> Mul<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
     fn mul(self, _rhs: &'b FieldElement) -> FieldElement {
-        let prod = FieldElement::montgomery_reduce(&FieldElement::mul_internal(self, _rhs)); 
+        let prod = FieldElement::montgomery_reduce(&FieldElement::mul_internal(self, _rhs));
         FieldElement::montgomery_reduce(&FieldElement::mul_internal(&prod, &constants::RR_FIELD))
     }
 }
@@ -98,7 +122,7 @@ impl Default for FieldElement {
 
 impl<'a> From<&'a Ristretto255Scalar> for FieldElement {
     /// Given a Ristretto255Scalar on canonical bytes representation
-    /// get it's FieldElement equivalent value as 5 limbs and 
+    /// get it's FieldElement equivalent value as 5 limbs and
     /// radix-52.
     fn from(origin: &'a Ristretto255Scalar) -> FieldElement {
         let origin_bytes = origin.to_bytes();
@@ -108,7 +132,7 @@ impl<'a> From<&'a Ristretto255Scalar> for FieldElement {
 
 impl Into<Ristretto255Scalar> for FieldElement {
     /// Given a FieldElement reference get it's
-    /// Ristretto255Scalar Equivalent on it's 
+    /// Ristretto255Scalar Equivalent on it's
     /// canonical bytes representation.
     fn into(self) -> Ristretto255Scalar {
         Ristretto255Scalar::from_canonical_bytes(self.to_bytes()).unwrap()
@@ -139,6 +163,34 @@ impl FieldElement {
         FieldElement([671914833335276, 3916664325105025, 1367801, 0, 17592186044416])
     }
 
+    /// Evaluate if a `FieldElement` is even or not.
+    pub fn is_even(self) -> bool {
+        self.0[0].is_even()
+    }
+
+    /// Give the half of the FieldElement value (mod l).
+    pub fn half(&self) -> FieldElement {
+        let mut res = self.clone();
+        let mut remainder = 0u64;
+        for i in (0..5).rev() {
+            res[i] = res[i] + remainder;
+            match(res[i] == 1, res[i].is_even()){
+                (true, _) => {
+                    remainder = 4503599627370496u64;
+                }
+                (_, false) => {
+                    res[i] = res[i] - 1u64;
+                    remainder = 4503599627370496u64;
+                }
+                (_, true) => {
+                    remainder = 0;
+                }
+            }
+        res[i] = res[i] >> 1;
+        };
+        res
+    }
+
     /// Load a `FieldElement` from the low 253b   bits of a 256-bit
     /// input. So Little Endian representation in bytes of a FieldElement.
     // @TODO: Macro for Inline load8 function as has variadic arguments.
@@ -156,7 +208,7 @@ impl FieldElement {
         };
 
         let low_52_bit_mask = (1u64 << 52) - 1;
-        
+
         FieldElement(
         // load bits [  0, 64), no shift
         [  load8(&bytes[ 0..])        & low_52_bit_mask
@@ -216,6 +268,42 @@ impl FieldElement {
         res
     }
 
+    /// Given a `k`: u64, compute `2^k` giving the resulting result
+    /// as a `FieldElement`.
+    /// Note that the input must be between the range => 0..260.
+    /// 
+    /// NOTE: Usually, we will say 253, but since on some operations as
+    /// inversion we need to exponenciate to greater values, we set the
+    /// max on the Montgomery modulo so `260`.
+    pub fn two_pow_k(exp: &u64) -> FieldElement {
+        let mut res = FieldElement::zero();
+
+        // Check that exp has to be less than 260.
+        // Note that a FieldElement can be as much
+        // `2^252 + 27742317777372353535851937790883648493` so we pick
+        // 253 knowing that 252 will be less than `FIELD_L`.
+        debug_assert!(exp < &260u64);
+        match exp {
+            0...51 => {
+               res[0]  = 1u64 << exp;
+            },
+            52...103 => {
+                res[1] = 1u64 << (exp - 52);
+            },
+            104...155 => {
+                res[2] = 1u64 << (exp - 104);
+            },
+            156...207 => {
+                res[3] = 1u64 << (exp - 156);
+            },
+            _ => {
+                res[4] = 1u64 << (exp - 208);
+            }
+        }
+
+        res
+    }
+
     /// Compute `a * b` with the function multiplying helper
     #[inline]
     pub fn mul_internal(a: &FieldElement, b: &FieldElement) -> [u128; 9] {
@@ -254,7 +342,7 @@ impl FieldElement {
 
         // FIELD_L[3] = 0 so we can skip these products.
         let l = &constants::FIELD_L;
-        
+
         // the first half computes the Montgomery adjustment factor n, and begins adding n*l to make limbs divisible by R
         let (carry, n0) = adjustment_fact(        limbs[0]);
         let (carry, n1) = adjustment_fact(carry + limbs[1] + m(n0,l[1]));
@@ -272,22 +360,174 @@ impl FieldElement {
         // result may be >= r, so attempt to subtract l
         FieldElement([r0,r1,r2,r3,r4]).sub(l)
     }
+
+    //--------------------InverseModMontgomery tools-----------------------//
+
+    /// Compute `(a * b) / R` (mod l), where R is the Montgomery modulus 2^253
+    #[inline]
+    pub fn montgomery_mul(a: &FieldElement, b: &FieldElement) -> FieldElement {
+        FieldElement::montgomery_reduce(&FieldElement::mul_internal(a, b))
+    }
+
+    /// Puts a Scalar into Montgomery form, i.e. computes `a*R (mod l)`
+    #[inline]
+    pub fn to_montgomery(&self) -> FieldElement {
+        FieldElement::montgomery_mul(self, &constants::RR_FIELD)
+    }
+
+    /// Takes a FieldElement out of Montgomery form, i.e. computes `a/R (mod l)`
+    #[inline]
+    pub fn from_montgomery(&self) -> FieldElement {
+        let mut limbs = [0u128; 9];
+        for i in 0..5 {
+            limbs[i] = self[i] as u128;
+        }
+        FieldElement::montgomery_reduce(&limbs)
+    }
+
+    // We will leave Kalinski_inverse stoped until we can see if an addition
+    // chain method exists for Doppio or we can create it.
+
+    /*
+    /// Compute `a^-1 (mod l)` using the the Kalinski implementation
+    /// of the Montgomery Modular Inverse algorithm.
+    /// B. S. Kaliski Jr. - The  Montgomery  inverse  and  its  applica-tions.
+    /// IEEE Transactions on Computers, 44(8):1064–1065, August-1995
+    #[inline]
+    pub (crate) fn kalinski_inverse(a: &FieldElement) -> FieldElement {
+
+        /// This Phase I indeed is the Binary GCD algorithm , a version o Stein's algorithm
+        /// which tries to remove the expensive division operation away from the Classical
+        /// Euclidean GDC algorithm replacing it for Bit-shifting, subtraction and comparaison.
+        /// 
+        /// Output = `a^(-1) * 2^k (mod l)
+        /// 
+        /// Stein, J.: Computational problems associated with Racah algebra.J. Comput. Phys.1, 397–405 (1967)
+        /// 
+        /// 
+        /// Mentioned on: SPECIAL ISSUE ON MONTGOMERY ARITHMETIC. 
+        /// Montgomery inversion - Erkay Sava ̧s & Çetin Kaya Koç
+        /// J Cryptogr Eng (2018) 8:201–210
+        /// https://doi.org/10.1007/s13389-017-0161-x
+        #[inline]
+        fn phase1(a: &FieldElement) -> (FieldElement, u64) {
+            // Declare L = 2^252 + 27742317777372353535851937790883648493
+            let p = FieldElement([517551446070577, 842026395247552, 136780, 0, 17592186044416]);
+            let mut u = p.clone();
+            let mut v = a.clone();
+            let mut r = FieldElement::zero();
+            let mut s = FieldElement::one();
+            let two = FieldElement([2, 0, 0, 0, 0]); 
+            let mut k = 0u64;
+
+            while v > FieldElement::zero() {
+                k += 1;
+                match(u.is_even(), v.is_even(), u > v, v >= u) {
+                    // u is even
+                    (true, _, _, _) => {
+
+                        u = u.half();
+                        s = &s * &two;
+                    },
+                    // u isn't even but v is even
+                    (false, true, _, _) => {
+
+                        v = v.half();
+                        r = &r * &two;
+                    },
+                    // u and v aren't even and u > v
+                    (false, false, true, _) => {
+
+                        u = &u - &v;
+                        u = u.half();
+                        r = &r + &s;
+                        s = &s * &two;
+                    },
+                    // u and v aren't even and v > u
+                    (false, false, false, true) => {
+
+                        v = &v - &u;
+                        v = v.half();
+                        s = &r + &s;
+                        r = &r * &two;
+                    },
+                    (false, false, false, false) => panic!("InverseMod does not exist"),
+                }
+                println!("Values on iteration: {}: \nr = {:?}\ns = {:?}\nv = {:?}\nu = {:?}\n", k, &r, &s,&v, &u);
+            }
+            if r >= p {
+                println!("Inside if: {:?} {}", &r - &p, k);
+                r = &r - &p;
+            }
+            println!("Outside if: {:?} {}", &p - &r, k);
+            (&p - &r, k)
+        }
+
+        /// Phase II performs some adjustments to obtain
+        /// the Montgomery inverse.
+        /// 
+        /// Output: `a^(-1) * 2^n  (mod l)`  where `n = 253 = log2(p) = log2(FIELD_L)`
+        #[inline]
+        fn phase2(r: &FieldElement, k: &u64) -> FieldElement {
+            let mut rr = r.clone();
+            let p = &constants::FIELD_L;
+
+            for _i in 1..=(k-253) {
+                match rr.is_even() {
+                    true => {
+                        rr = rr.half();
+                    },
+                    false => {
+                        rr = &rr + &p;
+                        println!("Value on iter: {} after addition for p = {:?}", _i, rr);
+                        rr = rr.half();
+                        println!("Value on iter: {} after performing half = {:?}", _i, rr);
+                    }
+                }
+            }
+            rr 
+        }
+
+        let (mut r, mut z) = phase1(&a.clone());
+
+        r = phase2(&r, &z);
+        // Since the output of the Phase II is multiplied by `2^n`
+        // We can multiply it by the two power needed to achive the 
+        // Montgomery modulus value and then convert it back to the 
+        // normal FieldElement domain.
+        //
+        // In this case: `R = 2^260` & `n = 2^253`. 
+        // So we multiply `r * 2^7` to get R on the Montgomery domain.
+        r = &r * &FieldElement::two_pow_k(&7);
+        r.from_montgomery()
+    }
+    */
 }
+    
 
 
 
 pub mod tests {
 
     use crate::backend::u64::field::FieldElement;
-    use crate::backend::u64::constants;
+    use crate::backend::u64::constants as constants;
     use crate::scalar::Ristretto255Scalar;
 
     /// Bytes representation of `-1 (mod l) = 7237005577332262213973186563042994240857116359379907606001950938285454250988`
     pub(crate) static MINUS_ONE_BYTES: [u8; 32] = [236, 211, 245, 92, 26, 99, 18, 88, 214, 156, 247, 162, 222, 249, 222, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16];
-    
+
     /// `A = 182687704666362864775460604089535377456991567872`
     pub static A: FieldElement = FieldElement([0, 0, 0, 2, 0]);
- 
+
+    /// A on Montgomery domain = `(A * R (mod l)) = 474213518376757474787523690767343130291324218287585596341053150401850043342`.
+    pub static INV_MONT_A: FieldElement = FieldElement([2317332620045262, 1576144597389635, 2025859686448975, 2756776639866422, 1152749206963]);
+
+    /// `(A ^ (-1)) (mod l) = 7155219595916845557842258654134856828180378438239419449390401977965479867845`.
+    pub static INV_MOD_A: FieldElement = FieldElement([1289905446467013, 1277206401232501, 2632844239031511, 61125669693438, 17393375336657]);
+
+    /// `(B ^ (-1)) (mod l) = 4972823702408169985605068068612629707457302171484944010058343536981337191056`.
+    pub static INV_MOD_B: FieldElement = FieldElement([3843051553829520, 3394345223148522, 3244765182786547, 3746084408926180, 12088264794607]);
+
     /// `B = 904625697166532776746648320197686575422163851717637391703244652875051672039`
     pub static B: FieldElement = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370493, 2199023255551]);
 
@@ -295,19 +535,31 @@ pub mod tests {
     pub static C: FieldElement = FieldElement([2009874587549, 0, 0, 0, 0]);
 
     /// `A + B (mod l) = 904625697166532776746648320380374280088526716493097995792780030332043239911`
-    pub static A_PLUS_B: FieldElement = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370495, 2199023255551]); 
+    pub static A_PLUS_B: FieldElement = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370495, 2199023255551]);
 
     /// `A - B (mod l) = 6332379880165729437226538243027995370101315372437730818388241662867394146822`
     pub static A_MINUS_B: FieldElement = FieldElement([2409288332882438, 4182428486726422, 2114509, 4, 15393162788864]);
 
+    /// `(A - B) / 2 (mod l) = 3166189940082864718613269121513997685050657686218865409194120831433697073411`
+    pub static A_MINUS_B_HALF: FieldElement = FieldElement([1204644166441219, 4343014057048459, 1057254, 2, 7696581394432]);
+
     /// `B - A (mod l) = 904625697166532776746648320014998870755800986942176787613709275418060104167`
-    pub static B_MINUS_A: FieldElement = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370491, 2199023255551]);  
-    
+    pub static B_MINUS_A: FieldElement = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370491, 2199023255551]);
+
     /// `A * B (mod l) = 918847811638530094170030839746468112210851935758749834752998326598248143582`
     pub static A_TIMES_B: FieldElement = FieldElement([2201910185007838, 1263014888683320, 1977367609994094, 4238575041099341, 2233595300724]);
 
     /// `A * C (mod l) = 367179375066579585494548942140953299433414959963106839625728`
     pub static A_TIMES_C: FieldElement = FieldElement([0, 0, 0, 4019749175098, 0]);
+
+    /// `2^197 (mod l) = 200867255532373784442745261542645325315275374222849104412672`
+    pub static TWO_POW_197: FieldElement = FieldElement([0, 0, 0, 2199023255552, 0]);
+
+    /// `2^252 (mod l) = 7237005577332262213973186563042994240829374041602535252466099000494570602496`
+    pub static TWO_POW_252: FieldElement = FieldElement([0, 0, 0, 0, 17592186044416]);
+
+    /// `2^104 (mod l) = 20282409603651670423947251286016`
+    pub static TWO_POW_104: FieldElement = FieldElement([0, 0, 1, 0, 0]);
 
     #[test]
     fn addition_with_modulo() {
@@ -322,6 +574,23 @@ pub mod tests {
         let res = &A + &B;
         for i in 0..5 {
             assert!(res[i] == A_PLUS_B[i]);
+        }
+    }
+
+    #[test]
+    fn addition_mod_0() {
+        let res = &FieldElement::minus_one() + &FieldElement::one();
+        for i in 0..5 {
+            assert!(res[i] == FieldElement::zero()[i]);
+        }
+    }
+
+    #[test]
+    fn add_L() {
+        let a: FieldElement = FieldElement([2, 0, 0, 0 ,0]);
+        let res = &a + &constants::FIELD_L;
+        for i in 0..5 {
+            assert!(res[i] == a[i]);
         }
     }
 
@@ -350,6 +619,15 @@ pub mod tests {
     }
 
     #[test]
+    fn subtract_L() {
+        let a: FieldElement = FieldElement([2, 0, 0, 0 ,0]);
+        let res = &a - &constants::FIELD_L;
+        for i in 0..5 {
+            assert!(res[i] == a[i]);
+        }
+    }
+
+    #[test]
     fn mul_with_modulo() {
         let res = &A * &B;
         for i in 0..5 {
@@ -364,7 +642,7 @@ pub mod tests {
             assert!(res[i] == A_TIMES_C[i]);
         }
     }
- 
+
     #[test]
     fn from_bytes_conversion() {
         let num = FieldElement::from_bytes(&MINUS_ONE_BYTES);
@@ -410,6 +688,70 @@ pub mod tests {
         }
     }
 
+    #[test]
+    fn two_pow_k() {
+        // Check for 0 value
+        let zero = FieldElement::two_pow_k(&0u64);
+        for i in 0..5 {
+            assert!(zero[i] == FieldElement::one()[i]);
+        }
 
+        // Check for MAX value
+        let max = FieldElement::two_pow_k(&252u64);
+        for i in 0..5 {
+            assert!(max[i] == TWO_POW_252[i]);
+        }
+
+      
+        // Check for non 52-multiple `k` values
+        let non_multiple = FieldElement::two_pow_k(&197u64);
+        for i in 0..5 {
+            assert!(non_multiple[i] == TWO_POW_197[i]);
+        }
+
+        // Check for 52-multiple `k` values
+        let non_multiple = FieldElement::two_pow_k(&104u64);
+        for i in 0..5 {
+            assert!(non_multiple[i] == TWO_POW_104[i]);
+        }
+    }
+
+    #[test]
+    fn ord_impl() {
+        assert!(&FieldElement([2, 0, 0, 0, 0]) < &FieldElement([0, 2, 0, 0, 0]));
+        assert!(&FieldElement([0, 0, 0, 0, 1]) > &FieldElement([0, 2498436546, 6587652167965486, 0, 0]));
+        assert!(&FieldElement([0, 1, 2, 3, 4]) == &FieldElement([0, 1, 2, 3, 4]));
+    }
+
+    #[test]
+    fn half() {
+        let two_pow_52: FieldElement = FieldElement([0, 1, 0, 0, 0]);
+        let half: FieldElement = FieldElement([2251799813685248, 0, 0, 0, 0]);
+
+        let comp_half = two_pow_52.half();
+        for i in 0..5 {
+            assert!(comp_half[i] == half[i])
+        }
+
+        let a_minus_b_half_comp = A_MINUS_B.half();
+        for i in 0..5 {
+            assert!(a_minus_b_half_comp[i] == A_MINUS_B_HALF[i]);
+        }
+    }
+
+    #[test]
+    fn to_montgomery_conv() {
+        let mont_a = &A.to_montgomery();
+        for i in 0..5 {
+            assert!(mont_a[i] == INV_MONT_A[i])
+        }
+    }
+
+    #[test]
+    fn from_montgomery_conv() {
+        let out_mont_a = &INV_MONT_A.from_montgomery();
+        for i in 0..5 {
+            assert!(out_mont_a[i] == A[i]);
+        }
+    }
 }
-
