@@ -116,9 +116,16 @@ impl Identity for EdwardsPoint {
 
 impl<'a> Neg for &'a EdwardsPoint {
     type Output = EdwardsPoint;
-    /// Negates an `EdwardsPoint` giving it as a result
+    /// Negates an `EdwardsPoint` giving it as a result.
+    /// Since the negative of a point is (-X:Y:Z:-T), it
+    /// gives as a result: `(-X, Y, Z, -T)`.
     fn neg(self) -> EdwardsPoint {
-       unimplemented!()
+       EdwardsPoint{
+           X: -&self.X,
+           Y:   self.Y,
+           Z:   self.Z,
+           T: -&self.T,
+       }
     }
 }
 
