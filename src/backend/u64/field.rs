@@ -786,6 +786,11 @@ pub mod tests {
         for i in 0..5 {
             assert!(minus_one[i] == FieldElement::minus_one()[i]);
         }
+
+        let one = -&FieldElement::minus_one();
+        for i in 0..5 {
+            assert!(one[i] == FieldElement::one()[i]);
+        }
     }
 
     #[test]
