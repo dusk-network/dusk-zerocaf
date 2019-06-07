@@ -6,9 +6,7 @@ use std::default::Default;
 use std::cmp::{PartialOrd, Ordering, Ord};
 
 use core::ops::{Index, IndexMut};
-use core::ops::Add;
-use core::ops::Sub;
-use core::ops::Mul;
+use core::ops::{Add, Sub, Mul, Neg};
 
 use num::Integer;
 
@@ -61,6 +59,16 @@ impl Ord for FieldElement {
         Ordering::Equal
     }
 }
+
+impl<'a> Neg for &'a FieldElement {
+    type Output = FieldElement;
+    /// Computes `-self (mod l)`.
+    /// Compute the negated value that correspond's to the
+    /// two's complement of the input FieldElement.
+    fn neg(self) -> FieldElement {
+        &FieldElement::zero() - self
+    }
+} 
 
 impl<'a, 'b> Add<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
@@ -519,17 +527,23 @@ pub mod tests {
     /// `A = 182687704666362864775460604089535377456991567872`
     pub static A: FieldElement = FieldElement([0, 0, 0, 2, 0]);
 
+    /// `-A (mod l) = 7237005577332262213973186562860306536190753494604447001912415560828462683117`.
+    pub static MINUS_A: FieldElement = FieldElement([671914833335277, 3916664325105025, 1367801, 4503599627370494, 17592186044415]);
+
     /// A on Montgomery domain = `(A * R (mod l)) = 474213518376757474787523690767343130291324218287585596341053150401850043342`.
     pub static INV_MONT_A: FieldElement = FieldElement([2317332620045262, 1576144597389635, 2025859686448975, 2756776639866422, 1152749206963]);
 
     /// `(A ^ (-1)) (mod l) = 7155219595916845557842258654134856828180378438239419449390401977965479867845`.
     pub static INV_MOD_A: FieldElement = FieldElement([1289905446467013, 1277206401232501, 2632844239031511, 61125669693438, 17393375336657]);
 
-    /// `(B ^ (-1)) (mod l) = 4972823702408169985605068068612629707457302171484944010058343536981337191056`.
-    pub static INV_MOD_B: FieldElement = FieldElement([3843051553829520, 3394345223148522, 3244765182786547, 3746084408926180, 12088264794607]);
-
     /// `B = 904625697166532776746648320197686575422163851717637391703244652875051672039`
     pub static B: FieldElement = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370493, 2199023255551]);
+    
+    /// `-B (mod l) = 6332379880165729437226538242845307665434952507662270214298706285410402578950`.
+    pub static MINUS_B: FieldElement = FieldElement([2409288332882438, 4182428486726422, 2114509, 2, 15393162788864]);
+
+    /// `(B ^ (-1)) (mod l) = 4972823702408169985605068068612629707457302171484944010058343536981337191056`.
+    pub static INV_MOD_B: FieldElement = FieldElement([3843051553829520, 3394345223148522, 3244765182786547, 3746084408926180, 12088264794607]);
 
     /// `C = 2009874587549`
     pub static C: FieldElement = FieldElement([2009874587549, 0, 0, 0, 0]);
