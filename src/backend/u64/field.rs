@@ -768,4 +768,31 @@ pub mod tests {
             assert!(out_mont_a[i] == A[i]);
         }
     }
+
+    #[test]
+    fn negation() {
+        let minus_a = -&A;
+        let minus_b = -&B;
+
+        for i in 0..5 {
+            assert!(minus_a[i] == MINUS_A[i]);
+            assert!(minus_b[i] == MINUS_B[i]);
+        }
+    }
+
+    #[test]
+    fn negate_one() {
+        let minus_one = -&FieldElement::one();
+        for i in 0..5 {
+            assert!(minus_one[i] == FieldElement::minus_one()[i]);
+        }
+    }
+
+    #[test]
+    fn negate_zero() {
+        let minus_zero = -&FieldElement::zero();
+        for i in 0..5 {
+            assert!(minus_zero[i] == FieldElement::zero()[i]);
+        }
+    }
 }
