@@ -4,11 +4,10 @@ use crate::field::FieldElement;
 use crate::scalar::Scalar;
 use crate::montgomery::MontgomeryPoint;
 use crate::constants;
+use crate::traits::*;
 
 
 use subtle::Choice;
-use subtle::ConditionallyNegatable;
-use subtle::ConditionallySelectable;
 use subtle::ConstantTimeEq;
 
 use std::default::Default;
@@ -47,11 +46,6 @@ impl CompressedEdwardsY {
         unimplemented!();
     }
 }
-/* Need to implement Identity trait.
-    pub fn decompress(&self) -> Result<EdwardsPoint> {
-        unimplemented!();
-    }
-}
 
 impl Identity for CompressedEdwardsY {
     fn identity() -> CompressedEdwardsY {
@@ -66,7 +60,7 @@ impl Default for CompressedEdwardsY {
     fn default() -> CompressedEdwardsY {
         CompressedEdwardsY::identity()
     }
-}*/
+}
 
 impl CompressedEdwardsY {
     /// Construct a `CompressedEdwardsY` from a slice of bytes.
@@ -102,8 +96,15 @@ impl PartialEq for EdwardsPoint {
 }
 
 impl Default for EdwardsPoint {
-    /// Returns the default EdwardsPoint Coordinates: (0, 1, 1, 0). 
+    /// Returns the default EdwardsPoint Extended Coordinates: (0, 1, 1, 0). 
     fn default() -> EdwardsPoint {
+        EdwardsPoint::identity()
+    }
+}
+
+impl Identity for EdwardsPoint {
+    /// Returns the Edwards Point identity value = `(0, 1, 1, 0)`.
+    fn identity() -> EdwardsPoint {
         EdwardsPoint {
             X: FieldElement::zero(),
             Y: FieldElement::one(),
@@ -129,13 +130,14 @@ impl Neg for EdwardsPoint {
     }
 }
 
-#[allow(non_snake_case)]
 impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Add two EdwardsPoints and give the resulting `EdwardsPoint`.
     /// Cost: 9M + 1*a + 7add.
     /// Cost: 9M + 1*a + 6add dependent upon the first point.
+    /// This implementation is speciffic for curves with `a = -1` as Doppio is.
     /// Source: 2008 Hisil–Wong–Carter–Dawson, http://eprint.iacr.org/2008/522, Section 3.1.
+    #[inline]
     fn add(self, other: &'b EdwardsPoint) -> EdwardsPoint {
         let A: FieldElement = &self.X * &other.X;
         let B: FieldElement = &self.Y * &other.Y;
