@@ -4,6 +4,7 @@ use crate::field::FieldElement;
 use crate::scalar::Scalar;
 use crate::montgomery::MontgomeryPoint;
 use crate::constants;
+use crate::traits::*;
 
 
 use subtle::Choice;
@@ -45,11 +46,6 @@ impl CompressedEdwardsY {
         unimplemented!();
     }
 }
-/* Need to implement Identity trait.
-    pub fn decompress(&self) -> Result<EdwardsPoint> {
-        unimplemented!();
-    }
-}
 
 impl Identity for CompressedEdwardsY {
     fn identity() -> CompressedEdwardsY {
@@ -64,7 +60,7 @@ impl Default for CompressedEdwardsY {
     fn default() -> CompressedEdwardsY {
         CompressedEdwardsY::identity()
     }
-}*/
+}
 
 impl CompressedEdwardsY {
     /// Construct a `CompressedEdwardsY` from a slice of bytes.
@@ -100,8 +96,15 @@ impl PartialEq for EdwardsPoint {
 }
 
 impl Default for EdwardsPoint {
-    /// Returns the default EdwardsPoint Coordinates: (0, 1, 1, 0). 
+    /// Returns the default EdwardsPoint Extended Coordinates: (0, 1, 1, 0). 
     fn default() -> EdwardsPoint {
+        EdwardsPoint::identity()
+    }
+}
+
+impl Identity for EdwardsPoint {
+    /// Returns the Edwards Point identity value = `(0, 1, 1, 0)`.
+    fn identity() -> EdwardsPoint {
         EdwardsPoint {
             X: FieldElement::zero(),
             Y: FieldElement::one(),
