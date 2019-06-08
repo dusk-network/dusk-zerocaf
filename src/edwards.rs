@@ -31,7 +31,34 @@ impl Debug for CompressedEdwardsY {
     }
 }
 
+impl Default for CompressedEdwardsY {
+    /// Returns the identity for `CompressedEdwardsY` point.
+    fn default() -> CompressedEdwardsY {
+        CompressedEdwardsY::identity()
+    }
+}
+
+impl Identity for CompressedEdwardsY {
+    /// Returns the `CompressedEdwards identity point value 
+    /// that corresponds to `1` (mod l)
+    /// with the sign bit setted to `0`.
+    fn identity() -> CompressedEdwardsY {
+        CompressedEdwardsY([1, 0, 0, 0, 0, 0, 0, 0,
+                            0, 0, 0, 0, 0, 0, 0, 0,
+                            0, 0, 0, 0, 0, 0, 0, 0,
+                            0, 0, 0, 0, 0, 0, 0, 0])
+    }
+}
+
 impl CompressedEdwardsY {
+    /// Construct a `CompressedEdwardsY` from a slice of bytes.
+    pub fn from_slice(bytes: &[u8]) -> CompressedEdwardsY {
+        let mut tmp = [0u8; 32];
+
+        tmp.copy_from_slice(bytes);
+
+        CompressedEdwardsY(tmp)
+    }
 
     /// Return the `CompressedEdwardsY` as an array of bytes (it's cannonical state).
     pub fn to_bytes(&self) -> [u8; 32] {
@@ -47,42 +74,18 @@ impl CompressedEdwardsY {
     }
 }
 
-impl Identity for CompressedEdwardsY {
-    fn identity() -> CompressedEdwardsY {
-        CompressedEdwardsY([1, 0, 0, 0, 0, 0, 0, 0,
-                            0, 0, 0, 0, 0, 0, 0, 0,
-                            0, 0, 0, 0, 0, 0, 0, 0,
-                            0, 0, 0, 0, 0, 0, 0, 0])
-    }
-}
-
-impl Default for CompressedEdwardsY {
-    fn default() -> CompressedEdwardsY {
-        CompressedEdwardsY::identity()
-    }
-}
-
-impl CompressedEdwardsY {
-    /// Construct a `CompressedEdwardsY` from a slice of bytes.
-    pub fn from_slice(bytes: &[u8]) -> CompressedEdwardsY {
-        let mut tmp = [0u8; 32];
-
-        tmp.copy_from_slice(bytes);
-
-        CompressedEdwardsY(tmp)
-    }
-}
 
 
-/// An `EdwardsPoint` represents a point on the Edwards form of Doppio Curve.
-#[derive(Copy, Clone)]
+/// An `EdwardsPoint` represents a point on the Doppio Curve expressed
+/// over the Twisted Edwards Extended Coordinates.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct EdwardsPoint {
     pub(crate) X: FieldElement,
     pub(crate) Y: FieldElement,
     pub(crate) Z: FieldElement,
     pub(crate) T: FieldElement,
 }
-
+/*
 impl ConstantTimeEq for EdwardsPoint {
     fn ct_eq(&self, other: &EdwardsPoint) -> Choice {
         self.compress().ct_eq(&other.compress())
@@ -94,7 +97,7 @@ impl PartialEq for EdwardsPoint {
         self.ct_eq(other).unwrap_u8() == 1u8
     }
 }
-
+*/
 impl Default for EdwardsPoint {
     /// Returns the default EdwardsPoint Extended Coordinates: (0, 1, 1, 0). 
     fn default() -> EdwardsPoint {
@@ -116,9 +119,16 @@ impl Identity for EdwardsPoint {
 
 impl<'a> Neg for &'a EdwardsPoint {
     type Output = EdwardsPoint;
-    /// Negates an `EdwardsPoint` giving it as a result
+    /// Negates an `EdwardsPoint` giving it as a result.
+    /// Since the negative of a point is (-X:Y:Z:-T), it
+    /// gives as a result: `(-X, Y, Z, -T)`.
     fn neg(self) -> EdwardsPoint {
-       unimplemented!()
+       EdwardsPoint{
+           X: -&self.X,
+           Y:   self.Y,
+           Z:   self.Z,
+           T: -&self.T,
+       }
     }
 }
 
@@ -211,5 +221,31 @@ pub mod tests {
     use super::*;
     use constants::*;
 
+    #[test]
+    fn edwards_extended_coords_neg() {
 
+        let inv_a: EdwardsPoint = EdwardsPoint{
+           X: FieldElement::minus_one(),
+           Y: FieldElement::zero(),
+           Z: FieldElement::zero(),
+           T: FieldElement::minus_one(),
+        };
+
+        let a: EdwardsPoint = EdwardsPoint{
+           X: FieldElement::one(),
+           Y: FieldElement::zero(),
+           Z: FieldElement::zero(),
+           T: FieldElement::one(),
+        };
+
+        let res = -a;
+        assert!(res == inv_a);
+    }
+
+    #[test]
+    fn edwards_extended_coords_neg_identity() {
+        let res = -EdwardsPoint::identity();
+
+        assert!(res == EdwardsPoint::identity())
+    }
 }
