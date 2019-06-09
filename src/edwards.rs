@@ -18,7 +18,7 @@ use std::ops::{Add, Sub, Mul, Neg};
 
 
 /// The first 255 bits of a `CompressedEdwardsY` represent the
-/// \\(y\\)-coordinate.  The high bit of the 32nd byte gives the sign of \\(x\\).
+/// (y)-coordinate.  The high bit of the 32nd byte gives the sign of (x).
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct CompressedEdwardsY(pub [u8; 32]);
 
@@ -51,6 +51,26 @@ impl Default for CompressedEdwardsY {
     /// Returns the identity for `CompressedEdwardsY` point.
     fn default() -> CompressedEdwardsY {
         CompressedEdwardsY::identity()
+    }
+}
+
+impl<'a> Neg for &'a CompressedEdwardsY {
+    type Output = CompressedEdwardsY;
+    /// Negates an `CompressedEdwardsY` by decompressing
+    /// it, negating over Twisted Edwards Extended 
+    /// Projective Coordinates and compressing it back.
+    fn neg(self) -> CompressedEdwardsY {
+        (-&self.decompress().unwrap()).compress()
+    }
+}
+
+impl Neg for CompressedEdwardsY {
+    type Output = CompressedEdwardsY;
+    /// Negates an `CompressedEdwardsY` by decompressing
+    /// it, negating over Twisted Edwards Extended 
+    /// Projective Coordinates and compressing it back.
+    fn neg(self) -> CompressedEdwardsY {
+        -& self
     }
 }
 
