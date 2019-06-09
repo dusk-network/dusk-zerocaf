@@ -800,4 +800,11 @@ pub mod tests {
             assert!(minus_zero[i] == FieldElement::zero()[i]);
         }
     }
+
+    #[test]
+    fn l_field_high_bit() {
+        let msb = &constants::FIELD_L.to_bytes();
+        let pos_sign = 1u8 << 7;
+        assert!(msb[31] < pos_sign);
+    }
 }
