@@ -11,17 +11,33 @@ use subtle::Choice;
 use subtle::ConstantTimeEq;
 
 use std::default::Default;
-use std::ops::{Add, Sub, Mul, Neg};
 use std::fmt::Debug;
 
+use core::ops::{Index, IndexMut};
+use std::ops::{Add, Sub, Mul, Neg};
+
+
 /// The first 255 bits of a `CompressedEdwardsY` represent the
-/// \\(y\\)-coordinate.  The high bit of the 32nd byte gives the sign of \\(x\\).
+/// (y)-coordinate.  The high bit of the 32nd byte gives the sign of (x).
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct CompressedEdwardsY(pub [u8; 32]);
 
 impl ConstantTimeEq for CompressedEdwardsY {
     fn ct_eq(&self, other: &CompressedEdwardsY) -> Choice {
         self.to_bytes().ct_eq(&other.to_bytes())
+    }
+}
+
+impl Index<usize> for CompressedEdwardsY {
+    type Output = u8;
+    fn index(&self, _index: usize) -> &u8 {
+        &(self.0[_index])
+    }
+}
+
+impl IndexMut<usize> for CompressedEdwardsY {
+    fn index_mut(&mut self, _index: usize) -> &mut u8 {
+        &mut (self.0[_index])
     }
 }
 
@@ -35,6 +51,26 @@ impl Default for CompressedEdwardsY {
     /// Returns the identity for `CompressedEdwardsY` point.
     fn default() -> CompressedEdwardsY {
         CompressedEdwardsY::identity()
+    }
+}
+
+impl<'a> Neg for &'a CompressedEdwardsY {
+    type Output = CompressedEdwardsY;
+    /// Negates an `CompressedEdwardsY` by decompressing
+    /// it, negating over Twisted Edwards Extended 
+    /// Projective Coordinates and compressing it back.
+    fn neg(self) -> CompressedEdwardsY {
+        (-&self.decompress().unwrap()).compress()
+    }
+}
+
+impl Neg for CompressedEdwardsY {
+    type Output = CompressedEdwardsY;
+    /// Negates an `CompressedEdwardsY` by decompressing
+    /// it, negating over Twisted Edwards Extended 
+    /// Projective Coordinates and compressing it back.
+    fn neg(self) -> CompressedEdwardsY {
+        -& self
     }
 }
 
