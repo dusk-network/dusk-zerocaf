@@ -199,6 +199,15 @@ impl FieldElement {
         res
     }
 
+    pub fn plus_p_and_half(&self) -> FieldElement {
+        let mut res = self.clone();
+        for i in 0..5 {
+            res[i] += constants::FIELD_L[i];
+        };
+        
+        res.half()
+    }
+
     /// Load a `FieldElement` from the low 253b   bits of a 256-bit
     /// input. So Little Endian representation in bytes of a FieldElement.
     // @TODO: Macro for Inline load8 function as has variadic arguments.
@@ -473,19 +482,19 @@ impl FieldElement {
         fn phase2(r: &FieldElement, k: &u64) -> FieldElement {
             let mut rr = r.clone();
             let p = &constants::FIELD_L;
+            
+            println!("begininin \nr:{:?} \nk:{:?} \np:{:?}", r, k, p);
 
-            for _i in 1..=(k-253) {
+            for _i in 0..(k-253) {
                 match rr.is_even() {
                     true => {
                         rr = rr.half();
                     },
                     false => {
-                        rr = &rr + &p;
-                        println!("Value on iter: {} after addition for p = {:?}", _i, rr);
-                        rr = rr.half();
-                        println!("Value on iter: {} after performing half = {:?}", _i, rr);
+                        rr = rr.plus_p_and_half();
                     }
                 }
+                println!("iter {:?}: {:?}", _i, rr);
             }
             rr 
         }
@@ -493,6 +502,8 @@ impl FieldElement {
         let (mut r, mut z) = phase1(&a.clone());
 
         r = phase2(&r, &z);
+        println!("r after PhaseII: {:?}", r);
+
         // Since the output of the Phase II is multiplied by `2^n`
         // We can multiply it by the two power needed to achive the 
         // Montgomery modulus value and then convert it back to the 
@@ -501,6 +512,8 @@ impl FieldElement {
         // In this case: `R = 2^260` & `n = 2^253`. 
         // So we multiply `r * 2^7` to get R on the Montgomery domain.
         r = &r * &FieldElement::two_pow_k(&7);
+
+
         r.from_montgomery()
     }
     
@@ -541,6 +554,9 @@ pub mod tests {
 
     /// `C = 2009874587549`
     pub static C: FieldElement = FieldElement([2009874587549, 0, 0, 0, 0]);
+
+    /// `(C ^ (-1)) (mod l) = 6974867113321324728532613090378096263200424274021140063642524210369192272949`.
+    pub static INV_MOD_C: FieldElement = FieldElement([623443786605621, 2862023947424023, 16740108872882, 4368084563887202, 16954962737206]);
 
     /// `A + B (mod l) = 904625697166532776746648320380374280088526716493097995792780030332043239911`
     pub static A_PLUS_B: FieldElement = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370495, 2199023255551]);
@@ -800,5 +816,13 @@ pub mod tests {
         let msb = &constants::FIELD_L.to_bytes();
         let pos_sign = 1u8 << 7;
         assert!(msb[31] < pos_sign);
+    }
+
+    #[test]
+    fn kalinski_inverse() {
+        let res = FieldElement::kalinski_inverse(&C);
+        for i in 0..5 {
+            assert!(res[i] == INV_MOD_C[i]);
+        }
     }
 }
