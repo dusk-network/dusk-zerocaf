@@ -46,11 +46,11 @@ def AlmostMontInv(x, p):
             s = r+s
             r = r << 1
         k += 1
-        print('Values on iteration: ' + str(k) + ':')
-        print('r = ' + str(fieldElement(r)))
-        print('s = ' + str(fieldElement(s)))
-        print('v = ' + str(fieldElement(v)))
-        print('u = ' + str(fieldElement(u)))
+        #print('Values on iteration: ' + str(k) + ':')
+        #print('r = ' + str(fieldElement(r)))
+        #print('s = ' + str(fieldElement(s)))
+        #print('v = ' + str(fieldElement(v)))
+        #print('u = ' + str(fieldElement(u)))
         
     if r>p:
         r = r-p
@@ -58,13 +58,29 @@ def AlmostMontInv(x, p):
     return p-r, k
 
 
+def phase2(r, k):
+    for i in range(0, k-253):
+        if (r % 2 == 0):
+            r = (r >> 1) % p
+        else:
+            r = (r+p) >> 1
+        #print('r on iter: ' + str(i) + '= ' + str(r))
+        print('iter: ' + str(i) + ': FieldElement(' + fieldElement(r) + ')')
+    return r
+
 # random.seed(11) # for debug
 
 p = 7237005577332262213973186563042994240857116359379907606001950938285454250989
 
 # Input to change value to get the AlmostMontInv.
-a = 2009874587549
+a = 904625697166532776746648320197686575422163851717637391703244652875051672039
 
 ainv, k = AlmostMontInv(a, p)
+print('r:FieldElement' + str(fieldElement(ainv)))
+print('r:FieldElement' + str(ainv))
+print('k:' + str(k))
+print('p:' + str(fieldElement(p)))
+ainv = phase2(ainv, k)
 
 print(ainv, k)
+print('ainv:FieldElement' + str(fieldElement(ainv)))
