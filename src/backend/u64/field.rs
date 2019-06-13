@@ -177,6 +177,9 @@ impl FieldElement {
     }
 
     /// Give the half of the FieldElement value (mod l).
+    /// This function SHOULD ONLY be used with even 
+    /// `FieldElements` otherways, can produce erroneus
+    /// results.
     pub fn half(&self) -> FieldElement {
         let mut res = self.clone();
         let mut remainder = 0u64;
@@ -199,6 +202,13 @@ impl FieldElement {
         res
     }
 
+    /// Performs the operation `((a + constants::FIELD_L) >> 2) % l).
+    /// This function SHOULD only be used on the Kalinski's modular 
+    /// inverse algorithm, since it's the only way we have to add `l`
+    /// to a `FieldElement` without obtaining the same number.
+    /// 
+    /// On Kalinski's `PhaseII`, this function allows us to trick the
+    /// addition and be able to divide odd numbers by `2`.
     pub fn plus_p_and_half(&self) -> FieldElement {
         let mut res = self.clone();
         for i in 0..5 {
@@ -482,8 +492,6 @@ impl FieldElement {
         fn phase2(r: &FieldElement, k: &u64) -> FieldElement {
             let mut rr = r.clone();
             let p = &constants::FIELD_L;
-            
-            println!("begininin \nr:{:?} \nk:{:?} \np:{:?}", r, k, p);
 
             for _i in 0..(k-253) {
                 match rr.is_even() {
@@ -494,7 +502,6 @@ impl FieldElement {
                         rr = rr.plus_p_and_half();
                     }
                 }
-                println!("iter {:?}: {:?}", _i, rr);
             }
             rr 
         }
@@ -502,7 +509,6 @@ impl FieldElement {
         let (mut r, mut z) = phase1(&a.clone());
 
         r = phase2(&r, &z);
-        println!("r after PhaseII: {:?}", r);
 
         // Since the output of the Phase II is multiplied by `2^n`
         // We can multiply it by the two power needed to achive the 
@@ -513,10 +519,11 @@ impl FieldElement {
         // So we multiply `r * 2^7` to get R on the Montgomery domain.
         r = &r * &FieldElement::two_pow_k(&7);
 
-
+        // Now we apply `from_montgomery()` function which performs
+        // `r/2^260` carrying the `FieldElement` out of the 
+        // Montgomery domain.
         r.from_montgomery()
     }
-    
 }
     
 
@@ -820,6 +827,16 @@ pub mod tests {
 
     #[test]
     fn kalinski_inverse() {
+        let res = FieldElement::kalinski_inverse(&A);
+        for i in 0..5 {
+            assert!(res[i] == INV_MOD_A[i]);
+        }
+
+        let res = FieldElement::kalinski_inverse(&B);
+        for i in 0..5 {
+            assert!(res[i] == INV_MOD_B[i]);
+        }
+
         let res = FieldElement::kalinski_inverse(&C);
         for i in 0..5 {
             assert!(res[i] == INV_MOD_C[i]);
