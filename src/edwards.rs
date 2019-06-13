@@ -103,7 +103,7 @@ impl CompressedEdwardsY {
 
     /// Attempt to decompress to an `EdwardsPoint`.
     ///
-    /// Returns `Err` if the input is not the \\(y\\)-coordinate of a
+    /// Returns `Err` if the input is not the Y-coordinate of a
     /// curve point.
     pub fn decompress(&self) -> Option<EdwardsPoint> {
         unimplemented!();
