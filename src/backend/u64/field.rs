@@ -393,10 +393,7 @@ impl FieldElement {
         FieldElement::montgomery_reduce(&limbs)
     }
 
-    // We will leave Kalinski_inverse stoped until we can see if an addition
-    // chain method exists for Doppio or we can create it.
-
-    /*
+    
     /// Compute `a^-1 (mod l)` using the the Kalinski implementation
     /// of the Montgomery Modular Inverse algorithm.
     /// B. S. Kaliski Jr. - The  Montgomery  inverse  and  its  applica-tions.
@@ -420,7 +417,7 @@ impl FieldElement {
         #[inline]
         fn phase1(a: &FieldElement) -> (FieldElement, u64) {
             // Declare L = 2^252 + 27742317777372353535851937790883648493
-            let p = FieldElement([517551446070577, 842026395247552, 136780, 0, 17592186044416]);
+            let p = FieldElement([671914833335277, 3916664325105025, 1367801, 0, 17592186044416]);
             let mut u = p.clone();
             let mut v = a.clone();
             let mut r = FieldElement::zero();
@@ -429,7 +426,6 @@ impl FieldElement {
             let mut k = 0u64;
 
             while v > FieldElement::zero() {
-                k += 1;
                 match(u.is_even(), v.is_even(), u > v, v >= u) {
                     // u is even
                     (true, _, _, _) => {
@@ -459,15 +455,13 @@ impl FieldElement {
                         s = &r + &s;
                         r = &r * &two;
                     },
-                    (false, false, false, false) => panic!("InverseMod does not exist"),
+                    (false, false, false, false) => panic!("Unexpected error has ocurred."),
                 }
-                println!("Values on iteration: {}: \nr = {:?}\ns = {:?}\nv = {:?}\nu = {:?}\n", k, &r, &s,&v, &u);
+                k += 1;
             }
-            if r >= p {
-                println!("Inside if: {:?} {}", &r - &p, k);
+            if r > p {
                 r = &r - &p;
             }
-            println!("Outside if: {:?} {}", &p - &r, k);
             (&p - &r, k)
         }
 
@@ -509,7 +503,7 @@ impl FieldElement {
         r = &r * &FieldElement::two_pow_k(&7);
         r.from_montgomery()
     }
-    */
+    
 }
     
 
