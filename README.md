@@ -102,11 +102,11 @@ Note: the refactoring relations are expressed as indentations
     - [x] Implement Subtraction.
     - [x] Implement Byte-encoding/decoding.
     - [x] Implement Multiplication on u64-backend with u128 usage.
-    - [ ] Implement Modular inversion.
-    - [ ] Research about addition chains inversion methods.
+    - [x] Implement Modular inversion.
+    - [x] Research about addition chains inversion methods.
   - [x] Add proper tests for every function.
 - [ ] Implement Edwards points
-     - [ ] Create projective co-ordiantes
+     - [ ] Create projective coordiantes
      - [ ] Implement Point Addition for projective coordinates
      - [ ] Implement Point Subtraction for projective coordinates
      - [x] Implement from byte conversions
