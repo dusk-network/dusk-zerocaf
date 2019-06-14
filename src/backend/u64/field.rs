@@ -925,4 +925,22 @@ pub mod tests {
             assert!(res[i] == INV_MOD_C[i]);
         }
     }
+    
+    #[test]
+    fn savas_koc_inverse() {
+        let res = FieldElement::savas_koc_inverse(&A);
+        for i in 0..5 {
+            assert!(res[i] == INV_MOD_A[i]);
+        }
+
+        let res = FieldElement::savas_koc_inverse(&B);
+        for i in 0..5 {
+            assert!(res[i] == INV_MOD_B[i]);
+        }
+
+        let res = FieldElement::savas_koc_inverse(&C);
+        for i in 0..5 {
+            assert!(res[i] == INV_MOD_C[i]);
+        }
+    }
 }
