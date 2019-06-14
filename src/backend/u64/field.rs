@@ -419,6 +419,7 @@ impl FieldElement {
     /// of the Montgomery Modular Inverse algorithm.
     /// B. S. Kaliski Jr. - The  Montgomery  inverse  and  its  applica-tions.
     /// IEEE Transactions on Computers, 44(8):1064–1065, August-1995
+    #[doc(hidden)]
     #[inline]
     pub fn kalinski_inverse(a: &FieldElement) -> FieldElement {
 
