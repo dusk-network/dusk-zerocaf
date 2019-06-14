@@ -1,36 +1,3 @@
-   Compiling param_translator v0.1.0 (/home/kr0/hdd/home/kr0/Desktop/dusk/Corretto/tools)
-warning: unused import: `num_traits::cast::ToPrimitive`
- --> src/main.rs:7:5
-  |
-7 | use num_traits::cast::ToPrimitive;
-  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  |
-  = note: #[warn(unused_imports)] on by default
-
-warning: unused variable: `res`
-  --> src/main.rs:51:9
-   |
-51 |     let res = phase1(&BigUint::from_str("182687704666362864775460604089535377456991567872").unwrap());
-   |         ^^^ help: consider prefixing with an underscore: `_res`
-   |
-   = note: #[warn(unused_variables)] on by default
-
-warning: unused variable: `i`
-   --> src/main.rs:143:13
-    |
-143 |         for i in 0..self.n {
-    |             ^ help: consider prefixing with an underscore: `_i`
-
-warning: structure field `BASE` should have a snake case name
-   --> src/main.rs:120:9
-    |
-120 |     pub BASE: BigUint,
-    |         ^^^^ help: convert the identifier to snake case: `base`
-    |
-    = note: #[warn(non_snake_case)] on by default
-
-    Finished dev [unoptimized + debuginfo] target(s) in 0.55s
-     Running `/home/kr0/hdd/home/kr0/Desktop/dusk/Corretto/tools/target/debug/param_translator`
 Values on iteration: 1: 
 r = [0, 0, 0, 0, 0]
 s = [1, 0, 0, 0, 0]
