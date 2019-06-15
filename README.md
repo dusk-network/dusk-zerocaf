@@ -1,4 +1,6 @@
-# dusk-corretto
+# Dusk-Corretto [![Build Status](https://travis-ci.com/dusk-network/dusk-corretto.svg?branch=master)](https://travis-ci.com/dusk-network/dusk-corretto)  [![codecov](https://codecov.io/gh/dusk-network/dusk-corretto/branch/master/graph/badge.svg)](https://codecov.io/gh/dusk-network/dusk-corretto) 
+
+
 
 ## Fast, efficient and bulletproof-friendly cryptographic operations.
 
