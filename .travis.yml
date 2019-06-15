@@ -3,8 +3,7 @@ sudo: true
 cache: cargo
 os: 
   - linux
-  - osx
-
+#  - osx  CodeCov doesn't support it so it's non tested now.
 branches: 
   only:
   - master
@@ -16,7 +15,6 @@ matrix:
   - rust: stable
   - rust: beta
   - rust: nightly
-  - rust: 1.0.0
 
 
 before_install:
