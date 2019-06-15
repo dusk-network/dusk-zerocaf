@@ -35,4 +35,8 @@ nightly = ["subtle/nightly"]
 u64_backend = []
 default = ["u64_backend"]
 
+[badges]
+travis-ci = { repository = "dusk-network/dusk-corretto", branch = "master" }
+codecov = { repository = "dusk-network/dusk-corretto", branch = "master", service = "github" }
+
 
