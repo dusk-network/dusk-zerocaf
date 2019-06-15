@@ -1,4 +1,6 @@
-# Corretto: Fast, efficient and bulletproof-friendly cryptographic operations.
+# Corretto
+
+## Fast, efficient and bulletproof-friendly cryptographic operations.
 
 This repository contains the first ever implementation of an elliptic curve over the `Ristretto Scalar field`: a pure Rust implementation designed by [Dusk](https://dusk.network) team.
 
