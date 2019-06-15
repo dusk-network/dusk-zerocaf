@@ -180,6 +180,7 @@ impl FieldElement {
     /// This function SHOULD ONLY be used with even 
     /// `FieldElements` otherways, can produce erroneus
     /// results.
+    #[inline]
     pub fn half(&self) -> FieldElement {
         let mut res = self.clone();
         let mut remainder = 0u64;
@@ -209,6 +210,7 @@ impl FieldElement {
     /// 
     /// On Kalinski's `PhaseII`, this function allows us to trick the
     /// addition and be able to divide odd numbers by `2`.
+    #[inline]
     pub fn plus_p_and_half(&self) -> FieldElement {
         let mut res = self.clone();
         for i in 0..5 {
@@ -417,8 +419,9 @@ impl FieldElement {
     /// of the Montgomery Modular Inverse algorithm.
     /// B. S. Kaliski Jr. - The  Montgomery  inverse  and  its  applica-tions.
     /// IEEE Transactions on Computers, 44(8):1064–1065, August-1995
+    #[doc(hidden)]
     #[inline]
-    pub (crate) fn kalinski_inverse(a: &FieldElement) -> FieldElement {
+    pub fn kalinski_inverse(a: &FieldElement) -> FieldElement {
 
         /// This Phase I indeed is the Binary GCD algorithm , a version o Stein's algorithm
         /// which tries to remove the expensive division operation away from the Classical
@@ -538,7 +541,7 @@ impl FieldElement {
     /// J Cryptogr Eng (2018) 8:201–210
     /// https://doi.org/10.1007/s13389-017-0161-x 
     #[inline]
-    pub (crate) fn savas_koc_inverse(a: &FieldElement) -> FieldElement {
+    pub fn savas_koc_inverse(a: &FieldElement) -> FieldElement {
 
         /// This Phase I indeed is the Binary GCD algorithm , a version o Stein's algorithm
         /// which tries to remove the expensive division operation away from the Classical
