@@ -1,9 +1,14 @@
 language: rust
+sudo: true
+cache: cargo
+os: 
+  - linux
+  - osx
+
 branches: 
   only:
   - master
 
-cache: cargo
 
 matrix:
   fast_finish: false
@@ -11,8 +16,45 @@ matrix:
   - rust: stable
   - rust: beta
   - rust: nightly
+  - rust: 1.0.0
 
+
+before_install:
+  - sudo apt-get update
+
+addons:
+  apt:
+    packages:
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - cmake
+      - gcc
+      - binutils-dev
+
+
+# Main build
 script:
   - cargo check
   - cargo build --release --no-default-features --features "u64_backend" --verbose --all
   - cargo test --verbose --all
+
+# Upload docs
+after_success:
+  # Coverage report
+  - |
+      if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_RUST_VERSION" == "stable" ]]; then
+        wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
+        tar xzf master.tar.gz &&
+        cd kcov-master &&
+        mkdir build &&
+        cd build &&
+        cmake .. &&
+        make &&
+        sudo make install &&
+        cd ../.. &&
+        rm -rf kcov-master &&
+        for file in target/debug/corretto-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
+        bash <(curl -s https://codecov.io/bash) &&
+        echo "Uploaded code coverage"
+      fi
