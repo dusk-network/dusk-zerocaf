@@ -424,7 +424,7 @@ impl FieldElement {
         /// which tries to remove the expensive division operation away from the Classical
         /// Euclidean GDC algorithm replacing it for Bit-shifting, subtraction and comparaison.
         /// 
-        /// Output = `a^(-1) * 2^k (mod l)
+        /// Output = `a^(-1) * 2^k (mod l)` where `k = log2(FIELD_L) == 253`.
         /// 
         /// Stein, J.: Computational problems associated with Racah algebra.J. Comput. Phys.1, 397–405 (1967)
         /// 
@@ -523,6 +523,89 @@ impl FieldElement {
         // `r/2^260` carrying the `FieldElement` out of the 
         // Montgomery domain.
         r.from_montgomery()
+    }
+
+    /// Compute `a^-1 (mod l)` using the the Savas & Koç modular
+    /// inverse algorithm. It's an optimization of the Kalinski
+    /// modular inversion algorithm that extends the Binary GCD 
+    /// algorithm to perform the modular inverse operation.
+    /// 
+    /// The `PhaseII` it's substituded by 1 or 2 Montgomery Multiplications,
+    /// what makes the second part compute in almost ConstTime.
+    /// 
+    /// SPECIAL ISSUE ON MONTGOMERY ARITHMETIC. 
+    /// Montgomery inversion - Erkay Sava ̧s & Çetin Kaya Koç
+    /// J Cryptogr Eng (2018) 8:201–210
+    /// https://doi.org/10.1007/s13389-017-0161-x 
+    #[inline]
+    pub (crate) fn savas_koc_inverse(a: &FieldElement) -> FieldElement {
+
+        /// This Phase I indeed is the Binary GCD algorithm , a version o Stein's algorithm
+        /// which tries to remove the expensive division operation away from the Classical
+        /// Euclidean GDC algorithm replacing it for Bit-shifting, subtraction and comparaison.
+        /// 
+        /// Output = `a^(-1) * 2^k (mod l)` where `k = log2(FIELD_L) == 253`.
+        /// 
+        /// Stein, J.: Computational problems associated with Racah algebra.J. Comput. Phys.1, 397–405 (1967).
+        #[inline]
+        fn phase1(a: &FieldElement) -> (FieldElement, u64) {
+            // Declare L = 2^252 + 27742317777372353535851937790883648493
+            let p = FieldElement([671914833335277, 3916664325105025, 1367801, 0, 17592186044416]);
+            let mut u = p.clone();
+            let mut v = a.clone();
+            let mut r = FieldElement::zero();
+            let mut s = FieldElement::one();
+            let two = FieldElement([2, 0, 0, 0, 0]); 
+            let mut k = 0u64;
+
+            while v > FieldElement::zero() {
+                match(u.is_even(), v.is_even(), u > v, v >= u) {
+                    // u is even
+                    (true, _, _, _) => {
+
+                        u = u.half();
+                        s = &s * &two;
+                    },
+                    // u isn't even but v is even
+                    (false, true, _, _) => {
+
+                        v = v.half();
+                        r = &r * &two;
+                    },
+                    // u and v aren't even and u > v
+                    (false, false, true, _) => {
+
+                        u = &u - &v;
+                        u = u.half();
+                        r = &r + &s;
+                        s = &s * &two;
+                    },
+                    // u and v aren't even and v > u
+                    (false, false, false, true) => {
+
+                        v = &v - &u;
+                        v = v.half();
+                        s = &r + &s;
+                        r = &r * &two;
+                    },
+                    (false, false, false, false) => panic!("Unexpected error has ocurred."),
+                }
+                k += 1;
+            }
+            if r > p {
+                r = &r - &p;
+            }
+            (&p - &r, k)
+        }
+
+        let (mut r, mut z) = phase1(&a.clone());
+        if z > 260 {
+            r = FieldElement::montgomery_mul(&r, &FieldElement::one());
+            z = z - 260;
+        }
+        let fact = FieldElement::two_pow_k(&(260 - z));
+        r = FieldElement::montgomery_mul(&r, &fact);
+        r
     }
 }
     
@@ -838,6 +921,24 @@ pub mod tests {
         }
 
         let res = FieldElement::kalinski_inverse(&C);
+        for i in 0..5 {
+            assert!(res[i] == INV_MOD_C[i]);
+        }
+    }
+    
+    #[test]
+    fn savas_koc_inverse() {
+        let res = FieldElement::savas_koc_inverse(&A);
+        for i in 0..5 {
+            assert!(res[i] == INV_MOD_A[i]);
+        }
+
+        let res = FieldElement::savas_koc_inverse(&B);
+        for i in 0..5 {
+            assert!(res[i] == INV_MOD_B[i]);
+        }
+
+        let res = FieldElement::savas_koc_inverse(&C);
         for i in 0..5 {
             assert!(res[i] == INV_MOD_C[i]);
         }
