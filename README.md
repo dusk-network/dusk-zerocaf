@@ -1,4 +1,4 @@
-# Corretto
+# dusk-corretto
 
 ## Fast, efficient and bulletproof-friendly cryptographic operations.
 
