@@ -2,6 +2,7 @@
 //! using 64-bit limbs with 128-bit products
 
 use core::fmt::Debug;
+use core::convert::From;
 use std::default::Default;
 use std::cmp::{PartialOrd, Ordering, Ord};
 
@@ -57,6 +58,61 @@ impl Ord for FieldElement {
             }
         }
         Ordering::Equal
+    }
+}
+
+//-------------- From Implementations -----------------//
+impl<'a> From<&'a u8> for FieldElement {
+    /// Performs the conversion.
+    fn from(_inp: &'a u8) -> FieldElement {
+        let mut res = FieldElement::zero();
+        res[0] = *_inp as u64;
+        res
+    }
+}
+
+impl<'a> From<&'a u16> for FieldElement {
+    /// Performs the conversion.
+    fn from(_inp: &'a u16) -> FieldElement {
+        let mut res = FieldElement::zero();
+        res[0] = *_inp as u64;
+        res
+    }
+}
+
+impl<'a> From<&'a u32> for FieldElement {
+    /// Performs the conversion.
+    fn from(_inp: &'a u32) -> FieldElement {
+        let mut res = FieldElement::zero();
+        res[0] = *_inp as u64;
+        res
+    }
+}
+
+impl<'a> From<&'a u64> for FieldElement {
+    /// Performs the conversion.
+    fn from(_inp: &'a u64) -> FieldElement {
+        let mut res = FieldElement::zero();
+        let mask = (1u64 << 52) - 1;
+        res[0] = _inp & mask;
+        res[1] = _inp >> 52;
+        res
+    }
+}
+
+impl<'a> From<&'a u128> for FieldElement {
+    /// Performs the conversion.
+    fn from(_inp: &'a u128) -> FieldElement {
+        let mut res = FieldElement::zero();
+        let mask = (1u128 << 52) - 1;
+
+        // Since 128 / 52 < 4 , we only need to care
+        // about the first three limbs.
+        res[0] = (_inp & mask) as u64;
+        res[1] = ((_inp >> 52) & mask) as u64;
+        res[2] = (_inp >> 104) as u64;
+
+        res
     }
 }
 
@@ -784,6 +840,54 @@ pub mod tests {
         let bytes = FieldElement::minus_one().to_bytes();
         for i in 0..32 {
             assert!(bytes[i] == MINUS_ONE_BYTES[i]);
+        }
+    }
+
+    #[test]
+    fn from_u8() {
+        let res = FieldElement::from(&2u8);
+        let two = FieldElement([2, 0, 0, 0, 0]);
+
+        for i in 0..5 {
+            assert!(res[i] == two[i]);
+        }
+    }
+
+    #[test]
+    fn from_u16() {
+        let res = FieldElement::from(&32768u16);
+        let two_pow_15 = FieldElement([32768, 0, 0, 0, 0]);
+
+        for i in 0..5 {
+            assert!(res[i] == two_pow_15[i]);
+        }
+    }
+
+    #[test]
+    fn from_u32() {
+        let res = FieldElement::from(&2147483648u32);
+        let two_pow_31 = FieldElement([2147483648, 0, 0, 0, 0]);
+        print!("{:?}", res);
+        for i in 0..5 {
+            assert!(res[i] == two_pow_31[i]);
+        }
+    }
+
+    #[test]
+    fn from_u64() {
+        let res = FieldElement::from(&18446744073709551615u64);
+        let two_pow_64_minus_one = FieldElement([4503599627370495, 4095, 0, 0, 0]);
+        for i in 0..5 {
+            assert!(res[i] == two_pow_64_minus_one[i]);
+        }
+    }
+
+    #[test]
+    fn from_u128() {
+        let res = FieldElement::from(&170141183460469231731687303715884105727u128);
+        let two_pow_127_minus_one = FieldElement([4503599627370495, 4503599627370495, 8388607, 0, 0]);
+        for i in 0..5 {
+            assert!(res[i] == two_pow_127_minus_one[i]);
         }
     }
 
