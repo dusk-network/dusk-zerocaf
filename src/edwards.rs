@@ -114,14 +114,14 @@ impl CompressedEdwardsY {
 
 /// An `EdwardsPoint` represents a point on the Doppio Curve expressed
 /// over the Twisted Edwards Extended Coordinates.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct EdwardsPoint {
     pub(crate) X: FieldElement,
     pub(crate) Y: FieldElement,
     pub(crate) Z: FieldElement,
     pub(crate) T: FieldElement,
 }
-
+/*
 impl ConstantTimeEq for EdwardsPoint {
     fn ct_eq(&self, other: &EdwardsPoint) -> Choice {
         self.compress().ct_eq(&other.compress())
@@ -133,7 +133,7 @@ impl PartialEq for EdwardsPoint {
         self.ct_eq(other).unwrap_u8() == 1u8
     }
 }
-
+*/
 impl Default for EdwardsPoint {
     /// Returns the default EdwardsPoint Extended Coordinates: (0, 1, 1, 0). 
     fn default() -> EdwardsPoint {
@@ -329,7 +329,7 @@ pub mod tests {
 
     #[test]
     fn edwards_extended_coords_neg_identity() {
-        let res = -EdwardsPoint::identity();
+        let res = - &EdwardsPoint::identity();
 
         assert!(res == EdwardsPoint::identity())
     }
