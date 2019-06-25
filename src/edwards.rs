@@ -252,6 +252,33 @@ impl<'a, 'b> Mul<&'b EdwardsPoint> for &'a Scalar {
 
 
 impl EdwardsPoint {
+    /// Double the given point following:
+    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// Source: 2008 Hisil–Wong–Carter–Dawson, 
+    /// http://eprint.iacr.org/2008/522, Section 3.1.
+    /// Cost: 4M+ 4S+ 1D
+    pub fn double(&self) -> EdwardsPoint {
+        let two = FieldElement::from(&2u8);
+        let a = FieldElement::minus_one();
+
+        let A = self.X.square();
+        let B = self.Y.square();
+        let C = &two * &self.Z.square();
+        let D = &a * &A;
+        let E = &((&(&self.X + &self.Y).square()) - &A) - &B;
+        let G = &D + &B;
+        let F = &G - &C;
+        let H = &D - &B;
+
+        EdwardsPoint {
+            X: &E * &F,
+            Y: &G * &H,
+            Z: &F * &G,
+            T: &E * &H,
+        }
+
+    }
+
     /// Convert this `EdwardsPoint` on the Edwards model to the
     /// corresponding `MontgomeryPoint` on the Montgomery model.
     pub fn to_montgomery(&self) -> MontgomeryPoint {
