@@ -106,7 +106,7 @@ impl CompressedEdwardsY {
     /// Returns `Err` if the input is not the Y-coordinate of a
     /// curve point.
     pub fn decompress(&self) -> Option<EdwardsPoint> {
-        unimplemented!();
+        unimplemented!()
     }
 }
 
@@ -114,14 +114,14 @@ impl CompressedEdwardsY {
 
 /// An `EdwardsPoint` represents a point on the Doppio Curve expressed
 /// over the Twisted Edwards Extended Coordinates.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug)]
 pub struct EdwardsPoint {
     pub(crate) X: FieldElement,
     pub(crate) Y: FieldElement,
     pub(crate) Z: FieldElement,
     pub(crate) T: FieldElement,
 }
-/*
+
 impl ConstantTimeEq for EdwardsPoint {
     fn ct_eq(&self, other: &EdwardsPoint) -> Choice {
         self.compress().ct_eq(&other.compress())
@@ -133,7 +133,7 @@ impl PartialEq for EdwardsPoint {
         self.ct_eq(other).unwrap_u8() == 1u8
     }
 }
-*/
+
 impl Default for EdwardsPoint {
     /// Returns the default EdwardsPoint Extended Coordinates: (0, 1, 1, 0). 
     fn default() -> EdwardsPoint {
@@ -179,26 +179,26 @@ impl Neg for EdwardsPoint {
 impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Add two EdwardsPoints and give the resulting `EdwardsPoint`.
-    /// Cost: 9M + 1*a + 7add.
-    /// Cost: 9M + 1*a + 6add dependent upon the first point.
-    /// This implementation is speciffic for curves with `a = -1` as Doppio is.
-    /// Source: 2008 Hisil–Wong–Carter–Dawson, http://eprint.iacr.org/2008/522, Section 3.1.
+    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// Source: 2008 Hisil–Wong–Carter–Dawson, 
+    /// http://eprint.iacr.org/2008/522, Section 3.1.
+    /// 
+    /// Trick 2k' is used to reduce 1D and 1M. `2d' = k = 2*(-a/EDWARDS_D)`.
     #[inline]
     fn add(self, other: &'b EdwardsPoint) -> EdwardsPoint {
-        let A: FieldElement = &self.X * &other.X;
-        let B: FieldElement = &self.Y * &other.Y;
-        let C: FieldElement = &self.Z * &other.T;
-        let D: FieldElement = &self.T * &other.Z;
-        let E: FieldElement = &D + &C;
-        let F: FieldElement = &(&(&(&self.X - &self.Y) * &(&other.X - &other.Y)) + &A) + &B;
-        let G: FieldElement = &(&B + &constants::EDWARDS_A) * &A;
-        let H: FieldElement = &D - &C;
+        let k = constants::EDWARDS_2_D_PRIME;
+        let two = FieldElement::from(&2u8);
 
-        EdwardsPoint{
-            X: &E * &F,
-            Y: &G * &H,
-            Z: &F * &G,
-            T: &E * &H
+        let A = &(&self.Y - &self.X) * &(&other.Y - &other.X);
+        let B = &(&self.Y + &self.X) * &(&other.Y + &other.X);
+        let C = &k * &(&self.T * &other.T);
+        let D = &two * &(&self.Z * &other.Z);
+        
+        EdwardsPoint {
+            X: &(&B - &A) * &(&D - &C),
+            Y: &(&D + &C) * &(&B + &A),
+            Z: &(&D - &C) * &(&D + &C),
+            T: &(&B - &A) * &(&B + &A),
         }
     }
 }
@@ -214,6 +214,8 @@ impl<'a, 'b> Sub<&'b EdwardsPoint> for &'a EdwardsPoint {
 impl<'a, 'b> Mul<&'b Scalar> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Scalar multiplication: compute `scalar * self`.
+    /// Same operations as in addition except that the 
+    /// input is negated.
     fn mul(self, scalar: &'b Scalar) -> EdwardsPoint {
         unimplemented!()
     }
@@ -241,6 +243,7 @@ impl EdwardsPoint {
     pub fn compress(&self) -> CompressedEdwardsY {
         unimplemented!()
     }
+    
 
     /// Multiply by the cofactor: return (8 P).
     pub fn mul_by_cofactor(&self) -> EdwardsPoint {
