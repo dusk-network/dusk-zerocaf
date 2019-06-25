@@ -333,6 +333,11 @@ impl FieldElement {
         res
     }
 
+    /// Compute `self^2 (mod l)`.
+    pub fn square(&self) -> FieldElement {
+        self * self
+    }
+
     /// Compute `a * b` with the function multiplying helper
     #[inline]
     pub fn mul_internal(a: &FieldElement, b: &FieldElement) -> [u128; 9] {
@@ -627,6 +632,9 @@ pub mod tests {
     /// `A = 182687704666362864775460604089535377456991567872`
     pub static A: FieldElement = FieldElement([0, 0, 0, 2, 0]);
 
+    /// `A_SQUARE = A^2 = 7237005577332262213845247704030316590229102007346248927835171914574158222317`.
+    pub static A_SQUARE: FieldElement = FieldElement([671914833335277, 423018350096769, 2042999080933985, 4503598226741381, 17592186044415]);
+
     /// `-A (mod l) = 7237005577332262213973186562860306536190753494604447001912415560828462683117`.
     pub static MINUS_A: FieldElement = FieldElement([671914833335277, 3916664325105025, 1367801, 4503599627370494, 17592186044415]);
 
@@ -638,6 +646,9 @@ pub mod tests {
 
     /// `B = 904625697166532776746648320197686575422163851717637391703244652875051672039`
     pub static B: FieldElement = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370493, 2199023255551]);
+
+    /// `B_SQUARE = B^2 = 6084981972634577367347263098159392507879678891294474389120508780995125934784`.
+    pub static B_SQUARE: FieldElement = FieldElement([3966658334128832, 2102453619223755, 4260110256982373, 4297171677577933, 14791771789536]);
     
     /// `-B (mod l) = 6332379880165729437226538242845307665434952507662270214298706285410402578950`.
     pub static MINUS_B: FieldElement = FieldElement([2409288332882438, 4182428486726422, 2114509, 2, 15393162788864]);
@@ -830,6 +841,19 @@ pub mod tests {
         let non_multiple = FieldElement::two_pow_k(&104u64);
         for i in 0..5 {
             assert!(non_multiple[i] == TWO_POW_104[i]);
+        }
+    }
+
+    #[test]
+    fn square() {
+        let res = &A.square();
+        for i in 0..5 {
+            assert!(res[i] == A_SQUARE[i]);
+        }
+
+        let res = &B.square();
+        for i in 0..5 {
+            assert!(res[i] == B_SQUARE[i]);
         }
     }
 
