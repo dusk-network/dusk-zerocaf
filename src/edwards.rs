@@ -206,16 +206,36 @@ impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
 impl<'a, 'b> Sub<&'b EdwardsPoint> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Substract two EdwardsPoints and give the resulting `EdwardsPoint`
+    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// Source: 2008 Hisil–Wong–Carter–Dawson, 
+    /// http://eprint.iacr.org/2008/522, Section 3.1.
+    /// 
+    /// Trick 2k' is used to reduce 1D and 1M. `2d' = k = 2*(-a/EDWARDS_D)`.
+    /// 
+    /// The only thing we do is to negate the second `EdwardsPoint`
+    /// and add it following the same addition algorithm.
     fn sub(self, other: &'b EdwardsPoint) -> EdwardsPoint {
-        unimplemented!()
+        let other_neg = -other;
+        let k = constants::EDWARDS_2_D_PRIME;
+        let two = FieldElement::from(&2u8);
+
+        let A = &(&self.Y - &self.X) * &(&other_neg.Y - &other_neg.X);
+        let B = &(&self.Y + &self.X) * &(&other_neg.Y + &other_neg.X);
+        let C = &k * &(&self.T * &other_neg.T);
+        let D = &two * &(&self.Z * &other_neg.Z);
+        
+        EdwardsPoint {
+            X: &(&B - &A) * &(&D - &C),
+            Y: &(&D + &C) * &(&B + &A),
+            Z: &(&D - &C) * &(&D + &C),
+            T: &(&B - &A) * &(&B + &A),
+        }
     }
 }
 
 impl<'a, 'b> Mul<&'b Scalar> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Scalar multiplication: compute `scalar * self`.
-    /// Same operations as in addition except that the 
-    /// input is negated.
     fn mul(self, scalar: &'b Scalar) -> EdwardsPoint {
         unimplemented!()
     }
@@ -223,7 +243,6 @@ impl<'a, 'b> Mul<&'b Scalar> for &'a EdwardsPoint {
 
 impl<'a, 'b> Mul<&'b EdwardsPoint> for &'a Scalar {
     type Output = EdwardsPoint;
-
     /// Scalar multiplication: compute `scalar * self`.
     fn mul(self, point: &'b EdwardsPoint) -> EdwardsPoint {
         unimplemented!()
