@@ -123,6 +123,11 @@ impl Scalar {
         Scalar([0,0,0,0,0])
     }
 
+    /// Evaluate if a `Scalar` is even or not.
+    pub fn is_even(self) -> bool {
+        self.0[0].is_even()
+    }
+
     /// Unpack a 32 byte / 256 bit Scalar into 5 52-bit limbs.
     pub fn from_bytes(bytes: &[u8; 32]) -> Scalar {
         let mut words = [0u64; 4];
