@@ -151,13 +151,13 @@ impl Scalar {
         let top_mask = (1u64 << 48) - 1;
         let mut s = Scalar::zero();
 
-        s[ 0] =   words[0]                            & mask;
+        s[0] =   words[0]                            & mask;
         // Get the 64-52 = 12 bits and add words[1] (shifting 12 to the left) on the front with `|` then apply mask.
-        s[ 1] = ((words[0] >> 52) | (words[1] << 12)) & mask; 
-        s[ 2] = ((words[1] >> 40) | (words[2] << 24)) & mask;
-        s[ 3] = ((words[2] >> 28) | (words[3] << 36)) & mask;
+        s[1] = ((words[0] >> 52) | (words[1] << 12)) & mask; 
+        s[2] = ((words[1] >> 40) | (words[2] << 24)) & mask;
+        s[3] = ((words[2] >> 28) | (words[3] << 36)) & mask;
         // Shift 16 to the right to get the 52 bits of the scalar on that limb. Then apply top_mask.
-        s[ 4] =  (words[3] >> 16)                     & top_mask;
+        s[4] =  (words[3] >> 16)                     & top_mask;
 
         s
     }
@@ -410,6 +410,9 @@ mod tests {
     /// `Y = 6145104759870991071742105800796537629880401874866217824609283457819451087098 (mod l) = 717350576871794411262215878514291949349241575907629849852603275827191647632`
     pub static Y: Scalar = Scalar([138340288859536, 461913478537005, 1182880083788836, 1688835920473363, 1743782656037]);
 
+    /// `Y/2 = 358675288435897205631107939257145974674620787953814924926301637913595823816`.
+    pub static Y_HALF: Scalar = Scalar([2320969958115016, 230956739268502, 2843239855579666, 3096217773921929, 871891328018]);
+    
     /// Y in Montgomery domain; `Y_MONT = (Y * R) (mod l) = 682963356548663143913382285837893622221394109239214830065314998385324548003`
     pub static Y_MONT: Scalar = Scalar([2328716356837283, 1997480944140188, 4481133454453893, 3196446152249575, 1660191953914]);
     
@@ -512,6 +515,18 @@ mod tests {
 
     #[test]
     fn half() {
-        
+        let res = &Y.half();
+        for i in 0..5 {
+            assert!(res[i] == Y_HALF[i]);
+        }
+
+        let a_half = Scalar([0, 0, 0, 1, 0]);
+        let a_half_half = Scalar([0, 0, 2251799813685248, 0, 0]);
+
+        for i in 0..5 {
+            assert!(a_half[i] == A.half()[i]);
+            assert!(a_half_half[i] == A.half().half()[i]);
+        }
+
     }
 }
