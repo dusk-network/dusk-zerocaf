@@ -118,9 +118,19 @@ macro_rules! m {
 
 impl Scalar {
 
-    /// Return the zero Scalar
+    /// Return a Scalar with value = `0`.
     pub fn zero() -> Scalar {
         Scalar([0,0,0,0,0])
+    }
+
+    /// Return a Scalar with value = `1`.
+    pub fn one() -> Scalar {
+        Scalar([1,0,0,0,0])
+    }
+
+    /// Return a Scalar with value = `-1 (mod l)`.
+    pub fn minus_one() -> Scalar {
+        Scalar([2766226127823334, 4237835465749098, 4503599626623787, 4503599627370495, 2199023255551])
     }
 
     /// Evaluate if a `Scalar` is even or not.
@@ -498,5 +508,10 @@ mod tests {
         for i in 0..5 {
             assert!( res[i] == X_TIMES_Y_MONT[i]);
         }
+    }
+
+    #[test]
+    fn half() {
+        
     }
 }
