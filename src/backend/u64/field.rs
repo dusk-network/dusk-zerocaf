@@ -2,6 +2,7 @@
 //! using 64-bit limbs with 128-bit products
 
 use core::fmt::Debug;
+use core::convert::From;
 use std::default::Default;
 use std::cmp::{PartialOrd, Ordering, Ord};
 
@@ -57,6 +58,61 @@ impl Ord for FieldElement {
             }
         }
         Ordering::Equal
+    }
+}
+
+//-------------- From Implementations -----------------//
+impl<'a> From<&'a u8> for FieldElement {
+    /// Performs the conversion.
+    fn from(_inp: &'a u8) -> FieldElement {
+        let mut res = FieldElement::zero();
+        res[0] = *_inp as u64;
+        res
+    }
+}
+
+impl<'a> From<&'a u16> for FieldElement {
+    /// Performs the conversion.
+    fn from(_inp: &'a u16) -> FieldElement {
+        let mut res = FieldElement::zero();
+        res[0] = *_inp as u64;
+        res
+    }
+}
+
+impl<'a> From<&'a u32> for FieldElement {
+    /// Performs the conversion.
+    fn from(_inp: &'a u32) -> FieldElement {
+        let mut res = FieldElement::zero();
+        res[0] = *_inp as u64;
+        res
+    }
+}
+
+impl<'a> From<&'a u64> for FieldElement {
+    /// Performs the conversion.
+    fn from(_inp: &'a u64) -> FieldElement {
+        let mut res = FieldElement::zero();
+        let mask = (1u64 << 52) - 1;
+        res[0] = _inp & mask;
+        res[1] = _inp >> 52;
+        res
+    }
+}
+
+impl<'a> From<&'a u128> for FieldElement {
+    /// Performs the conversion.
+    fn from(_inp: &'a u128) -> FieldElement {
+        let mut res = FieldElement::zero();
+        let mask = (1u128 << 52) - 1;
+
+        // Since 128 / 52 < 4 , we only need to care
+        // about the first three limbs.
+        res[0] = (_inp & mask) as u64;
+        res[1] = ((_inp >> 52) & mask) as u64;
+        res[2] = (_inp >> 104) as u64;
+
+        res
     }
 }
 
@@ -331,6 +387,11 @@ impl FieldElement {
         }
 
         res
+    }
+
+    /// Compute `self^2 (mod l)`.
+    pub fn square(&self) -> FieldElement {
+        self * self
     }
 
     /// Compute `a * b` with the function multiplying helper
@@ -627,6 +688,9 @@ pub mod tests {
     /// `A = 182687704666362864775460604089535377456991567872`
     pub static A: FieldElement = FieldElement([0, 0, 0, 2, 0]);
 
+    /// `A_SQUARE = A^2 = 7237005577332262213845247704030316590229102007346248927835171914574158222317`.
+    pub static A_SQUARE: FieldElement = FieldElement([671914833335277, 423018350096769, 2042999080933985, 4503598226741381, 17592186044415]);
+
     /// `-A (mod l) = 7237005577332262213973186562860306536190753494604447001912415560828462683117`.
     pub static MINUS_A: FieldElement = FieldElement([671914833335277, 3916664325105025, 1367801, 4503599627370494, 17592186044415]);
 
@@ -638,6 +702,9 @@ pub mod tests {
 
     /// `B = 904625697166532776746648320197686575422163851717637391703244652875051672039`
     pub static B: FieldElement = FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370493, 2199023255551]);
+
+    /// `B_SQUARE = B^2 = 6084981972634577367347263098159392507879678891294474389120508780995125934784`.
+    pub static B_SQUARE: FieldElement = FieldElement([3966658334128832, 2102453619223755, 4260110256982373, 4297171677577933, 14791771789536]);
     
     /// `-B (mod l) = 6332379880165729437226538242845307665434952507662270214298706285410402578950`.
     pub static MINUS_B: FieldElement = FieldElement([2409288332882438, 4182428486726422, 2114509, 2, 15393162788864]);
@@ -777,6 +844,54 @@ pub mod tests {
     }
 
     #[test]
+    fn from_u8() {
+        let res = FieldElement::from(&2u8);
+        let two = FieldElement([2, 0, 0, 0, 0]);
+
+        for i in 0..5 {
+            assert!(res[i] == two[i]);
+        }
+    }
+
+    #[test]
+    fn from_u16() {
+        let res = FieldElement::from(&32768u16);
+        let two_pow_15 = FieldElement([32768, 0, 0, 0, 0]);
+
+        for i in 0..5 {
+            assert!(res[i] == two_pow_15[i]);
+        }
+    }
+
+    #[test]
+    fn from_u32() {
+        let res = FieldElement::from(&2147483648u32);
+        let two_pow_31 = FieldElement([2147483648, 0, 0, 0, 0]);
+        print!("{:?}", res);
+        for i in 0..5 {
+            assert!(res[i] == two_pow_31[i]);
+        }
+    }
+
+    #[test]
+    fn from_u64() {
+        let res = FieldElement::from(&18446744073709551615u64);
+        let two_pow_64_minus_one = FieldElement([4503599627370495, 4095, 0, 0, 0]);
+        for i in 0..5 {
+            assert!(res[i] == two_pow_64_minus_one[i]);
+        }
+    }
+
+    #[test]
+    fn from_u128() {
+        let res = FieldElement::from(&170141183460469231731687303715884105727u128);
+        let two_pow_127_minus_one = FieldElement([4503599627370495, 4503599627370495, 8388607, 0, 0]);
+        for i in 0..5 {
+            assert!(res[i] == two_pow_127_minus_one[i]);
+        }
+    }
+
+    #[test]
     fn from_ristretto255scalar() {
         // a = `2238329342913194256032495932344128051776374960164957527413114840482143558222` = res.
         let a: Ristretto255Scalar = Ristretto255Scalar::from_canonical_bytes([0x4e, 0x5a, 0xb4, 0x34, 0x5d, 0x47, 0x08, 0x84,
@@ -830,6 +945,19 @@ pub mod tests {
         let non_multiple = FieldElement::two_pow_k(&104u64);
         for i in 0..5 {
             assert!(non_multiple[i] == TWO_POW_104[i]);
+        }
+    }
+
+    #[test]
+    fn square() {
+        let res = &A.square();
+        for i in 0..5 {
+            assert!(res[i] == A_SQUARE[i]);
+        }
+
+        let res = &B.square();
+        for i in 0..5 {
+            assert!(res[i] == B_SQUARE[i]);
         }
     }
 

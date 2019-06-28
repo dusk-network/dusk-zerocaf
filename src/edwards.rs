@@ -106,7 +106,7 @@ impl CompressedEdwardsY {
     /// Returns `Err` if the input is not the Y-coordinate of a
     /// curve point.
     pub fn decompress(&self) -> Option<EdwardsPoint> {
-        unimplemented!();
+        unimplemented!()
     }
 }
 
@@ -179,26 +179,26 @@ impl Neg for EdwardsPoint {
 impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Add two EdwardsPoints and give the resulting `EdwardsPoint`.
-    /// Cost: 9M + 1*a + 7add.
-    /// Cost: 9M + 1*a + 6add dependent upon the first point.
-    /// This implementation is speciffic for curves with `a = -1` as Doppio is.
-    /// Source: 2008 Hisil–Wong–Carter–Dawson, http://eprint.iacr.org/2008/522, Section 3.1.
+    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// Source: 2008 Hisil–Wong–Carter–Dawson, 
+    /// http://eprint.iacr.org/2008/522, Section 3.1.
+    /// 
+    /// Trick 2k' is used to reduce 1D and 1M. `2d' = k = 2*(-a/EDWARDS_D)`.
     #[inline]
     fn add(self, other: &'b EdwardsPoint) -> EdwardsPoint {
-        let A: FieldElement = &self.X * &other.X;
-        let B: FieldElement = &self.Y * &other.Y;
-        let C: FieldElement = &self.Z * &other.T;
-        let D: FieldElement = &self.T * &other.Z;
-        let E: FieldElement = &D + &C;
-        let F: FieldElement = &(&(&(&self.X - &self.Y) * &(&other.X - &other.Y)) + &A) + &B;
-        let G: FieldElement = &(&B + &constants::EDWARDS_A) * &A;
-        let H: FieldElement = &D - &C;
+        let k = constants::EDWARDS_2_D_PRIME;
+        let two = FieldElement::from(&2u8);
 
-        EdwardsPoint{
-            X: &E * &F,
-            Y: &G * &H,
-            Z: &F * &G,
-            T: &E * &H
+        let A = &(&self.Y - &self.X) * &(&other.Y - &other.X);
+        let B = &(&self.Y + &self.X) * &(&other.Y + &other.X);
+        let C = &k * &(&self.T * &other.T);
+        let D = &two * &(&self.Z * &other.Z);
+        
+        EdwardsPoint {
+            X: &(&B - &A) * &(&D - &C),
+            Y: &(&D + &C) * &(&B + &A),
+            Z: &(&D - &C) * &(&D + &C),
+            T: &(&B - &A) * &(&B + &A),
         }
     }
 }
@@ -206,8 +206,30 @@ impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
 impl<'a, 'b> Sub<&'b EdwardsPoint> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Substract two EdwardsPoints and give the resulting `EdwardsPoint`
+    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// Source: 2008 Hisil–Wong–Carter–Dawson, 
+    /// http://eprint.iacr.org/2008/522, Section 3.1.
+    /// 
+    /// Trick 2k' is used to reduce 1D and 1M. `2d' = k = 2*(-a/EDWARDS_D)`.
+    /// 
+    /// The only thing we do is to negate the second `EdwardsPoint`
+    /// and add it following the same addition algorithm.
     fn sub(self, other: &'b EdwardsPoint) -> EdwardsPoint {
-        unimplemented!()
+        let other_neg = -other;
+        let k = constants::EDWARDS_2_D_PRIME;
+        let two = FieldElement::from(&2u8);
+
+        let A = &(&self.Y - &self.X) * &(&other_neg.Y - &other_neg.X);
+        let B = &(&self.Y + &self.X) * &(&other_neg.Y + &other_neg.X);
+        let C = &k * &(&self.T * &other_neg.T);
+        let D = &two * &(&self.Z * &other_neg.Z);
+        
+        EdwardsPoint {
+            X: &(&B - &A) * &(&D - &C),
+            Y: &(&D + &C) * &(&B + &A),
+            Z: &(&D - &C) * &(&D + &C),
+            T: &(&B - &A) * &(&B + &A),
+        }
     }
 }
 
@@ -221,7 +243,6 @@ impl<'a, 'b> Mul<&'b Scalar> for &'a EdwardsPoint {
 
 impl<'a, 'b> Mul<&'b EdwardsPoint> for &'a Scalar {
     type Output = EdwardsPoint;
-
     /// Scalar multiplication: compute `scalar * self`.
     fn mul(self, point: &'b EdwardsPoint) -> EdwardsPoint {
         unimplemented!()
@@ -231,6 +252,33 @@ impl<'a, 'b> Mul<&'b EdwardsPoint> for &'a Scalar {
 
 
 impl EdwardsPoint {
+    /// Double the given point following:
+    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// Source: 2008 Hisil–Wong–Carter–Dawson, 
+    /// http://eprint.iacr.org/2008/522, Section 3.1.
+    /// Cost: 4M+ 4S+ 1D
+    pub fn double(&self) -> EdwardsPoint {
+        let two = FieldElement::from(&2u8);
+        let a = FieldElement::minus_one();
+
+        let A = self.X.square();
+        let B = self.Y.square();
+        let C = &two * &self.Z.square();
+        let D = &a * &A;
+        let E = &((&(&self.X + &self.Y).square()) - &A) - &B;
+        let G = &D + &B;
+        let F = &G - &C;
+        let H = &D - &B;
+
+        EdwardsPoint {
+            X: &E * &F,
+            Y: &G * &H,
+            Z: &F * &G,
+            T: &E * &H,
+        }
+
+    }
+
     /// Convert this `EdwardsPoint` on the Edwards model to the
     /// corresponding `MontgomeryPoint` on the Montgomery model.
     pub fn to_montgomery(&self) -> MontgomeryPoint {
@@ -241,6 +289,7 @@ impl EdwardsPoint {
     pub fn compress(&self) -> CompressedEdwardsY {
         unimplemented!()
     }
+    
 
     /// Multiply by the cofactor: return (8 P).
     pub fn mul_by_cofactor(&self) -> EdwardsPoint {
@@ -280,7 +329,7 @@ pub mod tests {
 
     #[test]
     fn edwards_extended_coords_neg_identity() {
-        let res = -EdwardsPoint::identity();
+        let res = - &EdwardsPoint::identity();
 
         assert!(res == EdwardsPoint::identity())
     }
