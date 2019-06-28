@@ -55,6 +55,61 @@ impl Ord for Scalar {
     }
 }
 
+//-------------- From Implementations -----------------//
+impl<'a> From<&'a u8> for Scalar {
+    /// Performs the conversion.
+    fn from(_inp: &'a u8) -> Scalar {
+        let mut res = Scalar::zero();
+        res[0] = *_inp as u64;
+        res
+    }
+}
+
+impl<'a> From<&'a u16> for Scalar {
+    /// Performs the conversion.
+    fn from(_inp: &'a u16) -> Scalar {
+        let mut res = Scalar::zero();
+        res[0] = *_inp as u64;
+        res
+    }
+}
+
+impl<'a> From<&'a u32> for Scalar {
+    /// Performs the conversion.
+    fn from(_inp: &'a u32) -> Scalar {
+        let mut res = Scalar::zero();
+        res[0] = *_inp as u64;
+        res
+    }
+}
+
+impl<'a> From<&'a u64> for Scalar {
+    /// Performs the conversion.
+    fn from(_inp: &'a u64) -> Scalar {
+        let mut res = Scalar::zero();
+        let mask = (1u64 << 52) - 1;
+        res[0] = _inp & mask;
+        res[1] = _inp >> 52;
+        res
+    }
+}
+
+impl<'a> From<&'a u128> for Scalar {
+    /// Performs the conversion.
+    fn from(_inp: &'a u128) -> Scalar {
+        let mut res = Scalar::zero();
+        let mask = (1u128 << 52) - 1;
+
+        // Since 128 / 52 < 4 , we only need to care
+        // about the first three limbs.
+        res[0] = (_inp & mask) as u64;
+        res[1] = ((_inp >> 52) & mask) as u64;
+        res[2] = (_inp >> 104) as u64;
+
+        res
+    }
+}
+
 impl<'b> Add<&'b Scalar> for Scalar {
     type Output = Scalar;
     /// Compute `a + b` (mod l)
@@ -527,6 +582,12 @@ mod tests {
             assert!(a_half[i] == A.half()[i]);
             assert!(a_half_half[i] == A.half().half()[i]);
         }
+    }
 
+    #[test]
+    fn even_scalar() {
+        assert!(Y.is_even());
+        assert!(!X.is_even());
+        assert!(Scalar::zero().is_even());
     }
 }
