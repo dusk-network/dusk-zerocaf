@@ -201,6 +201,33 @@ impl Scalar {
         res
     }  
 
+    /// Give the half of the `Scalar` value (mod l).
+    /// This function SHOULD ONLY be used with even 
+    /// `Scalars` otherways, can produce erroneus
+    /// results.
+    #[inline]
+    pub fn half(&self) -> Scalar {
+        let mut res = self.clone();
+        let mut remainder = 0u64;
+        for i in (0..5).rev() {
+            res[i] = res[i] + remainder;
+            match(res[i] == 1, res[i].is_even()){
+                (true, _) => {
+                    remainder = 4503599627370496u64;
+                }
+                (_, false) => {
+                    res[i] = res[i] - 1u64;
+                    remainder = 4503599627370496u64;
+                }
+                (_, true) => {
+                    remainder = 0;
+                }
+            }
+            res[i] = res[i] >> 1;
+        };
+        res
+    } 
+
     /// Compute `a * b` with the function multiplying helper
     #[inline]
     pub fn mul_internal(a: &Scalar, b: &Scalar) -> [u128; 9] {
