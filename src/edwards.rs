@@ -302,13 +302,13 @@ impl EdwardsPoint {
 
     /// Implementation of the standard algorithm of `add_and_double`.
     pub fn add_and_mul(&self, s: &Scalar) -> EdwardsPoint {
-        let G = self.clone();
-        let n = s.clone();
-        let R = EdwardsPoint::zero();
+        let mut G = self.clone();
+        let mut n = s.clone();
+        let mut R = EdwardsPoint::zero();
 
         while n != Scalar::zero() {
             if n.is_even() {
-                R = &R + self;
+                R = &R + &G;
             };
 
             G = G.double();
