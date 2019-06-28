@@ -1,5 +1,4 @@
 /// Implementation for Montgomery Points for the Doppio curve.
-
 use crate::edwards::{CompressedEdwardsY, EdwardsPoint};
 use crate::field::FieldElement;
 use crate::scalar::Scalar;

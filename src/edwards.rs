@@ -1,11 +1,9 @@
-/// Edwards Points support and encoding/decoding proces.
-
-use crate::field::FieldElement;
-use crate::scalar::Scalar;
-use crate::montgomery::MontgomeryPoint;
 use crate::constants;
+/// Edwards Points support and encoding/decoding proces.
+use crate::field::FieldElement;
+use crate::montgomery::MontgomeryPoint;
+use crate::scalar::Scalar;
 use crate::traits::*;
-
 
 use subtle::Choice;
 use subtle::ConstantTimeEq;
@@ -14,8 +12,7 @@ use std::default::Default;
 use std::fmt::Debug;
 
 use core::ops::{Index, IndexMut};
-use std::ops::{Add, Sub, Mul, Neg};
-
+use std::ops::{Add, Mul, Neg, Sub};
 
 /// The first 255 bits of a `CompressedEdwardsY` represent the
 /// (y)-coordinate.  The high bit of the 32nd byte gives the sign of (x).
@@ -57,7 +54,7 @@ impl Default for CompressedEdwardsY {
 impl<'a> Neg for &'a CompressedEdwardsY {
     type Output = CompressedEdwardsY;
     /// Negates an `CompressedEdwardsY` by decompressing
-    /// it, negating over Twisted Edwards Extended 
+    /// it, negating over Twisted Edwards Extended
     /// Projective Coordinates and compressing it back.
     fn neg(self) -> CompressedEdwardsY {
         (-&self.decompress().unwrap()).compress()
@@ -67,22 +64,22 @@ impl<'a> Neg for &'a CompressedEdwardsY {
 impl Neg for CompressedEdwardsY {
     type Output = CompressedEdwardsY;
     /// Negates an `CompressedEdwardsY` by decompressing
-    /// it, negating over Twisted Edwards Extended 
+    /// it, negating over Twisted Edwards Extended
     /// Projective Coordinates and compressing it back.
     fn neg(self) -> CompressedEdwardsY {
-        -& self
+        -&self
     }
 }
 
 impl Identity for CompressedEdwardsY {
-    /// Returns the `CompressedEdwards identity point value 
+    /// Returns the `CompressedEdwards identity point value
     /// that corresponds to `1` (mod l)
     /// with the sign bit setted to `0`.
     fn identity() -> CompressedEdwardsY {
-        CompressedEdwardsY([1, 0, 0, 0, 0, 0, 0, 0,
-                            0, 0, 0, 0, 0, 0, 0, 0,
-                            0, 0, 0, 0, 0, 0, 0, 0,
-                            0, 0, 0, 0, 0, 0, 0, 0])
+        CompressedEdwardsY([
+            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0,
+        ])
     }
 }
 
@@ -110,8 +107,6 @@ impl CompressedEdwardsY {
     }
 }
 
-
-
 /// An `EdwardsPoint` represents a point on the Doppio Curve expressed
 /// over the Twisted Edwards Extended Coordinates.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -135,7 +130,7 @@ impl PartialEq for EdwardsPoint {
 }
 */
 impl Default for EdwardsPoint {
-    /// Returns the default EdwardsPoint Extended Coordinates: (0, 1, 1, 0). 
+    /// Returns the default EdwardsPoint Extended Coordinates: (0, 1, 1, 0).
     fn default() -> EdwardsPoint {
         EdwardsPoint::identity()
     }
@@ -148,7 +143,7 @@ impl Identity for EdwardsPoint {
             X: FieldElement::zero(),
             Y: FieldElement::one(),
             Z: FieldElement::one(),
-            T: FieldElement::zero()
+            T: FieldElement::zero(),
         }
     }
 }
@@ -159,12 +154,12 @@ impl<'a> Neg for &'a EdwardsPoint {
     /// Since the negative of a point is (-X:Y:Z:-T), it
     /// gives as a result: `(-X, Y, Z, -T)`.
     fn neg(self) -> EdwardsPoint {
-       EdwardsPoint{
-           X: -&self.X,
-           Y:   self.Y,
-           Z:   self.Z,
-           T: -&self.T,
-       }
+        EdwardsPoint {
+            X: -&self.X,
+            Y: self.Y,
+            Z: self.Z,
+            T: -&self.T,
+        }
     }
 }
 
@@ -180,9 +175,9 @@ impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Add two EdwardsPoints and give the resulting `EdwardsPoint`.
     /// This implementation is specific for curves with `a = -1` as Doppio is.
-    /// Source: 2008 Hisil–Wong–Carter–Dawson, 
+    /// Source: 2008 Hisil–Wong–Carter–Dawson,
     /// http://eprint.iacr.org/2008/522, Section 3.1.
-    /// 
+    ///
     /// Trick 2k' is used to reduce 1D and 1M. `2d' = k = 2*(-a/EDWARDS_D)`.
     #[inline]
     fn add(self, other: &'b EdwardsPoint) -> EdwardsPoint {
@@ -193,7 +188,7 @@ impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
         let B = &(&self.Y + &self.X) * &(&other.Y + &other.X);
         let C = &k * &(&self.T * &other.T);
         let D = &two * &(&self.Z * &other.Z);
-        
+
         EdwardsPoint {
             X: &(&B - &A) * &(&D - &C),
             Y: &(&D + &C) * &(&B + &A),
@@ -207,11 +202,11 @@ impl<'a, 'b> Sub<&'b EdwardsPoint> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Substract two EdwardsPoints and give the resulting `EdwardsPoint`
     /// This implementation is specific for curves with `a = -1` as Doppio is.
-    /// Source: 2008 Hisil–Wong–Carter–Dawson, 
+    /// Source: 2008 Hisil–Wong–Carter–Dawson,
     /// http://eprint.iacr.org/2008/522, Section 3.1.
-    /// 
+    ///
     /// Trick 2k' is used to reduce 1D and 1M. `2d' = k = 2*(-a/EDWARDS_D)`.
-    /// 
+    ///
     /// The only thing we do is to negate the second `EdwardsPoint`
     /// and add it following the same addition algorithm.
     fn sub(self, other: &'b EdwardsPoint) -> EdwardsPoint {
@@ -223,7 +218,7 @@ impl<'a, 'b> Sub<&'b EdwardsPoint> for &'a EdwardsPoint {
         let B = &(&self.Y + &self.X) * &(&other_neg.Y + &other_neg.X);
         let C = &k * &(&self.T * &other_neg.T);
         let D = &two * &(&self.Z * &other_neg.Z);
-        
+
         EdwardsPoint {
             X: &(&B - &A) * &(&D - &C),
             Y: &(&D + &C) * &(&B + &A),
@@ -249,12 +244,10 @@ impl<'a, 'b> Mul<&'b EdwardsPoint> for &'a Scalar {
     }
 }
 
-
-
 impl EdwardsPoint {
     /// Double the given point following:
     /// This implementation is specific for curves with `a = -1` as Doppio is.
-    /// Source: 2008 Hisil–Wong–Carter–Dawson, 
+    /// Source: 2008 Hisil–Wong–Carter–Dawson,
     /// http://eprint.iacr.org/2008/522, Section 3.1.
     /// Cost: 4M+ 4S+ 1D
     pub fn double(&self) -> EdwardsPoint {
@@ -276,20 +269,18 @@ impl EdwardsPoint {
             Z: &F * &G,
             T: &E * &H,
         }
-
     }
 
     /// Convert this `EdwardsPoint` on the Edwards model to the
     /// corresponding `MontgomeryPoint` on the Montgomery model.
     pub fn to_montgomery(&self) -> MontgomeryPoint {
-       unimplemented!()
+        unimplemented!()
     }
 
     /// Compress this point to `CompressedEdwardsY` format.
     pub fn compress(&self) -> CompressedEdwardsY {
         unimplemented!()
     }
-    
 
     /// Multiply by the cofactor: return (8 P).
     pub fn mul_by_cofactor(&self) -> EdwardsPoint {
@@ -308,19 +299,18 @@ pub mod tests {
 
     #[test]
     fn edwards_extended_coords_neg() {
-
-        let inv_a: EdwardsPoint = EdwardsPoint{
-           X: FieldElement::minus_one(),
-           Y: FieldElement::zero(),
-           Z: FieldElement::zero(),
-           T: FieldElement::minus_one(),
+        let inv_a: EdwardsPoint = EdwardsPoint {
+            X: FieldElement::minus_one(),
+            Y: FieldElement::zero(),
+            Z: FieldElement::zero(),
+            T: FieldElement::minus_one(),
         };
 
-        let a: EdwardsPoint = EdwardsPoint{
-           X: FieldElement::one(),
-           Y: FieldElement::zero(),
-           Z: FieldElement::zero(),
-           T: FieldElement::one(),
+        let a: EdwardsPoint = EdwardsPoint {
+            X: FieldElement::one(),
+            Y: FieldElement::zero(),
+            Z: FieldElement::zero(),
+            T: FieldElement::one(),
         };
 
         let res = -a;
@@ -329,7 +319,7 @@ pub mod tests {
 
     #[test]
     fn edwards_extended_coords_neg_identity() {
-        let res = - &EdwardsPoint::identity();
+        let res = -&EdwardsPoint::identity();
 
         assert!(res == EdwardsPoint::identity())
     }

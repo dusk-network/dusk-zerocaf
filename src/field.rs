@@ -5,17 +5,15 @@ use subtle::ConstantTimeEq;
 
 use crate::backend;
 
-
 #[cfg(feature = "u64_backend")]
 pub use backend::u64::field::*;
-/// A `FieldElement` represents an element of the field 
+/// A `FieldElement` represents an element of the field
 /// `2^252 + 27742317777372353535851937790883648493`
-/// 
+///
 /// The `FieldElement` type is an alias for one of the platform-specific
 /// implementations.
 #[cfg(feature = "u64_backend")]
 pub type FieldElement = backend::u64::field::FieldElement;
-
 
 impl PartialEq for FieldElement {
     fn eq(&self, other: &FieldElement) -> bool {
@@ -31,4 +29,3 @@ impl ConstantTimeEq for FieldElement {
         self.to_bytes().ct_eq(&other.to_bytes())
     }
 }
-

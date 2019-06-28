@@ -4,7 +4,6 @@ extern crate subtle;
 extern crate curve25519_dalek;
 extern crate num;
 
-
 pub mod backend;
 pub mod constants;
 pub mod edwards;

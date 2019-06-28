@@ -1,4 +1,4 @@
-//! This is the definition and implementation 
+//! This is the definition and implementation
 //! of a Weierstrass point.
 
 use core::ops::Add;
@@ -6,7 +6,6 @@ use core::ops::Mul;
 
 use crate::field::FieldElement;
 use crate::scalar::Scalar;
-
 
 /// Holds the \\(u\\)-coordinate of a point on the Montgomery form of
 /// Curve25519 or its twist.
@@ -33,19 +32,17 @@ impl WeierstrassPoint {
     }
 }
 
-
-
 /// A `ProjectivePoint` represents a point on the Weierstrass form of the elliptic curve.
 #[derive(Debug, PartialEq)]
 pub struct ProjectivePoint {
-    pub y: FieldElement
+    pub y: FieldElement,
 }
 
 impl Default for ProjectivePoint {
     fn default() -> ProjectivePoint {
         let field_elem = ProjectivePoint {
-            y: FieldElement::one()
-        }; 
+            y: FieldElement::one(),
+        };
         field_elem
     }
 }
@@ -54,7 +51,7 @@ impl<'a, 'b> Add<&'b ProjectivePoint> for &'a ProjectivePoint {
     type Output = ProjectivePoint;
     fn add(self, _rhs: &'b ProjectivePoint) -> ProjectivePoint {
         let result = ProjectivePoint {
-            y: self.y.add(&_rhs.y)
+            y: self.y.add(&_rhs.y),
         };
         result
     }
@@ -62,7 +59,7 @@ impl<'a, 'b> Add<&'b ProjectivePoint> for &'a ProjectivePoint {
 
 impl<'a, 'b> Mul<&'b Scalar> for &'a ProjectivePoint {
     type Output = ProjectivePoint;
-    /// Multiply this `WeiestrassPoint` by a `Scalar`. 
+    /// Multiply this `WeiestrassPoint` by a `Scalar`.
     fn mul(self, _rhs: &'b Scalar) -> ProjectivePoint {
         unimplemented!()
     }

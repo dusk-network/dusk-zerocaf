@@ -4,9 +4,7 @@ compile_error!(
      please enable one of: u32_backend, u64_backend"
 );
 
-#[cfg(feature = "u64_backend")]
-
-
-pub mod field;
 pub mod constants;
+#[cfg(feature = "u64_backend")]
+pub mod field;
 pub mod scalar;
