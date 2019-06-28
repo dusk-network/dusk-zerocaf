@@ -1,15 +1,20 @@
-//! Arithmetic mod (2^249 - 15145038707218910765482344729778085401)
-//! with five \\(52\\)-bit unsigned limbs.
+///! Arithmetic mod (2^249 - 15145038707218910765482344729778085401)
+///! with five 52-bit unsigned limbs.
 
 use core::fmt::Debug;
 use core::ops::{Index, IndexMut};
 use core::ops::Add;
 use core::ops::Sub;
+
+use std::cmp::{PartialOrd, Ordering, Ord};
+
+use num::Integer;
+
 use crate::backend::u64::constants;
 
-/// The `Scalar` struct represents an Scalar over a modulo
+/// The `Scalar` struct represents an Scalar over the modulo
 /// `2^249 - 15145038707218910765482344729778085401` as 5 52-bit limbs.
-#[derive(Copy,Clone)]
+#[derive(Copy,Clone, Eq)]
 pub struct Scalar(pub [u64; 5]);
 
 impl Debug for Scalar {
@@ -28,6 +33,25 @@ impl Index<usize> for Scalar {
 impl IndexMut<usize> for Scalar {
     fn index_mut(&mut self, _index: usize) -> &mut u64 {
         &mut (self.0[_index])
+    }
+}
+
+impl PartialOrd for Scalar {
+    fn partial_cmp(&self, other: &Scalar) -> Option<Ordering> {
+        Some(self.cmp(&other))
+    }
+}
+
+impl Ord for Scalar {
+    fn cmp(&self, other: &Self) -> Ordering {
+        for i in (0..5).rev() {
+            if self[i] > other[i] {
+                return Ordering::Greater;
+            }else if self[i] < other[i] {
+                return Ordering::Less;
+            }
+        }
+        Ordering::Equal
     }
 }
 
@@ -93,6 +117,7 @@ macro_rules! m {
 
 
 impl Scalar {
+
     /// Return the zero Scalar
     pub fn zero() -> Scalar {
         Scalar([0,0,0,0,0])
@@ -169,7 +194,7 @@ impl Scalar {
         // High bit should be zero.
         debug_assert!((res[31] & 0b1000_0000u8) == 0u8);
         res
-    }   
+    }  
 
     /// Compute `a * b` with the function multiplying helper
     #[inline]
