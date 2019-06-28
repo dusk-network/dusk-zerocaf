@@ -409,6 +409,17 @@ mod tests {
     /// `X * Y (mod l) = 890263784947025690345271110799906008759402458672628420828189878638015362081`
     pub static X_TIMES_Y: Scalar = Scalar([3414372756436001, 1500062170770321, 4341044393209371, 2791496957276064, 2164111380879]); 
 
+    #[test]
+    fn partial_ord_and_eq() {
+        assert!(Y.is_even());
+        assert!(!X.is_even());
+
+        assert!(A_MONT < Y);
+        assert!(Y < X);
+
+        assert!(Y >= Y);
+        assert!(X == X);
+    }
 
     #[test]
     fn add_with_modulo() {
