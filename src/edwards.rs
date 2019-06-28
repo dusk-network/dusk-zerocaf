@@ -278,6 +278,17 @@ impl EdwardsPoint {
 
     }
 
+    /// Return the `EdwardsPoint` with Extended Coordinates
+    /// eq to: {0, 0, 0, 0}.
+    pub fn zero() -> EdwardsPoint {
+        EdwardsPoint {
+            X: FieldElement::zero(),
+            Y: FieldElement::zero(),
+            Z: FieldElement::zero(),
+            T: FieldElement::zero(),
+        }
+    }
+
     /// Convert this `EdwardsPoint` on the Edwards model to the
     /// corresponding `MontgomeryPoint` on the Montgomery model.
     pub fn to_montgomery(&self) -> MontgomeryPoint {
