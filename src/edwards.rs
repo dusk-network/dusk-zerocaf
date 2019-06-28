@@ -250,7 +250,6 @@ impl<'a, 'b> Mul<&'b EdwardsPoint> for &'a Scalar {
 }
 
 
-
 impl EdwardsPoint {
     /// Double the given point following:
     /// This implementation is specific for curves with `a = -1` as Doppio is.
@@ -288,6 +287,24 @@ impl EdwardsPoint {
     /// Compress this point to `CompressedEdwardsY` format.
     pub fn compress(&self) -> CompressedEdwardsY {
         unimplemented!()
+    }
+
+    /// Implementation of the standard algorithm of `add_and_double`.
+    pub fn add_and_mul(&self, s: &Scalar) -> EdwardsPoint {
+        let G = self.clone();
+        let n = s.clone();
+        let R = EdwardsPoint::zero();
+
+        while n != Scalar::zero() {
+            if n.is_even() {
+                R = &R + self;
+            };
+
+            G = G.double();
+            n = n.half();
+        }  
+
+        R
     }
     
 
