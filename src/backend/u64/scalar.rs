@@ -1,5 +1,5 @@
 //! Arithmetic mod (2^249 - 15145038707218910765482344729778085401)
-//! with five \\(52\\)-bit unsigned limbs.
+//! with five 52-bit unsigned limbs.
 
 use core::fmt::Debug;
 use core::ops::{Index, IndexMut};
@@ -236,7 +236,7 @@ impl Scalar {
 
     /// Compute `limbs/R` (mod l), where R is the Montgomery modulus 2^260
     #[inline]
-    pub (crate) fn montgomery_reduce(limbs: &[u128; 9]) -> Scalar {
+    pub fn montgomery_reduce(limbs: &[u128; 9]) -> Scalar {
 
         #[inline]
         fn adjustment_fact(sum: u128) -> (u128, u64) {

@@ -12,4 +12,3 @@ pub mod field;
 pub mod montgomery;
 pub mod scalar;
 pub mod traits;
-pub mod weierstrass;
