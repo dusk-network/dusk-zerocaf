@@ -1,4 +1,4 @@
-# Dusk-Corretto [![Build Status](https://travis-ci.com/dusk-network/dusk-corretto.svg?branch=master)](https://travis-ci.com/dusk-network/dusk-corretto)  [![codecov](https://codecov.io/gh/dusk-network/dusk-corretto/branch/master/graph/badge.svg)](https://codecov.io/gh/dusk-network/dusk-corretto) 
+# Dusk-Zerocaf [![Build Status](https://travis-ci.com/dusk-network/Dusk-Zerocaf.svg?branch=master)](https://travis-ci.com/dusk-network/Dusk-Zerocaf)  [![codecov](https://codecov.io/gh/dusk-network/dusk-corretto/branch/master/graph/badge.svg)](https://codecov.io/gh/dusk-network/dusk-corretto) 
 
 
 
@@ -11,9 +11,9 @@ This repository contains the first ever implementation of an elliptic curve over
 Ristretto is a technique for constructing prime order elliptic curve groups with non-malleable encodings. The [Ristretto protocol](https://ristretto.group/ristretto.html) arose as an extension of [Mike Hamburg's Decaf](https://www.shiftleft.org/papers/decaf/decaf.pdf) approach to cofactor elimination, which is applicable to curves of
 cofactor 4, whereas the Ristretto is designed for non-prime-order curves of cofactor 8 or 4.
 
-### Ristretto Scalar Field And Bulletproof
+### Ristretto Scalar Field And Bulletproofs.
 
-Originally designed to abstract _non-prime-order curves into prime-order scalar fields_, the `Ristretto` abstraction would have been far too inefficient to implement for Bulletproofs zero-knowledge proof. Therefore the `Ristretto scalar field` is used to **solve all negative impacts of using cofactors equalling 8 on the Ristretto curve.**. The strategy is to use a _Ristretto embedded curve_ (also called `Doppio Curve`), as the initial operations within `Corretto` are performed therein. `Corretto` opens up new opportunities for the use cases of **zero-knowledge proofs** inside the Dusk Network protocol as well as making a _Bulletproof-integrated ring signature substitute possible_, with orders of magnitude performance improvements compared to the fastest ringsig implementation.
+Originally designed to abstract _non-prime-order curves into prime-order scalar fields_, the `Ristretto` abstraction would have been far too inefficient to implement for Bulletproofs zero-knowledge proof. Therefore the `Ristretto scalar field` is used to **solve all negative impacts of using cofactors equalling 8 on the Ristretto curve.**. The strategy is to use a _Ristretto embedded curve_ (also called `Doppio Curve`), as the initial operations within `zerocaf` are performed therein. `zerocaf` opens up new opportunities for the use cases of **zero-knowledge proofs** inside the Dusk Network protocol as well as making a _Bulletproof-integrated ring signature substitute possible_, with orders of magnitude performance improvements compared to the fastest ringsig implementation.
 
 Within this library, the implementation of the Ristretto to construct the curve with desired properties is made possible by 
 defining the curve over the scalar field, using only a thin abstraction layer, which in turn allows for systems that use signatures to be safely extended with zero-knowledge protocols. These zero-knowledge protocols are utilised with no additional cryptographic assumptions and minimal changes in the code. The Ristretto scalar field is Bulletproof friendly, which makes it possible to use both cryptographic protocols in tandem with one another, as they are centric to contemporary applications of elliptic curve operations.
@@ -98,7 +98,7 @@ Note: the refactoring relations are expressed as indentations
         - [x] Implement Montgomery_Muliplication.
         - [x] Implement Montgomery_Squaring.
         - [x] Implement tests of Montgomery Arithmetics. (under revision)
-- [ ] Create FieldElement Struct and implement the basic operations we need on a u64 backend.
+- [x] Create FieldElement Struct and implement the basic operations we need on a u64 backend.
   - [x] Find the proper radix value for FieldElement.
   - [x] Add basic and needed constants.
   - [x] Implement Reduce function to make the FieldElements fit on a 5 u64-bit limbs.
@@ -110,18 +110,18 @@ Note: the refactoring relations are expressed as indentations
     - [x] Research about addition chains inversion methods.
   - [x] Add proper tests for every function.
 - [ ] Implement Edwards points
-     - [ ] Create projective coordiantes
-     - [ ] Implement Point Addition for projective coordinates
-     - [ ] Implement Point Subtraction for projective coordinates
+     - [x] Create projective coordiantes
+     - [x] Implement Point Addition for projective coordinates
+     - [x] Implement Point Subtraction for projective coordinates
      - [x] Implement from byte conversions
      - [x] Implement to byte conversions
-     - [ ] Implement compressed Edwards point Y-coordinate 
-     - [ ] Implement multiplication for scalar with Edwards basepoint
+     - [x] Implement compressed Edwards point Y-coordinate 
+     - [x] Implement multiplication for scalar with Edwards basepoint
     - [x] Represent Edwards points as Ristretto points using wrapping function (research)
     - [ ] Cargo doc testing and improvement
     - [ ] Re-define Edwards point struct
     - [ ] Decide the best use cases of the various Edwards coordinate types (compressed, standard, extended, projective)
-    - [ ] Benchmark different implementations and algorithms
+    - [x] Benchmark different implementations and algorithms
     - [ ] Create About Niels and ProjectiveNiels coordinates usage
     - [ ] Implement Montgomery and Edwards operations & functions
     - [ ] Implement Ristretto Mapping

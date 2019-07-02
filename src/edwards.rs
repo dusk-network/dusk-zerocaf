@@ -1,4 +1,7 @@
-/// Edwards Points support and encoding/decoding proces.
+//! Edwards Point operation implementations and definitions.
+//! Encoding/decoding processes implementation 
+//! and support for all kind of interactions with them.
+//! 
 
 use crate::field::FieldElement;
 use crate::scalar::Scalar;
@@ -75,8 +78,8 @@ impl Neg for CompressedEdwardsY {
 }
 
 impl Identity for CompressedEdwardsY {
-    /// Returns the `CompressedEdwards identity point value 
-    /// that corresponds to `1` (mod l)
+    /// Returns the `CompressedEdwardsY` identity point value 
+    /// that corresponds to `1 (mod l)`
     /// with the sign bit setted to `0`.
     fn identity() -> CompressedEdwardsY {
         CompressedEdwardsY([1, 0, 0, 0, 0, 0, 0, 0,
@@ -116,10 +119,10 @@ impl CompressedEdwardsY {
 /// over the Twisted Edwards Extended Coordinates.
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct EdwardsPoint {
-    pub(crate) X: FieldElement,
-    pub(crate) Y: FieldElement,
-    pub(crate) Z: FieldElement,
-    pub(crate) T: FieldElement,
+    pub X: FieldElement,
+    pub Y: FieldElement,
+    pub Z: FieldElement,
+    pub T: FieldElement,
 }
 
 impl Debug for EdwardsPoint {
@@ -189,8 +192,8 @@ impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Add two EdwardsPoints and give the resulting `EdwardsPoint`.
     /// This implementation is specific for curves with `a = -1` as Doppio is.
-    /// Source: 2008 Hisil–Wong–Carter–Dawson, 
-    /// http://eprint.iacr.org/2008/522, Section 3.1.
+    /// [Source: 2008 Hisil–Wong–Carter–Dawson], 
+    /// (http://eprint.iacr.org/2008/522), Section 3.1.
     /// 
     /// Trick 2k' is used to reduce 1D and 1M. `2d' = k = 2*(-a/EDWARDS_D)`.
     #[inline]
@@ -271,6 +274,10 @@ impl<'a, 'b> Mul<&'b Scalar> for &'a EdwardsPoint {
 impl<'a, 'b> Mul<&'b EdwardsPoint> for &'a Scalar {
     type Output = EdwardsPoint;
     /// Scalar multiplication: compute `scalar * self`.
+    /// This implementation uses the algorithm:
+    /// `add_and_doubling` which is the standard one for
+    /// this operations and also adds less constraints on
+    /// R1CS.
     fn mul(self, point: &'b EdwardsPoint) -> EdwardsPoint {
         unimplemented!()
     }
@@ -352,11 +359,13 @@ impl EdwardsPoint {
     }
 
     /// Compute ([2^k] P)
-    pub(crate) fn mul_by_pow_2(&self, k: u32) -> EdwardsPoint {
+    pub fn mul_by_pow_2(&self, k: u32) -> EdwardsPoint {
         unimplemented!()
     }
 }
 
+/// Module used for tesing `EdwardsPoint` operations and implementations.
+/// Also used to check the correctness of the transformation functions.
 pub mod tests {
     use super::*;
     use constants::*;

@@ -6,9 +6,9 @@ extern crate criterion;
 
 use criterion::{Criterion, Benchmark};
 
-use corretto::backend::u64::{scalar, field};
-use corretto::edwards::EdwardsPoint;
-use corretto::traits::Identity;
+use zerocaf::backend::u64::{scalar, field};
+use zerocaf::edwards::EdwardsPoint;
+use zerocaf::traits::Identity;
 
 
 

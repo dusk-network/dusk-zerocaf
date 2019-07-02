@@ -1,4 +1,6 @@
-/// Implementation for Montgomery Points for the Doppio curve.
+//! Implementation for Montgomery Points for the Doppio curve.
+//! A `MontgomeryPoint` is represented as the `u-coordinate`
+//! of itself in LE byte-format.
 
 use crate::edwards::{CompressedEdwardsY, EdwardsPoint};
 use crate::field::FieldElement;
@@ -8,8 +10,8 @@ use subtle::Choice;
 use subtle::ConditionallySelectable;
 use subtle::ConstantTimeEq;
 
-/// Holds the \\(u\\)-coordinate of a point on the Montgomery form of
-/// Curve25519 or its twist.
+/// Holds the u-coordinate of a point on the Montgomery form of
+/// Doppio-curve or its twist.
 #[derive(Copy, Clone, Debug)]
 pub struct MontgomeryPoint(pub [u8; 32]);
 
