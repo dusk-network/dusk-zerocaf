@@ -1,5 +1,7 @@
 //! Field arithmetic modulo `2^252 + 27742317777372353535851937790883648493`
-//! using 64-bit limbs with 128-bit products
+//! using 64-bit limbs with 128-bit products.
+//! In the 64-bit backend implementation, the `FieldElement` is
+//! represented in radix `2^52`.
 
 use core::fmt::Debug;
 use core::convert::From;
@@ -17,9 +19,8 @@ use crate::scalar::Ristretto255Scalar;
 /// A `FieldElement` represents an element into the field
 /// `2^252 + 27742317777372353535851937790883648493`
 ///
-/// In the 64-bit backend implementation, the `FieldElement is
+/// In the 64-bit backend implementation, the `FieldElement` is
 /// represented in radix `2^52`
-
 #[derive(Copy, Clone, Eq)]
 pub struct FieldElement(pub [u64;5] );
 
@@ -416,7 +417,7 @@ impl FieldElement {
 
     /// Compute `limbs/R` (mod l), where R is the Montgomery modulus 2^260
     #[inline]
-    pub (crate) fn montgomery_reduce(limbs: &[u128; 9]) -> FieldElement {
+    pub fn montgomery_reduce(limbs: &[u128; 9]) -> FieldElement {
 
         #[inline]
         fn adjustment_fact(sum: u128) -> (u128, u64) {
@@ -480,7 +481,6 @@ impl FieldElement {
     /// of the Montgomery Modular Inverse algorithm.
     /// B. S. Kaliski Jr. - The  Montgomery  inverse  and  its  applica-tions.
     /// IEEE Transactions on Computers, 44(8):1064–1065, August-1995
-    #[doc(hidden)]
     #[inline]
     pub fn kalinski_inverse(a: &FieldElement) -> FieldElement {
 
@@ -675,7 +675,8 @@ impl FieldElement {
     
 
 
-
+/// Module with constants used for `FieldElement` u64 implementation
+/// testing. It also includes the tests but remain hidden on the docs.
 pub mod tests {
 
     use crate::backend::u64::field::FieldElement;
@@ -683,7 +684,7 @@ pub mod tests {
     use crate::scalar::Ristretto255Scalar;
 
     /// Bytes representation of `-1 (mod l) = 7237005577332262213973186563042994240857116359379907606001950938285454250988`
-    pub(crate) static MINUS_ONE_BYTES: [u8; 32] = [236, 211, 245, 92, 26, 99, 18, 88, 214, 156, 247, 162, 222, 249, 222, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16];
+    pub static MINUS_ONE_BYTES: [u8; 32] = [236, 211, 245, 92, 26, 99, 18, 88, 214, 156, 247, 162, 222, 249, 222, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16];
 
     /// `A = 182687704666362864775460604089535377456991567872`
     pub static A: FieldElement = FieldElement([0, 0, 0, 2, 0]);
