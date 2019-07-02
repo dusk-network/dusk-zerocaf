@@ -1,0 +1,50 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `clear_on_drop` crate."><meta name="keywords" content="rust, rustlang, rust-lang, clear_on_drop"><title>clear_on_drop - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../dark.css"><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="shortcut icon" href="../favicon.ico"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../clear_on_drop/index.html'><img src='../rust-logo.png' alt='logo' width='100'></a><p class='location'>Crate clear_on_drop</p><div class="sidebar-elems"><a id='all-types' href='all.html'><p>See all clear_on_drop's items</p></a><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#functions">Functions</a></li></ul></div><p class='location'></p><script>window.sidebarCurrent = {name: 'clear_on_drop', ty: 'mod', relpath: '../'};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../src/clear_on_drop/lib.rs.html#1-67' title='goto source code'>[src]</a></span><span class='in-band'>Crate <a class="mod" href=''>clear_on_drop</a></span></h1><div class='docblock'><p>Helpers for clearing sensitive data on the stack and heap.</p>
+<p>Some kinds of data should not be kept in memory any longer than
+they are needed. For instance, cryptographic keys and intermediate
+values should be erased as soon as they are no longer needed.</p>
+<p>The Rust language helps prevent the accidental reading of leftover
+values on the stack or the heap; however, means outside the program
+(for instance a debugger, or even physical access to the hardware)
+can still read the leftover values. For long-lived processes, key
+material might be found in the memory long after it should have been
+discarded.</p>
+<p>This crate provides two mechanisms to help minimize leftover data.</p>
+<p>The <code>ClearOnDrop</code> wrapper holds a mutable reference to sensitive
+data (for instance, a cipher state), and clears the data when
+dropped. While the mutable reference is held, the data cannot be
+moved, so there won't be leftovers due to moves; the wrapper itself
+can be freely moved. Alternatively, it can hold data on the heap
+(using a <code>Box&lt;T&gt;</code>, or possibly a similar which allocates from a
+<code>mlock</code>ed heap).</p>
+<p>The <code>clear_stack_on_return</code> function calls a closure, and after it
+returns, overwrites several kilobytes of the stack. This can help
+overwrite temporary variables used by cryptographic algorithms, and
+is especially relevant when running on a short-lived thread, since
+the memory used for the thread stack cannot be easily overwritten
+after the thread terminates.</p>
+<h1 id="preventing-compiler-optimizations" class="section-header"><a href="#preventing-compiler-optimizations">Preventing compiler optimizations</a></h1>
+<p>If the compiler determines the data is not used after being cleared,
+it could elide the clearing code. Aditionally, the compiler could
+inline a called function and the stack clearing code, using separate
+areas of the stack for each. This crate has three mechanisms which
+prevent these unwanted optimizations, selected at compile time via
+cargo features.</p>
+<p>The fastest mechanism uses inline assembly, which is only available
+on nightly Rust. It is enabled through the <code>nightly</code> feature, and
+does not need a working C compiler.</p>
+<p>The second mechanism, which is the default, uses a call to a dummy
+C function. It works on stable Rust, but needs a working C compiler.</p>
+<p>The third mechanism is a fallback, which attempts to confuse the
+optimizer through the use of atomic instructions. It should not be
+used unless necessary, since it's less reliable. It is enabled by
+the <code>no_cc</code> feature, works on stable Rust, and does not need a C
+compiler.</p>
+</div><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+<table><tr class='module-item'><td><a class="mod" href="clear/index.html" title='clear_on_drop::clear mod'>clear</a></td><td class='docblock-short'><p>Traits to completely overwrite a value, without leaking data.</p>
+</td></tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table><tr class='module-item'><td><a class="struct" href="struct.ClearOnDrop.html" title='clear_on_drop::ClearOnDrop struct'>ClearOnDrop</a></td><td class='docblock-short'><p>Zeroizes a storage location when dropped.</p>
+</td></tr></table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
+<table><tr class='module-item'><td><a class="fn" href="fn.clear_stack.html" title='clear_on_drop::clear_stack fn'>clear_stack</a></td><td class='docblock-short'><p>Overwrites a few pages of stack.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.clear_stack_on_return.html" title='clear_on_drop::clear_stack_on_return fn'>clear_stack_on_return</a></td><td class='docblock-short'><p>Calls a closure and overwrites its stack on return.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.clear_stack_on_return_fnonce.html" title='clear_on_drop::clear_stack_on_return_fnonce fn'>clear_stack_on_return_fnonce</a></td><td class='docblock-short'><p>Calls a closure and overwrites its stack on return.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><aside id="help" class="hidden"><div><h1 class="hidden">Help</h1><div class="shortcuts"><h2>Keyboard Shortcuts</h2><dl><dt><kbd>?</kbd></dt><dd>Show this help dialog</dd><dt><kbd>S</kbd></dt><dd>Focus the search field</dd><dt><kbd>↑</kbd></dt><dd>Move up in search results</dd><dt><kbd>↓</kbd></dt><dd>Move down in search results</dd><dt><kbd>↹</kbd></dt><dd>Switch tab</dd><dt><kbd>&#9166;</kbd></dt><dd>Go to active search result</dd><dt><kbd>+</kbd></dt><dd>Expand all sections</dd><dt><kbd>-</kbd></dt><dd>Collapse all sections</dd></dl></div><div class="infos"><h2>Search Tricks</h2><p>Prefix searches with a type followed by a colon (e.g., <code>fn:</code>) to restrict the search to a given type.</p><p>Accepted types are: <code>fn</code>, <code>mod</code>, <code>struct</code>, <code>enum</code>, <code>trait</code>, <code>type</code>, <code>macro</code>, and <code>const</code>.</p><p>Search functions by type signature (e.g., <code>vec -> usize</code> or <code>* -> vec</code>)</p><p>Search multiple things at once by splitting your query with comma (e.g., <code>str,u8</code> or <code>String,struct:Vec,test</code>)</p></div></div></aside><script>window.rootPath = "../";window.currentCrate = "clear_on_drop";</script><script src="../aliases.js"></script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

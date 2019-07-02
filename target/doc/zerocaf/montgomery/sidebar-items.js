@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["MontgomeryPoint","Holds the u-coordinate of a point on the Montgomery form of Doppio-curve or its twist."]]});
