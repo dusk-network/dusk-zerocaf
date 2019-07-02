@@ -1,1 +1,0 @@
-initSidebarItems({"trait":[["Identity","Trait for getting the identity element of a point type."]]});
