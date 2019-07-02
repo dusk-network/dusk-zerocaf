@@ -114,12 +114,21 @@ impl CompressedEdwardsY {
 
 /// An `EdwardsPoint` represents a point on the Doppio Curve expressed
 /// over the Twisted Edwards Extended Coordinates.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub struct EdwardsPoint {
     pub(crate) X: FieldElement,
     pub(crate) Y: FieldElement,
     pub(crate) Z: FieldElement,
     pub(crate) T: FieldElement,
+}
+
+impl Debug for EdwardsPoint {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "X: {:?}\n", &self.X);
+        write!(f, "Y: {:?}\n", &self.Y);
+        write!(f, "Z: {:?}\n", &self.Z);
+        write!(f, "T: {:?}\n", &self.T)
+    }
 }
 /*
 impl ConstantTimeEq for EdwardsPoint {
@@ -334,6 +343,29 @@ pub mod tests {
     use super::*;
     use constants::*;
 
+    pub static P1: EdwardsPoint = EdwardsPoint {
+        X: FieldElement([16, 0, 0, 0, 0]),
+        Y: FieldElement([744343658140951, 4363419623334528, 2003626973643440, 4214092889063264, 3390442426993136]),
+        Z: FieldElement([1, 0, 0, 0, 0]),
+        T: FieldElement([3044696693283393, 1335206244302251, 532829969768419, 4375091441825287, 10369256955662])
+    };
+
+    pub static P2: EdwardsPoint = EdwardsPoint {
+        X: FieldElement([14, 0, 0, 0, 0]),
+        Y: FieldElement([240977717931359, 1354642034986115, 3973031519911661, 3891062626006949, 531095617912055]),
+        Z: FieldElement([1, 0, 0, 0, 0]),
+        T: FieldElement([3552404907893380, 939308030975045, 1579245173104917, 431681235651346, 11436140025230])
+    };
+
+    /// `P4 = P1 + P2` over Twisted Edwards Extended Coordinates. 
+    pub static P4: EdwardsPoint = EdwardsPoint {
+        X: FieldElement([3695809630566566, 1406835199736314, 2087224077454198, 2932972949864076, 3616338656082]),
+        Y: FieldElement([2137393371840939, 3929053264114558, 4422327011065865, 3745248280384311, 2969785507065]),
+        Z: FieldElement([306252662908586, 4494153833970931, 1411783288799924, 3371954172035510, 16088550827548]),
+        T: FieldElement([1278770890376673, 1564245874578444, 687728792810339, 3261309140699293, 3973036363295])
+    };
+
+
     #[test]
     fn edwards_extended_coords_neg() {
 
@@ -360,5 +392,12 @@ pub mod tests {
         let res = - &EdwardsPoint::identity();
 
         assert!(res == EdwardsPoint::identity())
+    }
+
+    #[test]
+    fn point_addition_extended_coords() {
+        let res = &P1 + &P2;
+        println!("{:?}", res);
+        assert!(res == P4);
     }
 }
