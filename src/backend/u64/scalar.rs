@@ -14,7 +14,7 @@ use crate::backend::u64::constants;
 
 /// The `Scalar` struct represents an Scalar over the modulo
 /// `2^249 - 15145038707218910765482344729778085401` as 5 52-bit limbs.
-#[derive(Copy,Clone, Eq)]
+#[derive(Copy,Clone)]
 pub struct Scalar(pub [u64; 5]);
 
 impl Debug for Scalar {

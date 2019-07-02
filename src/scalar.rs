@@ -27,5 +27,7 @@ impl ConstantTimeEq for Scalar {
     }
 }
 
+impl Eq for Scalar {}
+
 /// This is a type alias for the Scalar type in the `curve25519-dalek` lib.
 pub type Ristretto255Scalar = curve25519_dalek::scalar::Scalar;
