@@ -1,0 +1,71 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `edwards` mod in crate `curve25519_dalek`."><meta name="keywords" content="rust, rustlang, rust-lang, edwards"><title>curve25519_dalek::edwards - Rust</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../curve25519_dalek/index.html'><img src='https://doc.dalek.rs/assets/dalek-logo-clear.png' alt='logo' width='100'></a><p class='location'>Module edwards</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li></ul></div><p class='location'><a href='../index.html'>curve25519_dalek</a></p><script>window.sidebarCurrent = {name: 'edwards', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../../src/curve25519_dalek/edwards.rs.html#11-1343' title='goto source code'>[src]</a></span><span class='in-band'>Module <a href='../index.html'>curve25519_dalek</a>::<wbr><a class="mod" href=''>edwards</a></span></h1><div class='docblock'><p>Group operations for Curve25519, in Edwards form.</p>
+<h2 id="encoding-and-decoding" class="section-header"><a href="#encoding-and-decoding">Encoding and Decoding</a></h2>
+<p>Encoding is done by converting to and from a <code>CompressedEdwardsY</code>
+struct, which is a typed wrapper around <code>[u8; 32]</code>.</p>
+<h2 id="equality-testing" class="section-header"><a href="#equality-testing">Equality Testing</a></h2>
+<p>The <code>EdwardsPoint</code> struct implements the <code>subtle::ConstantTimeEq</code>
+trait for constant-time equality checking, and the Rust <code>Eq</code> trait
+for variable-time equality checking.</p>
+<h2 id="cofactor-related-functions" class="section-header"><a href="#cofactor-related-functions">Cofactor-related functions</a></h2>
+<p>The order of the group of points on the curve \(\mathcal E\)
+is \(|\mathcal E| = 8\ell \), so its structure is \( \mathcal
+E = \mathcal E[8] \times \mathcal E[\ell]\).  The torsion
+subgroup \( \mathcal E[8] \) consists of eight points of small
+order.  Technically, all of \(\mathcal E\) is torsion, but we
+use the word only to refer to the small \(\mathcal E[8]\) part, not
+the large prime-order \(\mathcal E[\ell]\) part.</p>
+<p>To test if a point is in \( \mathcal E[8] \), use
+<code>EdwardsPoint::is_small_order()</code>.</p>
+<p>To test if a point is in \( \mathcal E[\ell] \), use
+<code>EdwardsPoint::is_torsion_free()</code>.</p>
+<p>To multiply by the cofactor, use <code>EdwardsPoint::mul_by_cofactor()</code>.</p>
+<p>To avoid dealing with cofactors entirely, consider using Ristretto.</p>
+<h2 id="scalars" class="section-header"><a href="#scalars">Scalars</a></h2>
+<p>Scalars are represented by the <code>Scalar</code> struct.  To construct a scalar with a specific bit
+pattern, see <code>Scalar::from_bits()</code>.</p>
+<h2 id="scalar-multiplication" class="section-header"><a href="#scalar-multiplication">Scalar Multiplication</a></h2>
+<p>Scalar multiplication on Edwards points is provided by:</p>
+<ul>
+<li>
+<p>the <code>*</code> operator between a <code>Scalar</code> and a <code>EdwardsPoint</code>, which
+performs constant-time variable-base scalar multiplication;</p>
+</li>
+<li>
+<p>the <code>*</code> operator between a <code>Scalar</code> and a
+<code>EdwardsBasepointTable</code>, which performs constant-time fixed-base
+scalar multiplication;</p>
+</li>
+<li>
+<p>an implementation of the
+<a href="../traits/trait.MultiscalarMul.html"><code>MultiscalarMul</code></a> trait for
+constant-time variable-base multiscalar multiplication;</p>
+</li>
+<li>
+<p>an implementation of the
+<a href="../traits/trait.VartimeMultiscalarMul.html"><code>VartimeMultiscalarMul</code></a>
+trait for variable-time variable-base multiscalar multiplication;</p>
+</li>
+</ul>
+<h2 id="implementation" class="section-header"><a href="#implementation">Implementation</a></h2>
+<p>The Edwards arithmetic is implemented using the “extended twisted
+coordinates” of Hisil, Wong, Carter, and Dawson, and the
+corresponding complete formulas.  For more details,
+see the <a href="https://doc-internal.dalek.rs/curve25519_dalek/curve_models/index.html"><code>curve_models</code> submodule</a>
+of the internal documentation.</p>
+<h2 id="validity-checking" class="section-header"><a href="#validity-checking">Validity Checking</a></h2>
+<p>There is no function for checking whether a point is valid.
+Instead, the <code>EdwardsPoint</code> struct is guaranteed to hold a valid
+point on the curve.</p>
+<p>We use the Rust type system to make invalid points
+unrepresentable: <code>EdwardsPoint</code> objects can only be created via
+successful decompression of a compressed point, or else by
+operations on other (valid) <code>EdwardsPoint</code>s.</p>
+</div><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table><tr class='module-item'><td><a class="struct" href="struct.CompressedEdwardsY.html" title='curve25519_dalek::edwards::CompressedEdwardsY struct'>CompressedEdwardsY</a></td><td class='docblock-short'><p>In &quot;Edwards y&quot; / &quot;Ed25519&quot; format, the curve point \((x,y)\) is
+determined by the \(y\)-coordinate and the sign of \(x\).</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.EdwardsBasepointTable.html" title='curve25519_dalek::edwards::EdwardsBasepointTable struct'>EdwardsBasepointTable</a></td><td class='docblock-short'><p>A precomputed table of multiples of a basepoint, for accelerating
+fixed-base scalar multiplication.  One table, for the Ed25519
+basepoint, is provided in the <code>constants</code> module.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.EdwardsPoint.html" title='curve25519_dalek::edwards::EdwardsPoint struct'>EdwardsPoint</a></td><td class='docblock-short'><p>An <code>EdwardsPoint</code> represents a point on the Edwards form of Curve25519.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.VartimeEdwardsPrecomputation.html" title='curve25519_dalek::edwards::VartimeEdwardsPrecomputation struct'>VartimeEdwardsPrecomputation</a></td><td class='docblock-short'><p>Precomputation for variable-time multiscalar multiplication with <code>EdwardsPoint</code>s.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><aside id="help" class="hidden"><div><h1 class="hidden">Help</h1><div class="shortcuts"><h2>Keyboard Shortcuts</h2><dl><dt><kbd>?</kbd></dt><dd>Show this help dialog</dd><dt><kbd>S</kbd></dt><dd>Focus the search field</dd><dt><kbd>↑</kbd></dt><dd>Move up in search results</dd><dt><kbd>↓</kbd></dt><dd>Move down in search results</dd><dt><kbd>↹</kbd></dt><dd>Switch tab</dd><dt><kbd>&#9166;</kbd></dt><dd>Go to active search result</dd><dt><kbd>+</kbd></dt><dd>Expand all sections</dd><dt><kbd>-</kbd></dt><dd>Collapse all sections</dd></dl></div><div class="infos"><h2>Search Tricks</h2><p>Prefix searches with a type followed by a colon (e.g., <code>fn:</code>) to restrict the search to a given type.</p><p>Accepted types are: <code>fn</code>, <code>mod</code>, <code>struct</code>, <code>enum</code>, <code>trait</code>, <code>type</code>, <code>macro</code>, and <code>const</code>.</p><p>Search functions by type signature (e.g., <code>vec -> usize</code> or <code>* -> vec</code>)</p><p>Search multiple things at once by splitting your query with comma (e.g., <code>str,u8</code> or <code>String,struct:Vec,test</code>)</p></div></div></aside><script>window.rootPath = "../../";window.currentCrate = "curve25519_dalek";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script defer src="../../search-index.js"></script></body></html>

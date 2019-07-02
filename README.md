@@ -1,4 +1,4 @@
-# Dusk-Zerocaf [![Build Status](https://travis-ci.com/dusk-network/dusk-corretto.svg?branch=master)](https://travis-ci.com/dusk-network/dusk-corretto)  [![codecov](https://codecov.io/gh/dusk-network/dusk-corretto/branch/master/graph/badge.svg)](https://codecov.io/gh/dusk-network/dusk-corretto) 
+# Dusk-Zerocaf [![Build Status](https://travis-ci.com/dusk-network/Dusk-Zerocaf.svg?branch=master)](https://travis-ci.com/dusk-network/Dusk-Zerocaf)  [![codecov](https://codecov.io/gh/dusk-network/dusk-corretto/branch/master/graph/badge.svg)](https://codecov.io/gh/dusk-network/dusk-corretto) 
 
 
 
