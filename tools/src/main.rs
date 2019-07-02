@@ -69,7 +69,7 @@ pub fn from_radix_to_radix_10(num: &str, radix: u32) {
     println!("{}",BigUint::from_str_radix(num, radix).unwrap());
 }
 
-/// Gets a number as a &str and encodes it like a FieldElement51 representation of corretto repo.
+/// Gets a number as a &str and encodes it like a FieldElement51 representation of zerocaf repo.
 pub fn to_field_elem_51(num: &str) -> [u64; 5] {
     let mut resp_as_array = [0u64;5];
     let mut response = vec!();
@@ -86,7 +86,7 @@ pub fn to_field_elem_51(num: &str) -> [u64; 5] {
     resp_as_array
 }
 
-/// Gets a number as a &str and encodes it like a Scalar representation of corretto repo.
+/// Gets a number as a &str and encodes it like a Scalar representation of zerocaf repo.
 pub fn to_scalar_base_52(num: &str) -> [u64; 5] {
     let mut resp_as_array = [0u64;5];
     let mut response = vec!();

@@ -1,5 +1,5 @@
 //! Arithmetic mod (2^249 - 15145038707218910765482344729778085401)
-//! with five \\(52\\)-bit unsigned limbs.
+//! with five 52-bit unsigned limbs.
 
 use core::fmt::Debug;
 use core::ops::{Index, IndexMut};

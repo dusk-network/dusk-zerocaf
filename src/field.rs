@@ -1,3 +1,12 @@
+//! A `FieldElement` represents an element of the finite field 
+//! modulo `2^252 + 27742317777372353535851937790883648493`.
+//! 
+//! The `FieldElement` type is an alias for one of the platform-specific
+//! implementations. 
+//! 
+//! The most commonly used on all architectures will be the `u64` backend
+//! which is the one that has been implemented at this moment.
+
 use core::cmp::PartialEq;
 
 use subtle::Choice;

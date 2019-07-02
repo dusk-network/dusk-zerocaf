@@ -1,4 +1,7 @@
-/// Edwards Points support and encoding/decoding proces.
+//! Edwards Points support for operations between them,
+//! encoding/decoding processes and support for all kind
+//! of interactions with them.
+//! 
 
 use crate::field::FieldElement;
 use crate::scalar::Scalar;
@@ -180,8 +183,8 @@ impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Add two EdwardsPoints and give the resulting `EdwardsPoint`.
     /// This implementation is specific for curves with `a = -1` as Doppio is.
-    /// Source: 2008 Hisil–Wong–Carter–Dawson, 
-    /// http://eprint.iacr.org/2008/522, Section 3.1.
+    /// [Source: 2008 Hisil–Wong–Carter–Dawson], 
+    /// (http://eprint.iacr.org/2008/522), Section 3.1.
     /// 
     /// Trick 2k' is used to reduce 1D and 1M. `2d' = k = 2*(-a/EDWARDS_D)`.
     #[inline]

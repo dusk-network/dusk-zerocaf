@@ -1,3 +1,11 @@
+//! A `Scalar` represents an element of the finite field 
+//! modulo `2^249 - 15145038707218910765482344729778085401`.
+//! 
+//! The `Scalar` type is an alias for one of the platform-specific
+//! implementations. 
+//! 
+//! The most commonly used on all architectures will be the `u64` backend
+//! which is the one that has been implemented at this moment.
 use crate::backend;
 
 
