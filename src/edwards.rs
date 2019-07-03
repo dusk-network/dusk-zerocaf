@@ -274,14 +274,20 @@ impl EdwardsPoint {
     /// http://eprint.iacr.org/2008/522, Section 3.1.
     /// Cost: 4M+ 4S+ 1D
     pub fn double(&self) -> EdwardsPoint {
-        let tw_fr = FieldElement::from(&24u8);
-        let a = FieldElement::minus_one();
+        // This algorithm will be using point addition as base
+        // until we find out what problem are we experiencing
+        // with the doubling formulae on Extended Coords.
+        //
+        // TODO: Fix this as prio to reduce ops number.
 
-        let A = self.X.square();
-        let B = self.Y.square();
-        let C = &tw_fr * &self.Z.square();
-        let D = &a * &A;
-        let E = &((&(&self.X + &self.Y).square()) - &A) - &B;
+        /*let two: FieldElement = FieldElement::from(&2u8);
+
+        let A = &self.X * &self.X;
+        let B = &self.Y * &self.Y;
+        let C = &two * &(&self.Z * &self.Z);
+        // a = -1
+        let D = -&A;
+        let E = &(&(&(&self.X + &self.Y) * &(&self.X + &self.Y)) - &A) - &B;
         let G = &D + &B;
         let F = &G - &C;
         let H = &D - &B;
@@ -290,9 +296,10 @@ impl EdwardsPoint {
             X: &E * &F,
             Y: &G * &H,
             Z: &F * &G,
-            T: &E * &H,
-        }
+            T: &E * &H
+        }*/
 
+        self + self
     }
 
     /// Return the `EdwardsPoint` with Extended Coordinates
@@ -339,7 +346,7 @@ impl EdwardsPoint {
     pub fn double_and_add(&self, s: &Scalar) -> EdwardsPoint {
         let mut N = self.clone();
         let mut n = s.clone();
-        let mut Q = EdwardsPoint::zero();
+        let mut Q = EdwardsPoint::identity();
 
         while n != Scalar::zero() {
             if !n.is_even() {
@@ -442,5 +449,16 @@ pub mod tests {
         let res: EdwardsPoint = &P1 + &P1;
         
         assert!(res == P3);
+    }
+
+    #[test]
+    fn double_and_add() {
+        let res1 = &P1 * &Scalar::from(&2u8);
+
+        let res2 = &P1 + &P1;
+
+        let res3 = &P1.double();
+
+        println!("{:?}\n{:?}\n{:?}", res1, res2, res3);
     }
 }
