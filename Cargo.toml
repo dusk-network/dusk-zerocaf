@@ -1,10 +1,10 @@
 [package]
-name = "corretto"
+name = "zerocaf"
 version = "0.1.0"
 authors = ["Luke Pearson <luke@dusk.network>", 
            "CPerezz <carlos@dusk.network>"]
 readme = "README.md"
-repository = "https://github.com/dusk-network/corretto"
+repository = "https://github.com/dusk-network/Dusk-Zerocaf"
 keywords = ["cryptography", "ristretto", "doppio-curve", "ECC"]
 description = "A pure-Rust implementation of elliptic curve operations on Doppio-curve"
 exclude = [
@@ -34,5 +34,9 @@ nightly = ["subtle/nightly"]
 # The u64 backend uses u64s with u128 products.
 u64_backend = []
 default = ["u64_backend"]
+
+[badges]
+travis-ci = { repository = "dusk-network/dusk-network/Dusk-Zerocaf", branch = "master" }
+codecov = { repository = "dusk-network/dusk-network/Dusk-Zerocaf", branch = "master", service = "github" }
 
 

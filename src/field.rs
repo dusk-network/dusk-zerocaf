@@ -1,3 +1,13 @@
+//! A `FieldElement` represents an element of the finite field 
+//! modulo `2^252 + 27742317777372353535851937790883648493`.
+//! 
+//! The `FieldElement` type is an alias for one of the backend
+//! implementations. 
+//! 
+//! `ConstantTimeEq` and `PartialEq` traits have been implemented 
+//! here since they will be the samme across all of the different
+//! backends.
+
 use core::cmp::PartialEq;
 
 use subtle::Choice;
@@ -9,7 +19,7 @@ use crate::backend;
 #[cfg(feature = "u64_backend")]
 pub use backend::u64::field::*;
 /// A `FieldElement` represents an element of the field 
-/// `2²⁵² + 27742317777372353535851937790883648493`
+/// `2^252 + 27742317777372353535851937790883648493`
 /// 
 /// The `FieldElement` type is an alias for one of the platform-specific
 /// implementations.
@@ -31,3 +41,4 @@ impl ConstantTimeEq for FieldElement {
         self.to_bytes().ct_eq(&other.to_bytes())
     }
 }
+
