@@ -13,6 +13,8 @@ use core::ops::{Add, Sub, Mul, Neg};
 
 use num::Integer;
 
+use subtle::Choice;
+
 use crate::backend::u64::constants;
 use crate::scalar::Ristretto255Scalar;
 use crate::traits::Identity;
@@ -243,6 +245,20 @@ impl FieldElement {
     /// Evaluate if a `FieldElement` is even or not.
     pub fn is_even(self) -> bool {
         self.0[0].is_even()
+    }
+
+    /// Determine if this `FieldElement` is negative, in the sense
+    /// used in the ed25519 paper: `x` is negative if the low bit is
+    /// set.
+    /// 
+    /// Taken from the Curve25519-dalek implementation.
+    /// 
+    /// # Return
+    ///
+    /// If negative, return `Choice(1)`.  Otherwise, return `Choice(0)`.
+    pub fn is_negative(&self) -> Choice {
+        let bytes = self.to_bytes();
+        (bytes[0] & 1).into()
     }
 
     /// Give the half of the FieldElement value (mod l).
@@ -494,7 +510,7 @@ impl FieldElement {
     /// B. S. Kaliski Jr. - The  Montgomery  inverse  and  its  applica-tions.
     /// IEEE Transactions on Computers, 44(8):1064–1065, August-1995
     #[inline]
-    pub fn kalinski_inverse(a: &FieldElement) -> FieldElement {
+    pub fn kalinski_inverse(&self) -> FieldElement {
 
         /// This Phase I indeed is the Binary GCD algorithm , a version o Stein's algorithm
         /// which tries to remove the expensive division operation away from the Classical
@@ -582,7 +598,7 @@ impl FieldElement {
             rr 
         }
 
-        let (mut r, mut z) = phase1(&a.clone());
+        let (mut r, mut z) = phase1(&self.clone());
 
         r = phase2(&r, &z);
 
@@ -614,7 +630,7 @@ impl FieldElement {
     /// J Cryptogr Eng (2018) 8:201–210
     /// https://doi.org/10.1007/s13389-017-0161-x 
     #[inline]
-    pub fn savas_koc_inverse(a: &FieldElement) -> FieldElement {
+    pub fn savas_koc_inverse(&self) -> FieldElement {
 
         /// This Phase I indeed is the Binary GCD algorithm , a version o Stein's algorithm
         /// which tries to remove the expensive division operation away from the Classical
@@ -674,7 +690,7 @@ impl FieldElement {
             (&p - &r, k)
         }
 
-        let (mut r, mut z) = phase1(&a.clone());
+        let (mut r, mut z) = phase1(&self);
         if z > 260 {
             r = FieldElement::montgomery_mul(&r, &FieldElement::one());
             z = z - 260;

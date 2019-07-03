@@ -145,6 +145,8 @@ impl PartialEq for EdwardsPoint {
         self.ct_eq(other).unwrap_u8() == 1u8
     }
 }
+
+impl Eq for EdwardsPoint {}
 */
 impl Default for EdwardsPoint {
     /// Returns the default EdwardsPoint Extended Coordinates: (0, 1, 1, 0). 
@@ -313,7 +315,16 @@ impl EdwardsPoint {
 
     /// Compress this point to `CompressedEdwardsY` format.
     pub fn compress(&self) -> CompressedEdwardsY {
-        unimplemented!()
+        let recip = self.Z.savas_koc_inverse();
+        let x = &self.X * &recip;
+        let y = &self.Y * &recip;
+        let mut s: [u8; 32];
+
+        s = y.to_bytes();
+        // The 31st byte is always even, so we can't have a one by default.
+        // That's why we can play with this bit to represent the sign info.
+        s[31] ^= x.is_negative().unwrap_u8() << 7;
+        CompressedEdwardsY(s)
     }
 
     /// Implementation of the standard algorithm of `add_and_double`.
