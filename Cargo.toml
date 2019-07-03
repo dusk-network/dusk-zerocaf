@@ -6,11 +6,16 @@ authors = ["Luke Pearson <luke@dusk.network>",
 readme = "README.md"
 repository = "https://github.com/dusk-network/Dusk-Zerocaf"
 keywords = ["cryptography", "ristretto", "doppio-curve", "ECC"]
-description = "A pure-Rust implementation of elliptic curve operations on Doppio-curve"
+categories =["Algorithms", "Cryptography", "Development tools"]
+description = "A pure-Rust implementation of elliptic curve operations over the Doppio-curve"
 exclude = [
     "**/.gitignore",
-    ".gitignore"
+    ".gitignore",
+    "tools",
+    "sage_codes"
+
 ]
+license = "MIT"
 edition = "2018"
 
 [dependencies]
@@ -38,5 +43,8 @@ default = ["u64_backend"]
 [badges]
 travis-ci = { repository = "dusk-network/dusk-network/Dusk-Zerocaf", branch = "master" }
 codecov = { repository = "dusk-network/dusk-network/Dusk-Zerocaf", branch = "master", service = "github" }
+is-it-maintained-issue-resolution = { repository = "dusk-network/dusk-network/Dusk-Zerocaf" }
+is-it-maintained-open-issues = { repository = "dusk-network/dusk-network/Dusk-Zerocaf" }
+
 
 

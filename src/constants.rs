@@ -1,5 +1,4 @@
-//! Module for curve-specific constant values, 
-//! needed to either testing or implementing algorithms.
+//! Contains the curve-constants needed by the different algorithm implementations.
 
 use crate::scalar::Scalar;
 use crate::field::FieldElement;
