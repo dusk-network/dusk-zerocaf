@@ -250,7 +250,7 @@ impl<'a, 'b> Mul<&'b Scalar> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Scalar multiplication: compute `scalar * self`.
     fn mul(self, scalar: &'b Scalar) -> EdwardsPoint {
-        unimplemented!()
+        self.double_and_add(scalar)
     }
 }
 
@@ -262,7 +262,7 @@ impl<'a, 'b> Mul<&'b EdwardsPoint> for &'a Scalar {
     /// this operations and also adds less constraints on
     /// R1CS.
     fn mul(self, point: &'b EdwardsPoint) -> EdwardsPoint {
-        unimplemented!()
+        point.double_and_add(self)
     }
 }
 
@@ -274,12 +274,12 @@ impl EdwardsPoint {
     /// http://eprint.iacr.org/2008/522, Section 3.1.
     /// Cost: 4M+ 4S+ 1D
     pub fn double(&self) -> EdwardsPoint {
-        let two = FieldElement::from(&2u8);
+        let tw_fr = FieldElement::from(&24u8);
         let a = FieldElement::minus_one();
 
         let A = self.X.square();
         let B = self.Y.square();
-        let C = &two * &self.Z.square();
+        let C = &tw_fr * &self.Z.square();
         let D = &a * &A;
         let E = &((&(&self.X + &self.Y).square()) - &A) - &B;
         let G = &D + &B;
@@ -326,22 +326,31 @@ impl EdwardsPoint {
         CompressedEdwardsY(s)
     }
 
-    /// Implementation of the standard algorithm of `add_and_double`.
-    pub fn add_and_mul(&self, s: &Scalar) -> EdwardsPoint {
-        let mut G = self.clone();
+    /// Implementation of the standard algorithm of `double_and_add`.
+    /// 
+    /// Hankerson, Darrel; Vanstone, Scott; Menezes, Alfred (2004). 
+    /// Guide to Elliptic Curve Cryptography. 
+    /// Springer Professional Computing. New York: Springer-Verlag. 
+    /// 
+    /// We implement this and not `windowing algorithms` because we 
+    /// prioritize less constraints on R1CS over the computational 
+    /// costs of the algorithm. Since, building circuits for ZK proofs
+    /// it'll be more important.
+    pub fn double_and_add(&self, s: &Scalar) -> EdwardsPoint {
+        let mut N = self.clone();
         let mut n = s.clone();
-        let mut R = EdwardsPoint::zero();
+        let mut Q = EdwardsPoint::zero();
 
         while n != Scalar::zero() {
-            if n.is_even() {
-                R = &R + &G;
+            if !n.is_even() {
+                Q = &Q + &N;
             };
 
-            G = G.double();
+            N = N.double();
             n = n.half();
         }  
 
-        R
+        Q
     }
     
 
