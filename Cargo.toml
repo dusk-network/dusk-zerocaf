@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Luke Pearson <luke@dusk.network>", 
            "CPerezz <carlos@dusk.network>"]
 readme = "README.md"
+documentation = "https://dusk-network.github.io/dusk-zerocaf/zerocaf/index.html"
 repository = "https://github.com/dusk-network/Dusk-Zerocaf"
 keywords = ["cryptography", "ristretto", "doppio-curve", "ECC"]
 categories =["Algorithms", "Cryptography", "Development tools"]
