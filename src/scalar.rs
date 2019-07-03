@@ -1,11 +1,17 @@
 //! A `Scalar` represents an element of the finite field 
 //! modulo `2^249 - 15145038707218910765482344729778085401`.
 //! 
-//! The `Scalar` type is an alias for one of the platform-specific
+//! The `Scalar` type is an alias for one of the backend
 //! implementations. 
 //! 
-//! The most commonly used on all architectures will be the `u64` backend
-//! which is the one that has been implemented at this moment.
+//! `ConstantTimeEq` and `PartialEq` traits have been implemented 
+//! here since they will be the samme across all of the different
+//! backends.
+//! 
+//! Here it is also defined the `Ristretto255Scalar` type,
+//! which is a type-alias for the curve25519-dalek Scalar Struct.
+//! 
+
 use crate::backend;
 
 use subtle::Choice;
