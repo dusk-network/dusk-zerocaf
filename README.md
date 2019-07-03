@@ -1,10 +1,12 @@
 # Dusk-Zerocaf [![Build Status](https://travis-ci.com/dusk-network/Dusk-Zerocaf.svg?branch=master)](https://travis-ci.com/dusk-network/Dusk-Zerocaf)  [![codecov](https://codecov.io/gh/dusk-network/dusk-corretto/branch/master/graph/badge.svg)](https://codecov.io/gh/dusk-network/dusk-corretto) 
 
 
+![](https://imgur.com/IjadZPY)
+
 
 ## Fast, efficient and bulletproof-friendly cryptographic operations.
 
-This repository contains the first ever implementation of an elliptic curve over the `Ristretto Scalar field`: a pure Rust implementation designed by [Dusk](https://dusk.network) team.
+This repository contains an implementation of the Doppio curve over the `Ristretto Scalar field`: a pure Rust implementation designed by [Dusk](https://dusk.network) team.
 
 ### Ristretto curve 
 

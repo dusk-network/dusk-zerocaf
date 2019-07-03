@@ -1,4 +1,4 @@
-//! This module contains curve-specific constant values, 
+//! Module for curve-specific constant values, 
 //! needed to either testing or implementing algorithms.
 
 use crate::scalar::Scalar;

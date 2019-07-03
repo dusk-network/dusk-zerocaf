@@ -1,3 +1,5 @@
+//! ![](https://imgur.com/IjadZPY)
+
 // Used for traits related to constant-time code.
 extern crate subtle;
 // Used for Ristretto255Scalar trait.
