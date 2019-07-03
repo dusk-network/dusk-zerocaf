@@ -1,7 +1,8 @@
 # Dusk-Zerocaf [![Build Status](https://travis-ci.com/dusk-network/Dusk-Zerocaf.svg?branch=master)](https://travis-ci.com/dusk-network/Dusk-Zerocaf)  [![codecov](https://codecov.io/gh/dusk-network/dusk-corretto/branch/master/graph/badge.svg)](https://codecov.io/gh/dusk-network/dusk-corretto) 
 
-
-![](https://imgur.com/IjadZPY)
+<img
+ width="100%"
+ src="https://camo.githubusercontent.com/db129d98b9686d0db27a9fd27c8e54086b14a6a7/68747470733a2f2f692e696d6775722e636f6d2f496a61645a50592e6a7067">
 
 
 ## Fast, efficient and bulletproof-friendly cryptographic operations.
