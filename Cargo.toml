@@ -12,8 +12,8 @@ description = "A pure-Rust implementation of elliptic curve operations over the 
 exclude = [
     "**/.gitignore",
     ".gitignore",
-    "tools",
-    "sage_codes"
+    "**/tools",
+    "**/sage_codes"
 
 ]
 license = "MIT"
