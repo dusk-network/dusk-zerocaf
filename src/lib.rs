@@ -54,7 +54,7 @@
 //! On the future, we would like to implement an `u32` backend too.<br>
 //! 
 //! To select a backend just type:
-//! ```
+//! ```sh
 //! // For unoptimized builds:
 //! cargo build --features "u64_backend"
 //! 
