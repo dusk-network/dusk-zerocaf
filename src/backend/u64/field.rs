@@ -13,8 +13,11 @@ use core::ops::{Add, Sub, Mul, Neg};
 
 use num::Integer;
 
+use subtle::Choice;
+
 use crate::backend::u64::constants;
 use crate::scalar::Ristretto255Scalar;
+use crate::traits::Identity;
 
 /// A `FieldElement` represents an element into the field
 /// `2^252 + 27742317777372353535851937790883648493`
@@ -59,6 +62,17 @@ impl Ord for FieldElement {
             }
         }
         Ordering::Equal
+    }
+}
+
+impl Identity for FieldElement {
+    /// Returns the Identity element over the finite field
+    /// modulo `2^252 + 27742317777372353535851937790883648493`.
+    /// 
+    /// It is defined as 1 on `FieldElement` format, so:
+    /// `[1, 0, 0, 0, 0]`.
+    fn identity() -> FieldElement {
+        FieldElement([1, 0, 0, 0 ,0])
     }
 }
 
@@ -233,6 +247,20 @@ impl FieldElement {
         self.0[0].is_even()
     }
 
+    /// Determine if this `FieldElement` is negative, in the sense
+    /// used in the ed25519 paper: `x` is negative if the low bit is
+    /// set.
+    /// 
+    /// Taken from the Curve25519-dalek implementation.
+    /// 
+    /// # Return
+    ///
+    /// If negative, return `Choice(1)`.  Otherwise, return `Choice(0)`.
+    pub fn is_negative(&self) -> Choice {
+        let bytes = self.to_bytes();
+        (bytes[0] & 1).into()
+    }
+
     /// Give the half of the FieldElement value (mod l).
     /// This function SHOULD ONLY be used with even 
     /// `FieldElements` otherways, can produce erroneus
@@ -260,7 +288,7 @@ impl FieldElement {
         res
     }
 
-    /// Performs the operation `((a + constants::FIELD_L) >> 2) % l).
+    /// Performs the operation `((a + constants::FIELD_L) >> 2) % l)`.
     /// This function SHOULD only be used on the Kalinski's modular 
     /// inverse algorithm, since it's the only way we have to add `l`
     /// to a `FieldElement` without obtaining the same number.
@@ -482,7 +510,7 @@ impl FieldElement {
     /// B. S. Kaliski Jr. - The  Montgomery  inverse  and  its  applica-tions.
     /// IEEE Transactions on Computers, 44(8):1064–1065, August-1995
     #[inline]
-    pub fn kalinski_inverse(a: &FieldElement) -> FieldElement {
+    pub fn kalinski_inverse(&self) -> FieldElement {
 
         /// This Phase I indeed is the Binary GCD algorithm , a version o Stein's algorithm
         /// which tries to remove the expensive division operation away from the Classical
@@ -570,7 +598,7 @@ impl FieldElement {
             rr 
         }
 
-        let (mut r, mut z) = phase1(&a.clone());
+        let (mut r, mut z) = phase1(&self.clone());
 
         r = phase2(&r, &z);
 
@@ -602,7 +630,7 @@ impl FieldElement {
     /// J Cryptogr Eng (2018) 8:201–210
     /// https://doi.org/10.1007/s13389-017-0161-x 
     #[inline]
-    pub fn savas_koc_inverse(a: &FieldElement) -> FieldElement {
+    pub fn savas_koc_inverse(&self) -> FieldElement {
 
         /// This Phase I indeed is the Binary GCD algorithm , a version o Stein's algorithm
         /// which tries to remove the expensive division operation away from the Classical
@@ -662,7 +690,7 @@ impl FieldElement {
             (&p - &r, k)
         }
 
-        let (mut r, mut z) = phase1(&a.clone());
+        let (mut r, mut z) = phase1(&self);
         if z > 260 {
             r = FieldElement::montgomery_mul(&r, &FieldElement::one());
             z = z - 260;

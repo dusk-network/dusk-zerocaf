@@ -8,6 +8,9 @@
 //! which is the one that has been implemented at this moment.
 use crate::backend;
 
+use subtle::Choice;
+use subtle::ConstantTimeEq;
+
 
 #[cfg(feature = "u64_backend")]
 pub use backend::u64::scalar::*;
@@ -18,6 +21,23 @@ pub use backend::u64::scalar::*;
 /// module.
 #[cfg(feature = "u64_backend")]
 pub type Scalar = backend::u64::scalar::Scalar;
+
+impl PartialEq for Scalar {
+    fn eq(&self, other: &Scalar) -> bool {
+        self.ct_eq(other).unwrap_u8() == 1u8
+    }
+}
+
+impl ConstantTimeEq for Scalar {
+    /// Test equality between two `Scalar`s.  Since the
+    /// internal representation is not canonical, the field elements
+    /// are normalized to wire format before comparison.
+    fn ct_eq(&self, other: &Scalar) -> Choice {
+        self.to_bytes().ct_eq(&other.to_bytes())
+    }
+}
+
+impl Eq for Scalar {}
 
 /// This is a type alias for the Scalar type in the `curve25519-dalek` lib.
 pub type Ristretto255Scalar = curve25519_dalek::scalar::Scalar;
