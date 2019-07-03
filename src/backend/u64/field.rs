@@ -15,6 +15,7 @@ use num::Integer;
 
 use crate::backend::u64::constants;
 use crate::scalar::Ristretto255Scalar;
+use crate::traits::Identity;
 
 /// A `FieldElement` represents an element into the field
 /// `2^252 + 27742317777372353535851937790883648493`
@@ -59,6 +60,17 @@ impl Ord for FieldElement {
             }
         }
         Ordering::Equal
+    }
+}
+
+impl Identity for FieldElement {
+    /// Returns the Identity element over the finite field
+    /// modulo `2^252 + 27742317777372353535851937790883648493`.
+    /// 
+    /// It is defined as 1 on `FieldElement` format, so:
+    /// `[1, 0, 0, 0, 0]`.
+    fn identity() -> FieldElement {
+        FieldElement([1, 0, 0, 0 ,0])
     }
 }
 
@@ -260,7 +272,7 @@ impl FieldElement {
         res
     }
 
-    /// Performs the operation `((a + constants::FIELD_L) >> 2) % l).
+    /// Performs the operation `((a + constants::FIELD_L) >> 2) % l)`.
     /// This function SHOULD only be used on the Kalinski's modular 
     /// inverse algorithm, since it's the only way we have to add `l`
     /// to a `FieldElement` without obtaining the same number.

@@ -1,13 +1,19 @@
 //! Arithmetic mod (2^249 - 15145038707218910765482344729778085401)
 //! with five 52-bit unsigned limbs.
 
+
 use core::fmt::Debug;
 use core::ops::{Index, IndexMut};
 use core::ops::Add;
 use core::ops::Sub;
+
+use std::cmp::{PartialOrd, Ordering, Ord};
+
+use num::Integer;
+
 use crate::backend::u64::constants;
 
-/// The `Scalar` struct represents an Scalar over a modulo
+/// The `Scalar` struct represents an Scalar over the modulo
 /// `2^249 - 15145038707218910765482344729778085401` as 5 52-bit limbs.
 #[derive(Copy,Clone)]
 pub struct Scalar(pub [u64; 5]);
@@ -28,6 +34,80 @@ impl Index<usize> for Scalar {
 impl IndexMut<usize> for Scalar {
     fn index_mut(&mut self, _index: usize) -> &mut u64 {
         &mut (self.0[_index])
+    }
+}
+
+impl PartialOrd for Scalar {
+    fn partial_cmp(&self, other: &Scalar) -> Option<Ordering> {
+        Some(self.cmp(&other))
+    }
+}
+
+impl Ord for Scalar {
+    fn cmp(&self, other: &Self) -> Ordering {
+        for i in (0..5).rev() {
+            if self[i] > other[i] {
+                return Ordering::Greater;
+            }else if self[i] < other[i] {
+                return Ordering::Less;
+            }
+        }
+        Ordering::Equal
+    }
+}
+
+//-------------- From Implementations -----------------//
+impl<'a> From<&'a u8> for Scalar {
+    /// Performs the conversion.
+    fn from(_inp: &'a u8) -> Scalar {
+        let mut res = Scalar::zero();
+        res[0] = *_inp as u64;
+        res
+    }
+}
+
+impl<'a> From<&'a u16> for Scalar {
+    /// Performs the conversion.
+    fn from(_inp: &'a u16) -> Scalar {
+        let mut res = Scalar::zero();
+        res[0] = *_inp as u64;
+        res
+    }
+}
+
+impl<'a> From<&'a u32> for Scalar {
+    /// Performs the conversion.
+    fn from(_inp: &'a u32) -> Scalar {
+        let mut res = Scalar::zero();
+        res[0] = *_inp as u64;
+        res
+    }
+}
+
+impl<'a> From<&'a u64> for Scalar {
+    /// Performs the conversion.
+    fn from(_inp: &'a u64) -> Scalar {
+        let mut res = Scalar::zero();
+        let mask = (1u64 << 52) - 1;
+        res[0] = _inp & mask;
+        res[1] = _inp >> 52;
+        res
+    }
+}
+
+impl<'a> From<&'a u128> for Scalar {
+    /// Performs the conversion.
+    fn from(_inp: &'a u128) -> Scalar {
+        let mut res = Scalar::zero();
+        let mask = (1u128 << 52) - 1;
+
+        // Since 128 / 52 < 4 , we only need to care
+        // about the first three limbs.
+        res[0] = (_inp & mask) as u64;
+        res[1] = ((_inp >> 52) & mask) as u64;
+        res[2] = (_inp >> 104) as u64;
+
+        res
     }
 }
 
@@ -93,9 +173,25 @@ macro_rules! m {
 
 
 impl Scalar {
-    /// Return the zero Scalar
+
+    /// Return a Scalar with value = `0`.
     pub fn zero() -> Scalar {
         Scalar([0,0,0,0,0])
+    }
+
+    /// Return a Scalar with value = `1`.
+    pub fn one() -> Scalar {
+        Scalar([1,0,0,0,0])
+    }
+
+    /// Return a Scalar with value = `-1 (mod l)`.
+    pub fn minus_one() -> Scalar {
+        Scalar([2766226127823334, 4237835465749098, 4503599626623787, 4503599627370495, 2199023255551])
+    }
+
+    /// Evaluate if a `Scalar` is even or not.
+    pub fn is_even(self) -> bool {
+        self.0[0].is_even()
     }
 
     /// Unpack a 32 byte / 256 bit Scalar into 5 52-bit limbs.
@@ -111,13 +207,13 @@ impl Scalar {
         let top_mask = (1u64 << 48) - 1;
         let mut s = Scalar::zero();
 
-        s[ 0] =   words[0]                            & mask;
+        s[0] =   words[0]                            & mask;
         // Get the 64-52 = 12 bits and add words[1] (shifting 12 to the left) on the front with `|` then apply mask.
-        s[ 1] = ((words[0] >> 52) | (words[1] << 12)) & mask; 
-        s[ 2] = ((words[1] >> 40) | (words[2] << 24)) & mask;
-        s[ 3] = ((words[2] >> 28) | (words[3] << 36)) & mask;
+        s[1] = ((words[0] >> 52) | (words[1] << 12)) & mask; 
+        s[2] = ((words[1] >> 40) | (words[2] << 24)) & mask;
+        s[3] = ((words[2] >> 28) | (words[3] << 36)) & mask;
         // Shift 16 to the right to get the 52 bits of the scalar on that limb. Then apply top_mask.
-        s[ 4] =  (words[3] >> 16)                     & top_mask;
+        s[4] =  (words[3] >> 16)                     & top_mask;
 
         s
     }
@@ -169,7 +265,34 @@ impl Scalar {
         // High bit should be zero.
         debug_assert!((res[31] & 0b1000_0000u8) == 0u8);
         res
-    }   
+    }  
+
+    /// Give the half of the `Scalar` value (mod l).
+    /// This function SHOULD ONLY be used with even 
+    /// `Scalars` otherways, can produce erroneus
+    /// results.
+    #[inline]
+    pub fn half(&self) -> Scalar {
+        let mut res = self.clone();
+        let mut remainder = 0u64;
+        for i in (0..5).rev() {
+            res[i] = res[i] + remainder;
+            match(res[i] == 1, res[i].is_even()){
+                (true, _) => {
+                    remainder = 4503599627370496u64;
+                }
+                (_, false) => {
+                    res[i] = res[i] - 1u64;
+                    remainder = 4503599627370496u64;
+                }
+                (_, true) => {
+                    remainder = 0;
+                }
+            }
+            res[i] = res[i] >> 1;
+        };
+        res
+    } 
 
     /// Compute `a * b` with the function multiplying helper
     #[inline]
@@ -343,6 +466,9 @@ mod tests {
     /// `Y = 6145104759870991071742105800796537629880401874866217824609283457819451087098 (mod l) = 717350576871794411262215878514291949349241575907629849852603275827191647632`
     pub static Y: Scalar = Scalar([138340288859536, 461913478537005, 1182880083788836, 1688835920473363, 1743782656037]);
 
+    /// `Y/2 = 358675288435897205631107939257145974674620787953814924926301637913595823816`.
+    pub static Y_HALF: Scalar = Scalar([2320969958115016, 230956739268502, 2843239855579666, 3096217773921929, 871891328018]);
+    
     /// Y in Montgomery domain; `Y_MONT = (Y * R) (mod l) = 682963356548663143913382285837893622221394109239214830065314998385324548003`
     pub static Y_MONT: Scalar = Scalar([2328716356837283, 1997480944140188, 4481133454453893, 3196446152249575, 1660191953914]);
     
@@ -352,6 +478,17 @@ mod tests {
     /// `X * Y (mod l) = 890263784947025690345271110799906008759402458672628420828189878638015362081`
     pub static X_TIMES_Y: Scalar = Scalar([3414372756436001, 1500062170770321, 4341044393209371, 2791496957276064, 2164111380879]); 
 
+    #[test]
+    fn partial_ord_and_eq() {
+        assert!(Y.is_even());
+        assert!(!X.is_even());
+
+        assert!(A_MONT < Y);
+        assert!(Y < X);
+
+        assert!(Y >= Y);
+        assert!(X == X);
+    }
 
     #[test]
     fn add_with_modulo() {
@@ -430,5 +567,28 @@ mod tests {
         for i in 0..5 {
             assert!( res[i] == X_TIMES_Y_MONT[i]);
         }
+    }
+
+    #[test]
+    fn half() {
+        let res = &Y.half();
+        for i in 0..5 {
+            assert!(res[i] == Y_HALF[i]);
+        }
+
+        let a_half = Scalar([0, 0, 0, 1, 0]);
+        let a_half_half = Scalar([0, 0, 2251799813685248, 0, 0]);
+
+        for i in 0..5 {
+            assert!(a_half[i] == A.half()[i]);
+            assert!(a_half_half[i] == A.half().half()[i]);
+        }
+    }
+
+    #[test]
+    fn even_scalar() {
+        assert!(Y.is_even());
+        assert!(!X.is_even());
+        assert!(Scalar::zero().is_even());
     }
 }
