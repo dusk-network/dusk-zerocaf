@@ -1,7 +1,6 @@
 //! Edwards Point operation implementations and definitions.
 //! Encoding/decoding processes implementation 
 //! and support for all kind of interactions with them.
-//! 
 
 use crate::field::FieldElement;
 use crate::scalar::Scalar;

@@ -1,8 +1,7 @@
-//! Module for different backend implementations.
+//! Contains the different backend implementations: `u64` and further comming ones. .
 //! 
-//! On this module you can find the bit-implementations
-//! done for the backend maths found in Finite Fields.
-//! 
+//! On this module you can find the different implementations
+//! done for Finite Fields mathematical-backends.
 
 /// The u64 backend contains the implementation of all of the 
 /// mathematical base eg. Arithmetics over Finite Fields with 
