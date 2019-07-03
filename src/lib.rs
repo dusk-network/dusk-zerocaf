@@ -62,6 +62,22 @@
 //! cargo build --release --features "u64_backend"
 //! ```
 //! 
+//! # Security and features of Zerocaf
+//! 
+//! As is previously mentioned, zerocaf is designed to host the fastest possible curve operations whilst
+//! simultaneously avoiding all of the drawbacks associated with having a cofactor such that h > 1.<br>
+//! 
+//! To achieve this we make use of Ristretto, which is a technique to construct prime order elliptic curve groups.
+//! The Ristretto protocol compresses the cofactor by adding a thin abstraction layer to allow small changes
+//! in code to ultimately omit the cofactor issues. <br>
+//! 
+//! This is achieved by having defining the twisted edwards curve over the ristretto scalar field, 
+//! which means to perform every operation on the curve in modulo L, 
+//! where L is the order of the ristretto scalar field. L =  2^252 + 27742317777372353535851937790883648493. <br> 
+//! 
+//! By expounding the operations in this manner, we can benefit from the speed of a non-prime order twisted 
+//! edwards curve whilst not suffering the pitfalls of a cofactor greater than one.
+//! 
 //! NOTE: If no backend is selected, compilation will fail!<br>
 //! 
 //! # Performance & Benchmarks
