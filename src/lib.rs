@@ -60,7 +60,10 @@
 //! 
 //! // For optimized/release builds:
 //! cargo build --release --features "u64_backend"
-//! ```
+//! ``` 
+//! <br>
+//! 
+//! NOTE: If no backend is selected, compilation will fail!<br>
 //! 
 //! # Security and features of Zerocaf
 //! 
@@ -78,14 +81,13 @@
 //! By expounding the operations in this manner, we can benefit from the speed of a non-prime order twisted 
 //! edwards curve whilst not suffering the pitfalls of a cofactor greater than one.
 //! 
-//! NOTE: If no backend is selected, compilation will fail!<br>
 //! 
 //! # Performance & Benchmarks
 //! Benchmarks have been implemented using [Criterion.rs](https://docs.rs/criterion/0.2.11/criterion/).
 //! To run them just execute `cargo bech` on the repository root.<br>
 //! 
 //! All of the operatons have been implemented using bit-shifting techniques to allow a better performance
-//! and a decrease in execution time.  
+//! and a huge reduction on execution time.  
 
 
 // Used for traits related to constant-time code.

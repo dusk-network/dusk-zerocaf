@@ -1,6 +1,6 @@
 [package]
 name = "zerocaf"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Luke Pearson <luke@dusk.network>", 
            "CPerezz <carlos@dusk.network>"]
 readme = "README.md"
