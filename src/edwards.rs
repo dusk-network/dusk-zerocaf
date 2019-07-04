@@ -523,7 +523,30 @@ pub mod tests {
 
 
     #[test]
-    fn edwards_extended_coords_neg() {
+    fn from_projective_to_extended() {
+        let p3_proj = ProjectivePoint {
+            X: FieldElement([23, 0, 0, 0, 0]),
+            Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]),
+            Z: FieldElement([1, 0, 0, 0, 0])
+        };
+
+        assert!(EdwardsPoint::from(&p3_proj) == P1);
+    }
+
+    #[test]
+    fn from_extended_to_projective() {
+        let p3_proj = ProjectivePoint {
+            X: FieldElement([23, 0, 0, 0, 0]),
+            Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]),
+            Z: FieldElement([1, 0, 0, 0, 0])
+        };
+
+        assert!(p3_proj == ProjectivePoint::from(&P1));
+    }
+
+
+    #[test]
+    fn extended_point_neg() {
 
         let inv_a: EdwardsPoint = EdwardsPoint{
            X: FieldElement::minus_one(),
@@ -544,14 +567,14 @@ pub mod tests {
     }
 
     #[test]
-    fn edwards_extended_coords_neg_identity() {
+    fn extended_coords_neg_identity() {
         let res = - &EdwardsPoint::identity();
 
         assert!(res == EdwardsPoint::identity())
     }
 
     #[test]
-    fn point_addition_extended_coords() {
+    fn extended_point_addition() {
         let res = &P1 + &P2;
 
         assert!(res == P4);
@@ -559,7 +582,9 @@ pub mod tests {
 
     #[test]
     fn projective_point_doubling() {
+        // Double in extended
         let res = ProjectivePoint::from(&P1).double();
+        // Double in projective
         let res2 = ProjectivePoint::from(&P1.double());
         println!("{:?}", res);
         println!("{:?}", res2);
@@ -568,7 +593,7 @@ pub mod tests {
     }
 
     #[test]
-    fn point_doubling_double_adding_extended_coords() {
+    fn extended_point_doubling_by_addition() {
         let res: EdwardsPoint = &P1 + &P1;
         
         assert!(res == P3);
