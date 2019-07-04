@@ -445,6 +445,22 @@ impl<'a> Into<EdwardsPoint> for &'a ProjectivePoint {
     }
 }
 
+impl<'a> From<&'a EdwardsPoint> for ProjectivePoint {
+    /// Given (X:Y:T:Z) in εε, passing to ε is cost-free by 
+    /// simply ignoring `T`.
+    /// 
+    /// Twisted Edwards Curves Revisited - 
+    /// Huseyin Hisil, Kenneth Koon-Ho Wong, Gary Carter, 
+    /// and Ed Dawson, Section 3.
+    fn from(point: &'a EdwardsPoint) -> ProjectivePoint {
+        ProjectivePoint{
+            X: point.X,
+            Y: point.Y,
+            Z: point.Z
+        }
+    }
+}
+
 
 
 /// Module used for tesing `EdwardsPoint` operations and implementations.
