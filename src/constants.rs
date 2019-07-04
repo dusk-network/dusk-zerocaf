@@ -1,6 +1,5 @@
 //! Contains the curve-constants needed by the different algorithm implementations.
 
-use crate::scalar::Scalar;
 use crate::field::FieldElement;
 
 /// Edwards `a` variable value = `-1 (mod l)` equals:

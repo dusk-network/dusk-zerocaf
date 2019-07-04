@@ -4,12 +4,10 @@
 //! A `MontgomeryPoint` is represented as the `u-coordinate`
 //! of itself in LE byte-format.
 
-use crate::edwards::{CompressedEdwardsY, EdwardsPoint};
+use crate::edwards::EdwardsPoint;
 use crate::field::FieldElement;
-use crate::scalar::Scalar;
 
 use subtle::Choice;
-use subtle::ConditionallySelectable;
 use subtle::ConstantTimeEq;
 
 /// Holds the u-coordinate of a point on the Montgomery form of
@@ -54,7 +52,7 @@ impl MontgomeryPoint {
 
     /// Attempt to convert to an `EdwardsPoint`, using the supplied
     /// choice of sign for the `EdwardsPoint`.
-    pub fn to_edwards(&self, sign: u8) -> Option<EdwardsPoint> {
+    pub fn to_edwards(&self, _sign: u8) -> Option<EdwardsPoint> {
         unimplemented!()
     }
 }

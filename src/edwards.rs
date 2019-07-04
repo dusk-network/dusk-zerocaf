@@ -1,3 +1,4 @@
+#![allow(non_snake_case)]
 //! Edwards Point operation implementations and definitions.
 //! Encoding/decoding processes implementation 
 //! and support for all kind of interactions with them.
@@ -126,10 +127,13 @@ pub struct EdwardsPoint {
 
 impl Debug for EdwardsPoint {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
-        write!(f, "X: {:?}\n", &self.X);
-        write!(f, "Y: {:?}\n", &self.Y);
-        write!(f, "Z: {:?}\n", &self.Z);
-        write!(f, "T: {:?}\n", &self.T)
+        write!(f, "
+        EdwardsPoint {{
+            X: {:?},
+            Y: {:?},
+            Z: {:?},
+            T: {:?}
+        }};", self.X, self.Y, self.Z, self.T)
     }
 }
 /*
@@ -367,7 +371,7 @@ impl EdwardsPoint {
     }
 
     /// Compute ([2^k] P)
-    pub fn mul_by_pow_2(&self, k: u32) -> EdwardsPoint {
+    pub fn mul_by_pow_2(&self, _k: u32) -> EdwardsPoint {
         unimplemented!()
     }
 }
@@ -376,7 +380,6 @@ impl EdwardsPoint {
 /// Also used to check the correctness of the transformation functions.
 pub mod tests {
     use super::*;
-    use constants::*;
 
     pub static P1: EdwardsPoint = EdwardsPoint {
         X: FieldElement([23, 0, 0, 0, 0]),

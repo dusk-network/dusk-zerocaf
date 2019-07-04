@@ -167,7 +167,7 @@ fn m(x: u64, y: u64) -> u128 {
 /// u64 * u64 = u128 macro multiply helper
 macro_rules! m {
     ($x:expr, $y:expr) => {
-        ($x as u128 * $y as u128) 
+        $x as u128 * $y as u128 
     }
 }
 
@@ -219,7 +219,7 @@ impl Scalar {
     }
 
     /// Reduce a 64 byte / 512 bit scalar mod l
-    pub fn from_bytes_wide(bytes: &[u8; 64]) -> Scalar {
+    pub fn from_bytes_wide(_bytes: &[u8; 64]) -> Scalar {
        // We could provide 512 bit scalar support using Montgomery Reduction. 
        // But first we need to finnish the 256-bit implementation.
        unimplemented!()
