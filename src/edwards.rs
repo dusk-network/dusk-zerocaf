@@ -450,15 +450,4 @@ pub mod tests {
         
         assert!(res == P3);
     }
-
-    #[test]
-    fn double_and_add() {
-        let res1 = &P1 * &Scalar::from(&2u8);
-
-        let res2 = &P1 + &P1;
-
-        let res3 = &P1.double();
-
-        println!("{:?}\n{:?}\n{:?}", res1, res2, res3);
-    }
 }
