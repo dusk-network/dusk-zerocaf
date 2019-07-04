@@ -116,8 +116,8 @@ impl CompressedEdwardsY {
 
 
 /// An `EdwardsPoint` represents a point on the Doppio Curve expressed
-/// over the Twisted Edwards Extended Coordinates.
-#[derive(Copy, Clone, Eq, PartialEq)]
+/// over the Twisted Edwards Extended Coordinates eg. (X, Y, Z, T).
+#[derive(Copy, Clone, Eq, PartialEq)] 
 pub struct EdwardsPoint {
     pub X: FieldElement,
     pub Y: FieldElement,
@@ -373,6 +373,27 @@ impl EdwardsPoint {
     /// Compute ([2^k] P)
     pub fn mul_by_pow_2(&self, _k: u32) -> EdwardsPoint {
         unimplemented!()
+    }
+}
+
+/// A `ProjectivePoint` represents a point on the Doppio Curve expressed
+/// over the Twisted Edwards Projective Coordinates eg. (X, Y, Z).
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub struct ProjectivePoint {
+    pub X: FieldElement,
+    pub Y: FieldElement,
+    pub Z: FieldElement,
+    pub T: FieldElement,
+}
+
+impl Debug for ProjectivePoint {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "
+        ProjectivePoint {{
+            X: {:?},
+            Y: {:?},
+            Z: {:?}
+        }};", self.X, self.Y, self.Z)
     }
 }
 
