@@ -41,11 +41,6 @@ nightly = ["subtle/nightly"]
 u64_backend = []
 default = ["u64_backend"]
 
-[badges]
-travis-ci = { repository = "dusk-network/dusk-network/Dusk-Zerocaf", branch = "master" }
-codecov = { repository = "dusk-network/dusk-network/Dusk-Zerocaf", branch = "master", service = "github" }
-is-it-maintained-issue-resolution = { repository = "dusk-network/dusk-network/Dusk-Zerocaf" }
-is-it-maintained-open-issues = { repository = "dusk-network/dusk-network/Dusk-Zerocaf" }
 
 
 
