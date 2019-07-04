@@ -117,6 +117,11 @@ impl CompressedEdwardsY {
 
 /// An `EdwardsPoint` represents a point on the Doppio Curve expressed
 /// over the Twisted Edwards Extended Coordinates eg. (X, Y, Z, T).
+/// 
+/// Extended coordinates represent x y as`(X Y Z T)` satisfying the following equations:
+/// x=X/Z
+/// y=Y/Z
+/// x*y=T/Z
 #[derive(Copy, Clone, Eq, PartialEq)] 
 pub struct EdwardsPoint {
     pub X: FieldElement,
@@ -381,14 +386,17 @@ impl EdwardsPoint {
 ///  
 /// For Z1≠0 the point (X1:Y1:Z1) represents the affine point (x1= X1/Z1, y1= Y1/Z1)
 /// on EE,a,d.
+/// Projective coordinates represent `x` `y` as `(X Y Z`) satisfying the following equations:
+/// x=X/Z
+/// y=Y/Z
+/// 
 /// Expressing an elliptic curve in twisted Edwards form saves time in arithmetic, 
 /// even when the same curve can be expressed in the Edwards form. 
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct ProjectivePoint {
     pub X: FieldElement,
     pub Y: FieldElement,
-    pub Z: FieldElement,
-    pub T: FieldElement,
+    pub Z: FieldElement
 }
 
 impl Debug for ProjectivePoint {
@@ -403,20 +411,36 @@ impl Debug for ProjectivePoint {
 }
 
 impl Default for ProjectivePoint {
-    /// Returns the default ProjectivePoint Extended Coordinates: (0, 1, 1, 0). 
+    /// Returns the default ProjectivePoint Extended Coordinates: (0, 1, 1). 
     fn default() -> ProjectivePoint {
         ProjectivePoint::identity()
     }
 }
 
 impl Identity for ProjectivePoint {
-    /// Returns the Edwards Point identity value = `(0, 1, 1, 0)`.
+    /// Returns the Edwards Point identity value = `(0, 1, 1)`.
     fn identity() -> ProjectivePoint {
         ProjectivePoint {
             X: FieldElement::zero(),
             Y: FieldElement::one(),
-            Z: FieldElement::one(),
-            T: FieldElement::zero()
+            Z: FieldElement::one()
+        }
+    }
+}
+
+impl<'a> Into<EdwardsPoint> for &'a ProjectivePoint {
+    /// Given (X:Y:Z) in ε passing to εε can beperformed 
+    /// in 3M+ 1S by computing (X*Z, Y*Z, X*Y, Z^2). 
+    /// 
+    /// Twisted Edwards Curves Revisited - 
+    /// Huseyin Hisil, Kenneth Koon-Ho Wong, Gary Carter, 
+    /// and Ed Dawson, Section 3.
+    fn into(self) -> EdwardsPoint {
+        EdwardsPoint {
+            X: &self.X * &self.Z,
+            Y: &self.Y * &self.Z,
+            Z: self.Z.square(),
+            T: &self.X * &self.Y
         }
     }
 }
