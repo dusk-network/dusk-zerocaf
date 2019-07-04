@@ -175,6 +175,23 @@ impl Identity for EdwardsPoint {
     }
 }
 
+impl<'a> From<&'a ProjectivePoint> for EdwardsPoint {
+    /// Given (X:Y:Z) in ε passing to εε can beperformed 
+    /// in 3M+ 1S by computing (X*Z, Y*Z, X*Y, Z^2). 
+    /// 
+    /// Twisted Edwards Curves Revisited - 
+    /// Huseyin Hisil, Kenneth Koon-Ho Wong, Gary Carter, 
+    /// and Ed Dawson, Section 3.
+    fn from(point: &'a ProjectivePoint) -> EdwardsPoint {
+        EdwardsPoint {
+            X: &point.X * &point.Z,
+            Y: &point.Y * &point.Z,
+            Z: point.Z.square(),
+            T: &point.X * &point.Y
+        }
+    }
+}
+
 impl<'a> Neg for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Negates an `EdwardsPoint` giving it as a result.
@@ -428,23 +445,6 @@ impl Identity for ProjectivePoint {
     }
 }
 
-impl<'a> Into<EdwardsPoint> for &'a ProjectivePoint {
-    /// Given (X:Y:Z) in ε passing to εε can beperformed 
-    /// in 3M+ 1S by computing (X*Z, Y*Z, X*Y, Z^2). 
-    /// 
-    /// Twisted Edwards Curves Revisited - 
-    /// Huseyin Hisil, Kenneth Koon-Ho Wong, Gary Carter, 
-    /// and Ed Dawson, Section 3.
-    fn into(self) -> EdwardsPoint {
-        EdwardsPoint {
-            X: &self.X * &self.Z,
-            Y: &self.Y * &self.Z,
-            Z: self.Z.square(),
-            T: &self.X * &self.Y
-        }
-    }
-}
-
 impl<'a> From<&'a EdwardsPoint> for ProjectivePoint {
     /// Given (X:Y:T:Z) in εε, passing to ε is cost-free by 
     /// simply ignoring `T`.
@@ -457,6 +457,29 @@ impl<'a> From<&'a EdwardsPoint> for ProjectivePoint {
             X: point.X,
             Y: point.Y,
             Z: point.Z
+        }
+    }
+}
+
+impl ProjectivePoint {
+    /// Double the given point following:
+    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// Source: 2008 Hisil–Wong–Carter–Dawson, 
+    /// http://eprint.iacr.org/2008/522, Section 3.1.
+    /// Cost: 3M+ 4S+ +7a + 1D
+    pub fn double(&self) -> ProjectivePoint {
+        let B = (&self.X + &self.Y).square();
+        let C = self.X.square();
+        let D = self.Y.square();
+        let E = &constants::EDWARDS_A * &C;
+        let F = &E + &D;
+        let H = self.Z.square();
+        let J = &F - &(&FieldElement::from(&2u8) * &H);
+
+        ProjectivePoint {
+            X: &(&(&B - &C) -&D) * &J,
+            Y: &F * &(&E - &D),
+            Z: &F *&J
         }
     }
 }
@@ -532,6 +555,14 @@ pub mod tests {
         let res = &P1 + &P2;
 
         assert!(res == P4);
+    }
+
+    #[test]
+    fn projective_point_doubling() {
+        let res = ProjectivePoint::from(&P1).double();
+        println!("{:?}", res);
+        println!("{:?}", ProjectivePoint::from(&P3));
+        assert!(res == ProjectivePoint::from(&P3));
     }
 
     #[test]
