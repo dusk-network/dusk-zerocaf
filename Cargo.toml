@@ -1,9 +1,10 @@
 [package]
 name = "zerocaf"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Luke Pearson <luke@dusk.network>", 
            "CPerezz <carlos@dusk.network>"]
 readme = "README.md"
+documentation = "https://dusk-network.github.io/dusk-zerocaf/zerocaf/index.html"
 repository = "https://github.com/dusk-network/Dusk-Zerocaf"
 keywords = ["cryptography", "ristretto", "doppio-curve", "ECC"]
 categories =["Algorithms", "Cryptography", "Development tools"]
@@ -11,8 +12,8 @@ description = "A pure-Rust implementation of elliptic curve operations over the 
 exclude = [
     "**/.gitignore",
     ".gitignore",
-    "tools",
-    "sage_codes"
+    "**/tools",
+    "**/sage_codes"
 
 ]
 license = "MIT"
@@ -40,11 +41,6 @@ nightly = ["subtle/nightly"]
 u64_backend = []
 default = ["u64_backend"]
 
-[badges]
-travis-ci = { repository = "dusk-network/dusk-network/Dusk-Zerocaf", branch = "master" }
-codecov = { repository = "dusk-network/dusk-network/Dusk-Zerocaf", branch = "master", service = "github" }
-is-it-maintained-issue-resolution = { repository = "dusk-network/dusk-network/Dusk-Zerocaf" }
-is-it-maintained-open-issues = { repository = "dusk-network/dusk-network/Dusk-Zerocaf" }
 
 
 

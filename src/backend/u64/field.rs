@@ -583,7 +583,7 @@ impl FieldElement {
         #[inline]
         fn phase2(r: &FieldElement, k: &u64) -> FieldElement {
             let mut rr = r.clone();
-            let p = &constants::FIELD_L;
+            let _p = &constants::FIELD_L;
 
             for _i in 0..(k-253) {
                 match rr.is_even() {
@@ -598,7 +598,7 @@ impl FieldElement {
             rr 
         }
 
-        let (mut r, mut z) = phase1(&self.clone());
+        let (mut r, z) = phase1(&self.clone());
 
         r = phase2(&r, &z);
 
@@ -708,7 +708,9 @@ impl FieldElement {
 pub mod tests {
 
     use crate::backend::u64::field::FieldElement;
+    #[allow(unused_imports)]
     use crate::backend::u64::constants as constants;
+    #[allow(unused_imports)]
     use crate::scalar::Ristretto255Scalar;
 
     /// Bytes representation of `-1 (mod l) = 7237005577332262213973186563042994240857116359379907606001950938285454250988`
@@ -799,7 +801,7 @@ pub mod tests {
     }
 
     #[test]
-    fn add_L() {
+    fn add_field_l() {
         let a: FieldElement = FieldElement([2, 0, 0, 0 ,0]);
         let res = &a + &constants::FIELD_L;
         for i in 0..5 {
@@ -832,7 +834,7 @@ pub mod tests {
     }
 
     #[test]
-    fn subtract_L() {
+    fn subtract_field_l() {
         let a: FieldElement = FieldElement([2, 0, 0, 0 ,0]);
         let res = &a - &constants::FIELD_L;
         for i in 0..5 {

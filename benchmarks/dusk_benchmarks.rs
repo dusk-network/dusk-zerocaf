@@ -8,6 +8,7 @@ use criterion::{Criterion, Benchmark};
 
 use zerocaf::backend::u64::{scalar, field};
 use zerocaf::edwards::EdwardsPoint;
+#[allow(unused_imports)]
 use zerocaf::traits::Identity;
 
 
