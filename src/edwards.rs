@@ -560,8 +560,10 @@ pub mod tests {
     #[test]
     fn projective_point_doubling() {
         let res = ProjectivePoint::from(&P1).double();
+        let res2 = ProjectivePoint::from(&P1.double());
         println!("{:?}", res);
-        println!("{:?}", ProjectivePoint::from(&P3));
+        println!("{:?}", res2);
+        println!("P3 in projective.{:?}", ProjectivePoint::from(&P3));
         assert!(res == ProjectivePoint::from(&P3));
     }
 
