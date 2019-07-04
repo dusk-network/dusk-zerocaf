@@ -4,6 +4,12 @@
 //! <a href="https://travis-ci.com/dusk-network/dusk-zerocaf">
 //! <img src="https://travis-ci.com/dusk-network/dusk-zerocaf.svg?branch=master" />
 //! </a>
+//! <a href="https://github.com/dusk-network/dusk-zerocaf">
+//! <img alt="GitHub closed issues" src="https://img.shields.io/github/issues-closed/dusk-network/dusk-zerocaf.svg?color=4C4CFF">
+//! </a>
+//! <a href="https://crates.io/crates/zerocaf">
+//! <img alt="Crates.io" src="https://img.shields.io/crates/v/zerocaf.svg?color=f07900">
+//! </a>
 //! </hr>
 //! 
 //! <div>
