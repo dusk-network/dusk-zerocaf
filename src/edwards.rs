@@ -378,6 +378,11 @@ impl EdwardsPoint {
 
 /// A `ProjectivePoint` represents a point on the Doppio Curve expressed
 /// over the Twisted Edwards Projective Coordinates eg. (X, Y, Z).
+///  
+/// For Z1≠0 the point (X1:Y1:Z1) represents the affine point (x1= X1/Z1, y1= Y1/Z1)
+/// on EE,a,d.
+/// Expressing an elliptic curve in twisted Edwards form saves time in arithmetic, 
+/// even when the same curve can be expressed in the Edwards form. 
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct ProjectivePoint {
     pub X: FieldElement,
@@ -396,6 +401,27 @@ impl Debug for ProjectivePoint {
         }};", self.X, self.Y, self.Z)
     }
 }
+
+impl Default for ProjectivePoint {
+    /// Returns the default ProjectivePoint Extended Coordinates: (0, 1, 1, 0). 
+    fn default() -> ProjectivePoint {
+        ProjectivePoint::identity()
+    }
+}
+
+impl Identity for ProjectivePoint {
+    /// Returns the Edwards Point identity value = `(0, 1, 1, 0)`.
+    fn identity() -> ProjectivePoint {
+        ProjectivePoint {
+            X: FieldElement::zero(),
+            Y: FieldElement::one(),
+            Z: FieldElement::one(),
+            T: FieldElement::zero()
+        }
+    }
+}
+
+
 
 /// Module used for tesing `EdwardsPoint` operations and implementations.
 /// Also used to check the correctness of the transformation functions.
