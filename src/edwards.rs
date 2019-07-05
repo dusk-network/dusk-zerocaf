@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 //! Edwards Point operation implementations and definitions.
-//! Encoding/decoding processes implementation 
+//! Encoding/decoding processes implementations
 //! and support for all kind of interactions with them.
 
 use crate::field::FieldElement;
