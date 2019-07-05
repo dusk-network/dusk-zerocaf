@@ -175,6 +175,35 @@ impl Sub<Scalar> for Scalar {
     }
 }
 
+impl<'a, 'b> Mul<&'a Scalar> for &'b Scalar {
+    type Output = Scalar;
+    /// Compute `a * b (mod l)`.
+    /// 
+    /// This Mul implementation uses double precision techniques.
+    /// The result of the standard mul is stored on a [u128; 9].
+    /// 
+    /// Then, we apply the Montgomery Reduction function to perform
+    /// the modulo and the reduction to the `Scalar` format: [u64; 5].
+    fn mul(self, b: &'a Scalar) -> Scalar {
+        let ab = Scalar::montgomery_reduce(&Scalar::mul_internal(self, b)); 
+        Scalar::montgomery_reduce(&Scalar::mul_internal(&ab, &constants::RR))
+    }
+}
+
+impl Mul<Scalar> for Scalar {
+    type Output = Scalar;
+    /// Compute `a * b (mod l)`.
+    /// 
+    /// This Mul implementation uses double precision techniques.
+    /// The result of the standard mul is stored on a [u128; 9].
+    /// 
+    /// Then, we apply the Montgomery Reduction function to perform
+    /// the modulo and the reduction to the `Scalar` format: [u64; 5].
+    fn mul(self, b: Scalar) -> Scalar {
+        &self * &b
+    }
+}
+
 /// u64 * u64 = u128 inline func multiply helper
 #[inline]
 fn m(x: u64, y: u64) -> u128 {
@@ -313,7 +342,7 @@ impl Scalar {
 
     /// Compute `a * b` with the function multiplying helper
     #[inline]
-    pub fn mul_internal(a: &Scalar, b: &Scalar) -> [u128; 9] {
+    pub(self) fn mul_internal(a: &Scalar, b: &Scalar) -> [u128; 9] {
         let mut res = [0u128; 9];
         // Note that this is just the normal way of performing a product.
         // We need to store the results on u128 as otherwise we'll end
@@ -333,7 +362,7 @@ impl Scalar {
 
     /// Compute `a * b` with the macro multiplying helper
     #[inline]
-    pub fn mul_internal_macros(a: &Scalar, b: &Scalar) -> [u128; 9] {
+    pub(self) fn mul_internal_macros(a: &Scalar, b: &Scalar) -> [u128; 9] {
         let mut res = [0u128; 9];
         // Note that this is just the normal way of performing a product.
         // We need to store the results on u128 as otherwise we'll end
@@ -353,7 +382,7 @@ impl Scalar {
 
     /// Compute `a^2`
     #[inline]
-    pub fn square_internal(a: &Scalar) -> [u128; 9] {
+    pub(self) fn square_internal(a: &Scalar) -> [u128; 9] {
         let a_sqrt = [
             a[0]*2,
             a[1]*2,
@@ -407,7 +436,7 @@ impl Scalar {
         let         r4 = carry as u64;
 
         // result may be >= r, so attempt to subtract l
-        Scalar::sub(Scalar([r0,r1,r2,r3,r4]), l)
+        &Scalar([r0,r1,r2,r3,r4]) - l
     }
 
     /// Compute `(a * b) / R` (mod l), where R is the Montgomery modulus 2^260
