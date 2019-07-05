@@ -532,40 +532,66 @@ impl ProjectivePoint {
 }
 
 
-
+#[allow(dead_code)]
 /// Module used for tesing `EdwardsPoint` operations and implementations.
 /// Also used to check the correctness of the transformation functions.
 pub mod tests {
     use super::*;
 
-    pub static P1: EdwardsPoint = EdwardsPoint {
+    pub(self) static P1_EXTENDED: EdwardsPoint = EdwardsPoint {
         X: FieldElement([23, 0, 0, 0, 0]),
         Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]),
         Z: FieldElement([1, 0, 0, 0, 0]),
         T: FieldElement([4351986304670635, 4020128726404030, 674192131526433, 1158854437106827, 6468984742885])
     };
 
-    pub static P2: EdwardsPoint = EdwardsPoint {
+    pub(self) static P2_EXTENDED: EdwardsPoint = EdwardsPoint {
         X: FieldElement([68, 0, 0, 0, 0]),
         Y: FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]),
         Z: FieldElement([1, 0, 0, 0, 0]),
         T: FieldElement([3505259403500377, 292342788271022, 2608000066641474, 796697979921534, 2995435405555])
     };
 
-    /// `P4 = P1 + P2` over Twisted Edwards Extended Coordinates. 
-    pub static P4: EdwardsPoint = EdwardsPoint {
+    /// `P4_EXTENDED = P1_EXTENDED + P2_EXTENDED` over Twisted Edwards Extended Coordinates. 
+    pub(self) static P4_EXTENDED: EdwardsPoint = EdwardsPoint {
         X: FieldElement([1933054591726350, 4403792816774408, 3029093546253310, 1134491999944368, 8146384875494]),
         Y: FieldElement([3369514960042642, 4355698098047571, 1547650124195635, 1314697306673062, 12051634278308]),
         Z: FieldElement([576719056868307, 1763329757922533, 3184642959683715, 2550235128581121, 11094626825862]),
         T: FieldElement([4345938036071968, 1280347559053553, 3286762790776823, 3577757860131876, 6505793015434])
     };
 
-    /// `P3 = 2P1` over Twisted Edwards Extended Coordinates. 
-    pub static P3: EdwardsPoint = EdwardsPoint {
+    /// `P3_EXTENDED = 2P1_EXTENDED` over Twisted Edwards Extended Coordinates. 
+    pub(self) static P3_EXTENDED: EdwardsPoint = EdwardsPoint {
         X: FieldElement([3851124475403222, 3539758816612178, 1146717153316815, 2152796892260637, 5956037993247]),
         Y: FieldElement([980361497621373, 1671502808757874, 2143986549518967, 1109176323830729, 9039277193734]),
         Z: FieldElement([2942534902618579, 3556685217095302, 1974617438797742, 1657071371119364, 16635295697052]),
         T: FieldElement([2487305805734419, 681684275336734, 499518740758148, 156812857292600, 3978688323434])
+    };
+
+    pub(self) static P1_PROJECTIVE: ProjectivePoint = ProjectivePoint {
+        X: FieldElement([23, 0, 0, 0, 0]),
+        Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]),
+        Z: FieldElement([1, 0, 0, 0, 0])
+    };
+
+    pub(self) static P2_PROJECTIVE: ProjectivePoint = ProjectivePoint {
+        X: FieldElement([68, 0, 0, 0, 0]),
+        Y: FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]),
+        Z: FieldElement([1, 0, 0, 0, 0])
+    };
+
+    /// `P4_PROJECTIVE = P1_PROJECTIVE + P2_PROJECTIVE` over Twisted Edwards Projective Coordinates. 
+    pub(self) static P4_PROJECTIVE: ProjectivePoint = ProjectivePoint {
+        X: FieldElement([1933054591726350, 4403792816774408, 3029093546253310, 1134491999944368, 8146384875494]),
+        Y: FieldElement([3369514960042642, 4355698098047571, 1547650124195635, 1314697306673062, 12051634278308]),
+        Z: FieldElement([576719056868307, 1763329757922533, 3184642959683715, 2550235128581121, 11094626825862])
+    };
+
+    /// `P3_PROJECTIVE = 2P1_PROJECTIVE` over Twisted Edwards Projective Coordinates. 
+    pub(self) static P3_PROJECTIVE: ProjectivePoint = ProjectivePoint {
+        X: FieldElement([3851124475403222, 3539758816612178, 1146717153316815, 2152796892260637, 5956037993247]),
+        Y: FieldElement([980361497621373, 1671502808757874, 2143986549518967, 1109176323830729, 9039277193734]),
+        Z: FieldElement([2942534902618579, 3556685217095302, 1974617438797742, 1657071371119364, 16635295697052])
     };
 
 
@@ -573,24 +599,24 @@ pub mod tests {
 
     #[test]
     fn from_projective_to_extended() {
-        let p3_proj = ProjectivePoint {
+        let p3_extended_proj = ProjectivePoint {
             X: FieldElement([23, 0, 0, 0, 0]),
             Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]),
             Z: FieldElement([1, 0, 0, 0, 0])
         };
 
-        assert!(EdwardsPoint::from(&p3_proj) == P1);
+        assert!(EdwardsPoint::from(&p3_extended_proj) == P1_EXTENDED);
     }
 
     #[test]
     fn from_extended_to_projective() {
-        let p3_proj = ProjectivePoint {
+        let p3_extended_proj = ProjectivePoint {
             X: FieldElement([23, 0, 0, 0, 0]),
             Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]),
             Z: FieldElement([1, 0, 0, 0, 0])
         };
 
-        assert!(p3_proj == ProjectivePoint::from(&P1));
+        assert!(p3_extended_proj == ProjectivePoint::from(&P1_EXTENDED));
     }
 
 
@@ -623,16 +649,16 @@ pub mod tests {
 
     #[test]
     fn extended_point_addition() {
-        let res = &P1 + &P2;
+        let res = &P1_EXTENDED + &P2_EXTENDED;
 
-        assert!(res == P4);
+        assert!(res == P4_EXTENDED);
     }
 
     #[test]
     fn extended_point_doubling_by_addition() {
-        let res: EdwardsPoint = &P1 + &P1;
+        let res: EdwardsPoint = &P1_EXTENDED + &P1_EXTENDED;
         
-        assert!(res == P3);
+        assert!(res == P3_EXTENDED);
     }
 
     #[test]
@@ -660,17 +686,15 @@ pub mod tests {
         assert!(res == ProjectivePoint::identity())
     }
 
-    
-
     #[test]
     fn projective_point_doubling() {
         // Double in extended
-        let res = ProjectivePoint::from(&P1).double();
+        let res = ProjectivePoint::from(&P1_EXTENDED).double();
         // Double in projective
-        let res2 = ProjectivePoint::from(&P1.double());
+        let res2 = ProjectivePoint::from(&P1_EXTENDED.double());
         println!("{:?}", res);
         println!("{:?}", res2);
-        println!("P3 in projective.{:?}", ProjectivePoint::from(&P3));
-        //assert!(res == ProjectivePoint::from(&P3));
+        println!("P3_EXTENDED in projective.{:?}", ProjectivePoint::from(&P3_EXTENDED));
+        //assert!(res == ProjectivePoint::from(&P3_EXTENDED));
     }
 }
