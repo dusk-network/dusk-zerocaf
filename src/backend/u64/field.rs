@@ -141,6 +141,16 @@ impl<'a> Neg for &'a FieldElement {
     }
 } 
 
+impl Neg for FieldElement {
+    type Output = FieldElement;
+    /// Computes `-self (mod l)`.
+    /// Compute the negated value that correspond's to the
+    /// two's complement of the input FieldElement.
+    fn neg(self) -> FieldElement {
+        -&self
+    }
+}
+
 impl<'a, 'b> Add<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
     /// Compute `a + b (mod l)`.
@@ -193,11 +203,26 @@ impl<'a, 'b> Sub<&'b FieldElement> for &'a FieldElement {
     }
 }
 
+impl Sub<FieldElement> for FieldElement {
+    type Output = FieldElement;
+    /// Compute `a + b (mod l)`.
+    fn sub(self, b: FieldElement) -> FieldElement {
+        &self - &b
+    }
+}
+
 impl<'a, 'b> Mul<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
     fn mul(self, _rhs: &'b FieldElement) -> FieldElement {
         let prod = FieldElement::montgomery_reduce(&FieldElement::mul_internal(self, _rhs));
         FieldElement::montgomery_reduce(&FieldElement::mul_internal(&prod, &constants::RR_FIELD))
+    }
+}
+
+impl Mul<FieldElement> for FieldElement {
+    type Output = FieldElement;
+    fn mul(self, _rhs: FieldElement) -> FieldElement {
+        &self * &_rhs
     }
 }
 
