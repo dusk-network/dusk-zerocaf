@@ -5,8 +5,7 @@
 
 use core::fmt::Debug;
 use core::ops::{Index, IndexMut};
-use core::ops::Add;
-use core::ops::Sub;
+use core::ops::{Add, Sub, Mul, Neg};
 
 use std::cmp::{PartialOrd, Ordering, Ord};
 
@@ -113,9 +112,9 @@ impl<'a> From<&'a u128> for Scalar {
     }
 }
 
-impl<'b> Add<&'b Scalar> for Scalar {
+impl<'a, 'b> Add<&'b Scalar> for &'a Scalar {
     type Output = Scalar;
-    /// Compute `a + b` (mod l)
+    /// Compute `a + b (mod l)`.
     fn add(self, b: &'b Scalar) -> Scalar {
         let mut sum = Scalar::zero();
         let mask = (1u64 << 52) - 1;
@@ -126,14 +125,22 @@ impl<'b> Add<&'b Scalar> for Scalar {
             carry = self.0[i] + b[i] + (carry >> 52);
             sum[i] = carry & mask;
         }
-        // subtract r if the sum is >= l
-        sum.sub(&constants::L)
+        // subtract l if the sum is >= l
+        sum - constants::L
     }
 } 
 
-impl<'b> Sub<&'b Scalar> for Scalar {
+impl Add<Scalar> for Scalar {
     type Output = Scalar;
-    /// Compute `a - b` (mod r)
+    /// Compute `a + b (mod l)`.
+    fn add(self, b: Scalar) -> Scalar {
+        &self + &b
+    }
+}
+
+impl<'a, 'b> Sub<&'b Scalar> for &'a Scalar {
+    type Output = Scalar;
+    /// Compute `a - b (mod l)`.
     fn sub(self, b: &'b Scalar) -> Scalar {
         let mut difference = Scalar::zero();
         let mask = (1u64 << 52) - 1;
@@ -157,6 +164,14 @@ impl<'b> Sub<&'b Scalar> for Scalar {
         }
 
         difference
+    }
+}
+
+impl Sub<Scalar> for Scalar {
+    type Output = Scalar;
+    /// Compute `a - b (mod l)`.
+    fn sub(self, b: Scalar) -> Scalar {
+        &self - &b
     }
 }
 
@@ -393,13 +408,6 @@ impl Scalar {
 
         // result may be >= r, so attempt to subtract l
         Scalar::sub(Scalar([r0,r1,r2,r3,r4]), l)
-    }
-
-    /// Compute `a * b` (mod l)
-    #[inline]
-    pub fn mul(a: &Scalar, b: &Scalar) -> Scalar {
-        let ab = Scalar::montgomery_reduce(&Scalar::mul_internal(a, b)); 
-        Scalar::montgomery_reduce(&Scalar::mul_internal(&ab, &constants::RR))
     }
 
     /// Compute `(a * b) / R` (mod l), where R is the Montgomery modulus 2^260
