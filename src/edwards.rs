@@ -461,6 +461,28 @@ impl<'a> From<&'a EdwardsPoint> for ProjectivePoint {
     }
 }
 
+impl<'a> Neg for &'a ProjectivePoint {
+    type Output = ProjectivePoint;
+    /// Negates an `ProjectivePoint` giving it as a result.
+    /// Since the negative of a point is (-X:Y:Z:-T), it
+    /// gives as a result: `(-X, Y, Z, -T)`.
+    fn neg(self) -> ProjectivePoint {
+       ProjectivePoint{
+           X: -&self.X,
+           Y:   self.Y,
+           Z:   self.Z
+       }
+    }
+}
+
+impl Neg for ProjectivePoint {
+    type Output = ProjectivePoint;
+    /// Negates an `ProjectivePoint` giving it as a result
+    fn neg(self) -> ProjectivePoint {
+        -&self
+    }
+}
+
 impl ProjectivePoint {
     /// Double the given point following:
     /// This implementation is specific for curves with `a = -1` as Doppio is.
