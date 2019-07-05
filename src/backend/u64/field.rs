@@ -213,6 +213,11 @@ impl Sub<FieldElement> for FieldElement {
 
 impl<'a, 'b> Mul<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
+    /// This Mul implementation uses double precision techniques.
+    /// The result of the standard mul is stored on a [u128; 9].
+    /// 
+    /// Then, we apply the Montgomery Reduction function to perform
+    /// the modulo and the reduction to the `FieldElement` format: [u64; 5].
     fn mul(self, _rhs: &'b FieldElement) -> FieldElement {
         let prod = FieldElement::montgomery_reduce(&FieldElement::mul_internal(self, _rhs));
         FieldElement::montgomery_reduce(&FieldElement::mul_internal(&prod, &constants::RR_FIELD))
@@ -221,6 +226,11 @@ impl<'a, 'b> Mul<&'b FieldElement> for &'a FieldElement {
 
 impl Mul<FieldElement> for FieldElement {
     type Output = FieldElement;
+    /// This Mul implementation uses double precision techniques.
+    /// The result of the standard mul is stored on a [u128; 9].
+    /// 
+    /// Then, we apply the Montgomery Reduction function to perform
+    /// the modulo and the reduction to the `FieldElement` format: [u64; 5].
     fn mul(self, _rhs: FieldElement) -> FieldElement {
         &self * &_rhs
     }
