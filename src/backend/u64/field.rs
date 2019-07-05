@@ -143,7 +143,7 @@ impl<'a> Neg for &'a FieldElement {
 
 impl<'a, 'b> Add<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
-    /// Compute `a + b` (mod l)
+    /// Compute `a + b (mod l)`.
     fn add(self, b: &'b FieldElement) -> FieldElement {
         let mut sum = FieldElement::zero();
         let mask = (1u64 << 52) - 1;
@@ -157,6 +157,15 @@ impl<'a, 'b> Add<&'b FieldElement> for &'a FieldElement {
         // subtract l if the sum is >= l
         &sum - &constants::FIELD_L
     }
+}
+
+impl Add<FieldElement> for FieldElement {
+    type Output = FieldElement;
+    /// Compute `a + b (mod l)`.
+    fn add(self, b: FieldElement) -> FieldElement {
+        &self + &b
+    }
+    
 }
 
 impl<'a, 'b> Sub<&'b FieldElement> for &'a FieldElement {
