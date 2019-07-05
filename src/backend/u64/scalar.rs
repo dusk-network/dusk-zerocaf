@@ -639,6 +639,32 @@ mod tests {
     }
 
     #[test]
+    fn scalar_mul() {
+        let res = &X * &Y;
+        for i in 0..5 {
+            assert!(res[i] == X_TIMES_Y[i]);
+        }
+    }
+
+    #[test]
+    fn mul_by_identity() {
+        let res = &Y * &Scalar::identity();
+
+        println!("{:?}", res);
+        for i in 0..5 {
+            assert!(res[i] == Y[i]);
+        }
+    }
+
+    #[test]
+    fn mul_by_zero() {
+        let res = &Y * &Scalar::zero();
+        for i in 0..5 {
+            assert!(res[i] == Scalar::zero()[i]);
+        }
+    }
+
+    #[test]
     fn montgomery_mul() {
         let res = Scalar::montgomery_mul(&X, &Y);
         for i in 0..5 {
