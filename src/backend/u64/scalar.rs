@@ -12,6 +12,7 @@ use std::cmp::{PartialOrd, Ordering, Ord};
 use num::Integer;
 
 use crate::backend::u64::constants;
+use crate::traits::{Square, Identity};
 
 /// The `Scalar` struct represents an Scalar over the modulo
 /// `2^249 - 15145038707218910765482344729778085401` as 5 52-bit limbs
@@ -109,6 +110,24 @@ impl<'a> From<&'a u128> for Scalar {
         res[2] = (_inp >> 104) as u64;
 
         res
+    }
+}
+
+impl<'a> Neg for &'a Scalar {
+    type Output = Scalar;
+    /// Performs the negate operation over the
+    /// sub-group modulo l. 
+    fn neg(self) -> Scalar {
+        &Scalar::zero() - &self
+    }
+}
+
+impl Neg for Scalar {
+    type Output = Scalar;
+    /// Performs the negate operation over the
+    /// sub-group modulo l.
+    fn neg(self) -> Scalar {
+        -&self
     }
 }
 
@@ -360,8 +379,9 @@ impl Scalar {
         res
     }
 
-    /// Compute `a * b` with the macro multiplying helper
+    #[allow(dead_code)]
     #[inline]
+    /// Compute `a * b` with the macro multiplying helper
     pub(self) fn mul_internal_macros(a: &Scalar, b: &Scalar) -> [u128; 9] {
         let mut res = [0u128; 9];
         // Note that this is just the normal way of performing a product.
@@ -534,7 +554,7 @@ mod tests {
 
     #[test]
     fn add_with_modulo() {
-        let res = A.add(&B);
+        let res = A + B;
         let zero = Scalar::zero();;
         for i in 0..5 {
             assert!(res[i] == zero[i]);
@@ -543,7 +563,7 @@ mod tests {
 
     #[test]
     fn sub_with_modulo() {
-        let res = A.sub(&B);
+        let res = A - B;
         for i in 0..5 {
             assert!(res[i] == AB[i]);
         }
@@ -551,7 +571,7 @@ mod tests {
 
     #[test]
     fn sub_without_modulo() {
-        let res = B.sub(&A);
+        let res = B - A;
         for i in 0..5 {
             assert!(res[i] == BA[i]);
         }
@@ -597,7 +617,7 @@ mod tests {
 
     #[test]
     fn full_montgomery_mul() {
-        let res = Scalar::mul(&X, &Y);
+        let res = &X * &Y;
         for i in 0..5 {
             assert!(res[i] == X_TIMES_Y[i]);
         }
