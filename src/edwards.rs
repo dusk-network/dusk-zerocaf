@@ -686,6 +686,15 @@ pub mod tests {
         assert!(res == ProjectivePoint::identity())
     }
 
+    // Not Passing
+    #[test]
+    fn projective_point_addition() {
+        let res = &P1_PROJECTIVE + &P2_PROJECTIVE;
+        print!("{:?}", EdwardsPoint::from(&res));
+        assert!(res == P4_PROJECTIVE);
+    }
+
+    // Not Passing
     #[test]
     fn projective_point_doubling() {
         // Double in extended
