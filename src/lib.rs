@@ -82,7 +82,9 @@
 //! 
 //! This is achieved by having defining the twisted edwards curve over the ristretto scalar field, 
 //! which means to perform every operation on the curve in modulo L, 
-//! where L is the order of the ristretto scalar field. L =  2^252 + 27742317777372353535851937790883648493. <br> 
+//! where L is the order of the ristretto scalar field. <br>
+//! 
+//! `L =  2^252 + 27742317777372353535851937790883648493`. <br> 
 //! 
 //! By expounding the operations in this manner, we can benefit from the speed of a non-prime order twisted 
 //! edwards curve whilst not suffering the pitfalls of a cofactor greater than one.

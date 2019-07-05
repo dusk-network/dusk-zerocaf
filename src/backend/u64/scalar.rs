@@ -1,5 +1,6 @@
-//! Arithmetic mod (2^249 - 15145038707218910765482344729778085401)
-//! with five 52-bit unsigned limbs.
+//! Arithmetic mod `2^249 - 15145038707218910765482344729778085401`
+//! with five 52-bit unsigned limbs
+//! represented in radix `2^52`.
 
 
 use core::fmt::Debug;
@@ -14,7 +15,8 @@ use num::Integer;
 use crate::backend::u64::constants;
 
 /// The `Scalar` struct represents an Scalar over the modulo
-/// `2^249 - 15145038707218910765482344729778085401` as 5 52-bit limbs.
+/// `2^249 - 15145038707218910765482344729778085401` as 5 52-bit limbs
+/// represented in radix `2^52`.
 #[derive(Copy,Clone)]
 pub struct Scalar(pub [u64; 5]);
 

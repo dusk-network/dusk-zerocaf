@@ -1,6 +1,6 @@
 //! Field arithmetic modulo `2^252 + 27742317777372353535851937790883648493`
 //! using 64-bit limbs with 128-bit products.
-//! In the 64-bit backend implementation, the `FieldElement` is
+//! In the 64-bit backend implementation, a `FieldElement` is
 //! represented in radix `2^52`.
 
 use core::fmt::Debug;

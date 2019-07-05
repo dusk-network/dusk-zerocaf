@@ -1,4 +1,4 @@
-//! Contains the curve-constants needed by the different algorithm implementations.
+//! Contains the curve-constants needed by different algorithm implementations.
 
 use crate::field::FieldElement;
 
