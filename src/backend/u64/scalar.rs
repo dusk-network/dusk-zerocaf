@@ -131,6 +131,14 @@ impl Neg for Scalar {
     }
 }
 
+impl Identity for Scalar {
+    /// Returns the `Identity` element for `Scalar`
+    /// which equals `1 (mod l)`. 
+    fn identity() -> Scalar {
+        Scalar::one()
+    }
+}
+
 impl<'a, 'b> Add<&'b Scalar> for &'a Scalar {
     type Output = Scalar;
     /// Compute `a + b (mod l)`.
