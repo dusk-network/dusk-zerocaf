@@ -776,6 +776,9 @@ pub mod tests {
     /// `2^104 (mod l) = 20282409603651670423947251286016`
     pub static TWO_POW_104: FieldElement = FieldElement([0, 0, 1, 0, 0]);
 
+
+    //------------------ Tests ------------------//
+
     #[test]
     fn addition_with_modulo() {
         let res = &FieldElement::minus_one() + &FieldElement::one();
