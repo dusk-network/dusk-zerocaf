@@ -17,7 +17,7 @@ use subtle::Choice;
 
 use crate::backend::u64::constants;
 use crate::scalar::Ristretto255Scalar;
-use crate::traits::Identity;
+use crate::traits::{Identity, Square};
 
 /// A `FieldElement` represents an element into the field
 /// `2^252 + 27742317777372353535851937790883648493`
@@ -462,11 +462,6 @@ impl FieldElement {
         res
     }
 
-    /// Compute `self^2 (mod l)`.
-    pub fn square(&self) -> FieldElement {
-        self * self
-    }
-
     /// Compute `a * b` with the function multiplying helper
     #[inline]
     pub fn mul_internal(a: &FieldElement, b: &FieldElement) -> [u128; 9] {
@@ -485,6 +480,32 @@ impl FieldElement {
         res[8] =                                                             m(a[4],b[4]);
 
         res
+    }
+
+    /// Compute `a^2`. 
+    /// 
+    /// This operation is multo-precision. So it gives back
+    /// an `[u128; 9]` with the result of the squaring.
+    #[inline]
+    pub(self) fn square_internal(a: &FieldElement) -> [u128; 9] {
+        let a_sqrt = [
+            a[0]*2,
+            a[1]*2,
+            a[2]*2,
+            a[3]*2,
+        ];
+
+        [
+            m(a[0],a[0]),
+            m(a_sqrt[0],a[1]),
+            m(a_sqrt[0],a[2]) + m(a[1],a[1]),
+            m(a_sqrt[0],a[3]) + m(a_sqrt[1],a[2]),
+            m(a_sqrt[0],a[4]) + m(a_sqrt[1],a[3]) + m(a[2],a[2]),
+                                m(a_sqrt[1],a[4]) + m(a_sqrt[2],a[3]),
+                                                    m(a_sqrt[2],a[4]) + m(a[3],a[3]),
+                                                                        m(a_sqrt[3],a[4]),
+                                                                        m(a[4],a[4])
+        ]
     }
 
     /// Compute `limbs/R` (mod l), where R is the Montgomery modulus 2^260
@@ -521,7 +542,7 @@ impl FieldElement {
         let         r4 = carry as u64;
 
         // result may be >= r, so attempt to subtract l
-        FieldElement([r0,r1,r2,r3,r4]).sub(l)
+        &FieldElement([r0,r1,r2,r3,r4]) - l
     }
 
     //--------------------InverseModMontgomery tools-----------------------//
