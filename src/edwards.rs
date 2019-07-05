@@ -483,12 +483,37 @@ impl Neg for ProjectivePoint {
     }
 }
 
+impl<'a, 'b> Add<&'b ProjectivePoint> for &'a ProjectivePoint {
+    type Output = ProjectivePoint;
+    /// Add two ProjectivePoints and give the resulting `ProjectivePoint`.
+    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// [Source: 2008 Hisil–Wong–Carter–Dawson], 
+    /// (http://eprint.iacr.org/2008/522), Section 3.1.
+    /// Cost: 10M + 1S + 2D + 7a.
+    #[inline]
+    fn add(self, other: &'b ProjectivePoint) -> ProjectivePoint {
+        let A = self.Z.square();
+        let B = A.square();
+        let C = &self.X + &other.X;
+        let D = &self.Y + &other.Y;
+        let E = &constants::EDWARDS_D * &(&C * &D);
+        let F = &B - &E;
+        let G = &B + &E;
+
+        ProjectivePoint {
+            X: &(&A * &F) * &(&(&(&(&self.X + &self.Y) * &(&other.X + &other.Y)) - &C) - &D),
+            Y: &A * &(&G * &(&D - &(&constants::EDWARDS_A * &C))),
+            Z: &F * &G
+        }
+    }
+}
+
 impl ProjectivePoint {
     /// Double the given point following:
     /// This implementation is specific for curves with `a = -1` as Doppio is.
     /// Source: 2008 Hisil–Wong–Carter–Dawson, 
     /// http://eprint.iacr.org/2008/522, Section 3.1.
-    /// Cost: 3M+ 4S+ +7a + 1D
+    /// Cost: 3M+ 4S+ +7a + 1D.
     pub fn double(&self) -> ProjectivePoint {
         let B = (&self.X + &self.Y).square();
         let C = self.X.square();
@@ -569,7 +594,6 @@ pub mod tests {
 
     #[test]
     fn extended_point_neg() {
-
         let inv_a: EdwardsPoint = EdwardsPoint{
            X: FieldElement::minus_one(),
            Y: FieldElement::zero(),
