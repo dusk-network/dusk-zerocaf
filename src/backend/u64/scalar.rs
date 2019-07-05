@@ -221,13 +221,28 @@ impl Mul<Scalar> for Scalar {
     type Output = Scalar;
     /// Compute `a * b (mod l)`.
     /// 
-    /// This Mul implementation uses double precision techniques.
+    /// This `Mul` implementation uses double precision techniques.
     /// The result of the standard mul is stored on a [u128; 9].
     /// 
     /// Then, we apply the Montgomery Reduction function to perform
     /// the modulo and the reduction to the `Scalar` format: [u64; 5].
     fn mul(self, b: Scalar) -> Scalar {
         &self * &b
+    }
+}
+
+impl<'a> Square for &'a Scalar {
+    type Output = Scalar;
+    /// Compute `a^2 (mod l)`. 
+    /// 
+    /// This `Square` implementation uses double precision techniques.
+    /// The result of the standard square is stored on a [u128; 9].
+    /// 
+    /// Then, we apply the Montgomery Reduction function to perform
+    /// the modulo and the reduction to the `Scalar` format: [u64; 5]. 
+    fn square(self) -> Scalar {
+        let aa = Scalar::montgomery_reduce(&Scalar::square_internal(self)); 
+        Scalar::montgomery_reduce(&Scalar::mul_internal(&aa, &constants::RR))
     }
 }
 
@@ -620,14 +635,6 @@ mod tests {
         let y = Scalar::from_montgomery(&Y_MONT);
         for i in 0..5 {
             assert!(y[i] == Y[i]);
-        }
-    }
-
-    #[test]
-    fn full_montgomery_mul() {
-        let res = &X * &Y;
-        for i in 0..5 {
-            assert!(res[i] == X_TIMES_Y[i]);
         }
     }
 
