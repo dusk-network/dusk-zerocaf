@@ -213,7 +213,7 @@ impl Sub<FieldElement> for FieldElement {
 
 impl<'a, 'b> Mul<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
-    /// This Mul implementation uses double precision techniques.
+    /// This Mul implementation returns a double precision result.
     /// The result of the standard mul is stored on a [u128; 9].
     /// 
     /// Then, we apply the Montgomery Reduction function to perform
@@ -226,13 +226,28 @@ impl<'a, 'b> Mul<&'b FieldElement> for &'a FieldElement {
 
 impl Mul<FieldElement> for FieldElement {
     type Output = FieldElement;
-    /// This Mul implementation uses double precision techniques.
+    /// This Mul implementation returns a double precision result.
     /// The result of the standard mul is stored on a [u128; 9].
     /// 
     /// Then, we apply the Montgomery Reduction function to perform
     /// the modulo and the reduction to the `FieldElement` format: [u64; 5].
     fn mul(self, _rhs: FieldElement) -> FieldElement {
         &self * &_rhs
+    }
+}
+
+impl<'a> Square for &'a FieldElement {
+    type Output = FieldElement;
+    /// Compute `a^2 (mod l)`. 
+    /// 
+    /// This `Square` implementation returns a double precision result.
+    /// The result of the standard square is stored on a [u128; 9].
+    /// 
+    /// Then, we apply the Montgomery Reduction function to perform
+    /// the modulo and the reduction to the `FieldElement` format: [u64; 5]. 
+    fn square(self) -> FieldElement {
+        let aa = FieldElement::montgomery_reduce(&FieldElement::square_internal(self)); 
+        FieldElement::montgomery_reduce(&FieldElement::mul_internal(&aa, &constants::RR_FIELD))
     }
 }
 
@@ -289,20 +304,6 @@ impl FieldElement {
     /// Evaluate if a `FieldElement` is even or not.
     pub fn is_even(self) -> bool {
         self.0[0].is_even()
-    }
-
-    /// Determine if this `FieldElement` is negative, in the sense
-    /// used in the ed25519 paper: `x` is negative if the low bit is
-    /// set.
-    /// 
-    /// Taken from the Curve25519-dalek implementation.
-    /// 
-    /// # Return
-    ///
-    /// If negative, return `Choice(1)`.  Otherwise, return `Choice(0)`.
-    pub fn is_negative(&self) -> Choice {
-        let bytes = self.to_bytes();
-        (bytes[0] & 1).into()
     }
 
     /// Give the half of the FieldElement value (mod l).
@@ -553,7 +554,7 @@ impl FieldElement {
         FieldElement::montgomery_reduce(&FieldElement::mul_internal(a, b))
     }
 
-    /// Puts a Scalar into Montgomery form, i.e. computes `a*R (mod l)`
+    /// Puts a FieldElement into Montgomery form, i.e. computes `a*R (mod l)`
     #[inline]
     pub fn to_montgomery(&self) -> FieldElement {
         FieldElement::montgomery_mul(self, &constants::RR_FIELD)
@@ -575,7 +576,7 @@ impl FieldElement {
     /// B. S. Kaliski Jr. - The  Montgomery  inverse  and  its  applica-tions.
     /// IEEE Transactions on Computers, 44(8):1064–1065, August-1995
     #[inline]
-    pub fn kalinski_inverse(&self) -> FieldElement {
+    pub(self) fn kalinski_inverse(&self) -> FieldElement {
 
         /// This Phase I indeed is the Binary GCD algorithm , a version o Stein's algorithm
         /// which tries to remove the expensive division operation away from the Classical
@@ -772,7 +773,7 @@ impl FieldElement {
 /// testing. It also includes the tests but remain hidden on the docs.
 pub mod tests {
 
-    use crate::backend::u64::field::FieldElement;
+    use super::*;
     #[allow(unused_imports)]
     use crate::backend::u64::constants as constants;
     #[allow(unused_imports)]
@@ -927,6 +928,30 @@ pub mod tests {
     }
 
     #[test]
+    fn square() {
+        let res = &A.square();
+        for i in 0..5 {
+            assert!(res[i] == A_SQUARE[i]);
+        }
+
+        let res = &B.square();
+        for i in 0..5 {
+            assert!(res[i] == B_SQUARE[i]);
+        }
+    }
+
+    #[test]
+    fn square_zero_and_identity() {
+        let zero = &FieldElement::zero().square();
+        let one = &FieldElement::identity().square();
+
+        for i in 0..5 {
+            assert!(zero[i] == FieldElement::zero()[i]);
+            assert!(one[i] == FieldElement::one()[i]);
+        }
+    }
+
+    #[test]
     fn from_bytes_conversion() {
         let num = FieldElement::from_bytes(&MINUS_ONE_BYTES);
         for i in 0..5 {
@@ -1044,19 +1069,6 @@ pub mod tests {
         let non_multiple = FieldElement::two_pow_k(&104u64);
         for i in 0..5 {
             assert!(non_multiple[i] == TWO_POW_104[i]);
-        }
-    }
-
-    #[test]
-    fn square() {
-        let res = &A.square();
-        for i in 0..5 {
-            assert!(res[i] == A_SQUARE[i]);
-        }
-
-        let res = &B.square();
-        for i in 0..5 {
-            assert!(res[i] == B_SQUARE[i]);
         }
     }
 
