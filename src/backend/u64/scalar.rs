@@ -204,9 +204,7 @@ impl Sub<Scalar> for Scalar {
 
 impl<'a, 'b> Mul<&'a Scalar> for &'b Scalar {
     type Output = Scalar;
-    /// Compute `a * b (mod l)`.
-    /// 
-    /// This Mul implementation uses double precision techniques.
+    /// This `Mul` implementation returns a double precision result.
     /// The result of the standard mul is stored on a [u128; 9].
     /// 
     /// Then, we apply the Montgomery Reduction function to perform
@@ -219,9 +217,7 @@ impl<'a, 'b> Mul<&'a Scalar> for &'b Scalar {
 
 impl Mul<Scalar> for Scalar {
     type Output = Scalar;
-    /// Compute `a * b (mod l)`.
-    /// 
-    /// This `Mul` implementation uses double precision techniques.
+    /// This `Mul` implementation returns a double precision result.
     /// The result of the standard mul is stored on a [u128; 9].
     /// 
     /// Then, we apply the Montgomery Reduction function to perform
@@ -233,10 +229,8 @@ impl Mul<Scalar> for Scalar {
 
 impl<'a> Square for &'a Scalar {
     type Output = Scalar;
-    /// Compute `a^2 (mod l)`. 
-    /// 
-    /// This `Square` implementation uses double precision techniques.
-    /// The result of the standard square is stored on a [u128; 9].
+    /// This `Square` implementation returns a double precision result.
+    /// The result of the standard mul is stored on a [u128; 9].
     /// 
     /// Then, we apply the Montgomery Reduction function to perform
     /// the modulo and the reduction to the `Scalar` format: [u64; 5]. 
@@ -246,7 +240,7 @@ impl<'a> Square for &'a Scalar {
     }
 }
 
-/// u64 * u64 = u128 inline func multiply helper
+/// u64 * u64 = u128 inline func multiply helper.
 #[inline]
 fn m(x: u64, y: u64) -> u128 {
     (x as u128) * (y as u128)
@@ -382,13 +376,14 @@ impl Scalar {
         res
     } 
 
-    /// Compute `a * b` with the function multiplying helper
+    /// Compute `a * b`.
+    /// Note that this is just the normal way of performing a product. 
+    /// This operation returns back a double precision result stored
+    /// on a `[u128; 9] in order to avoid overflowings.
     #[inline]
     pub(self) fn mul_internal(a: &Scalar, b: &Scalar) -> [u128; 9] {
         let mut res = [0u128; 9];
-        // Note that this is just the normal way of performing a product.
-        // We need to store the results on u128 as otherwise we'll end
-        // up having overflowings.
+        
         res[0] = m(a[0],b[0]);
         res[1] = m(a[0],b[1]) + m(a[1],b[0]);
         res[2] = m(a[0],b[2]) + m(a[1],b[1]) + m(a[2],b[0]);
@@ -404,12 +399,13 @@ impl Scalar {
 
     #[allow(dead_code)]
     #[inline]
-    /// Compute `a * b` with the macro multiplying helper
+    /// Compute `a * b`.
+    /// Note that this is just the normal way of performing a product. 
+    /// This operation returns back a double precision result stored
+    /// on a `[u128; 9] in order to avoid overflowings.
     pub(self) fn mul_internal_macros(a: &Scalar, b: &Scalar) -> [u128; 9] {
         let mut res = [0u128; 9];
-        // Note that this is just the normal way of performing a product.
-        // We need to store the results on u128 as otherwise we'll end
-        // up having overflows.
+        
         res[0] = m!(a[0],b[0]);
         res[1] = m!(a[0],b[1]) + m!(a[1],b[0]);
         res[2] = m!(a[0],b[2]) + m!(a[1],b[1]) + m!(a[2],b[0]);
@@ -423,7 +419,10 @@ impl Scalar {
         res
     }
 
-    /// Compute `a^2`
+    /// Compute `a^2`. 
+    /// 
+    /// This operation returns a double precision result. 
+    /// So it gives back a `[u128; 9]` with the result of the squaring.
     #[inline]
     pub(self) fn square_internal(a: &Scalar) -> [u128; 9] {
         let a_sqrt = [
@@ -448,7 +447,7 @@ impl Scalar {
 
     /// Compute `limbs/R` (mod l), where R is the Montgomery modulus 2^260
     #[inline]
-    pub fn montgomery_reduce(limbs: &[u128; 9]) -> Scalar {
+    pub(self) fn montgomery_reduce(limbs: &[u128; 9]) -> Scalar {
 
         #[inline]
         fn adjustment_fact(sum: u128) -> (u128, u64) {
@@ -484,19 +483,19 @@ impl Scalar {
 
     /// Compute `(a * b) / R` (mod l), where R is the Montgomery modulus 2^260
     #[inline]
-    pub fn montgomery_mul(a: &Scalar, b: &Scalar) -> Scalar {
+    pub(self) fn montgomery_mul(a: &Scalar, b: &Scalar) -> Scalar {
         Scalar::montgomery_reduce(&Scalar::mul_internal(a, b))
     }
 
     /// Puts a Scalar into Montgomery form, i.e. computes `a*R (mod l)`
     #[inline]
-    pub fn to_montgomery(&self) -> Scalar {
+    pub(self) fn to_montgomery(&self) -> Scalar {
         Scalar::montgomery_mul(self, &constants::RR)
     }
 
     /// Takes a Scalar out of Montgomery form, i.e. computes `a/R (mod l)`
     #[inline]
-    pub fn from_montgomery(&self) -> Scalar {
+    pub(self) fn from_montgomery(&self) -> Scalar {
         let mut limbs = [0u128; 9];
         for i in 0..5 {
             limbs[i] = self[i] as u128;
