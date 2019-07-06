@@ -131,6 +131,25 @@ impl<'a> From<&'a u128> for FieldElement {
     }
 }
 
+impl<'a> From<&'a Ristretto255Scalar> for FieldElement {
+    /// Given a Ristretto255Scalar on canonical bytes representation
+    /// get it's FieldElement equivalent value as 5 limbs and
+    /// radix-52.
+    fn from(origin: &'a Ristretto255Scalar) -> FieldElement {
+        let origin_bytes = origin.to_bytes();
+        FieldElement::from_bytes(&origin_bytes)
+    }
+}
+
+impl Into<Ristretto255Scalar> for FieldElement {
+    /// Given a FieldElement reference get it's
+    /// Ristretto255Scalar Equivalent on it's
+    /// canonical bytes representation.
+    fn into(self) -> Ristretto255Scalar {
+        Ristretto255Scalar::from_canonical_bytes(self.to_bytes()).unwrap()
+    }
+}
+
 impl<'a> Neg for &'a FieldElement {
     type Output = FieldElement;
     /// Computes `-self (mod l)`.
@@ -258,25 +277,6 @@ impl Default for FieldElement {
     }
 }
 
-impl<'a> From<&'a Ristretto255Scalar> for FieldElement {
-    /// Given a Ristretto255Scalar on canonical bytes representation
-    /// get it's FieldElement equivalent value as 5 limbs and
-    /// radix-52.
-    fn from(origin: &'a Ristretto255Scalar) -> FieldElement {
-        let origin_bytes = origin.to_bytes();
-        FieldElement::from_bytes(&origin_bytes)
-    }
-}
-
-impl Into<Ristretto255Scalar> for FieldElement {
-    /// Given a FieldElement reference get it's
-    /// Ristretto255Scalar Equivalent on it's
-    /// canonical bytes representation.
-    fn into(self) -> Ristretto255Scalar {
-        Ristretto255Scalar::from_canonical_bytes(self.to_bytes()).unwrap()
-    }
-}
-
 /// u64 * u64 = u128 inline func multiply helper
 #[inline]
 fn m(x: u64, y: u64) -> u128 {
@@ -341,7 +341,7 @@ impl FieldElement {
     /// On Kalinski's `PhaseII`, this function allows us to trick the
     /// addition and be able to divide odd numbers by `2`.
     #[inline]
-    pub fn plus_p_and_half(&self) -> FieldElement {
+    pub(self) fn plus_p_and_half(&self) -> FieldElement {
         let mut res = self.clone();
         for i in 0..5 {
             res[i] += constants::FIELD_L[i];
@@ -511,7 +511,7 @@ impl FieldElement {
 
     /// Compute `limbs/R` (mod l), where R is the Montgomery modulus 2^260
     #[inline]
-    pub fn montgomery_reduce(limbs: &[u128; 9]) -> FieldElement {
+    pub(self) fn montgomery_reduce(limbs: &[u128; 9]) -> FieldElement {
 
         #[inline]
         fn adjustment_fact(sum: u128) -> (u128, u64) {
@@ -550,19 +550,20 @@ impl FieldElement {
 
     /// Compute `(a * b) / R` (mod l), where R is the Montgomery modulus 2^253
     #[inline]
-    pub fn montgomery_mul(a: &FieldElement, b: &FieldElement) -> FieldElement {
+    pub(self) fn montgomery_mul(a: &FieldElement, b: &FieldElement) -> FieldElement {
         FieldElement::montgomery_reduce(&FieldElement::mul_internal(a, b))
     }
 
     /// Puts a FieldElement into Montgomery form, i.e. computes `a*R (mod l)`
     #[inline]
-    pub fn to_montgomery(&self) -> FieldElement {
+    #[allow(dead_code)]
+    pub(self) fn to_montgomery(&self) -> FieldElement {
         FieldElement::montgomery_mul(self, &constants::RR_FIELD)
     }
 
     /// Takes a FieldElement out of Montgomery form, i.e. computes `a/R (mod l)`
     #[inline]
-    pub fn from_montgomery(&self) -> FieldElement {
+    pub(self) fn from_montgomery(&self) -> FieldElement {
         let mut limbs = [0u128; 9];
         for i in 0..5 {
             limbs[i] = self[i] as u128;
@@ -576,6 +577,7 @@ impl FieldElement {
     /// B. S. Kaliski Jr. - The  Montgomery  inverse  and  its  applica-tions.
     /// IEEE Transactions on Computers, 44(8):1064–1065, August-1995
     #[inline]
+    #[allow(dead_code)]
     pub(self) fn kalinski_inverse(&self) -> FieldElement {
 
         /// This Phase I indeed is the Binary GCD algorithm , a version o Stein's algorithm
@@ -696,7 +698,7 @@ impl FieldElement {
     /// J Cryptogr Eng (2018) 8:201–210
     /// https://doi.org/10.1007/s13389-017-0161-x 
     #[inline]
-    pub fn savas_koc_inverse(&self) -> FieldElement {
+    pub fn inverse(&self) -> FieldElement {
 
         /// This Phase I indeed is the Binary GCD algorithm , a version o Stein's algorithm
         /// which tries to remove the expensive division operation away from the Classical
@@ -771,6 +773,7 @@ impl FieldElement {
 
 /// Module with constants used for `FieldElement` u64 implementation
 /// testing. It also includes the tests but remain hidden on the docs.
+#[cfg(test)]
 pub mod tests {
 
     use super::*;
@@ -1170,17 +1173,17 @@ pub mod tests {
     
     #[test]
     fn savas_koc_inverse() {
-        let res = FieldElement::savas_koc_inverse(&A);
+        let res = FieldElement::inverse(&A);
         for i in 0..5 {
             assert!(res[i] == INV_MOD_A[i]);
         }
 
-        let res = FieldElement::savas_koc_inverse(&B);
+        let res = FieldElement::inverse(&B);
         for i in 0..5 {
             assert!(res[i] == INV_MOD_B[i]);
         }
 
-        let res = FieldElement::savas_koc_inverse(&C);
+        let res = FieldElement::inverse(&C);
         for i in 0..5 {
             assert!(res[i] == INV_MOD_C[i]);
         }

@@ -483,18 +483,21 @@ impl Scalar {
 
     /// Compute `(a * b) / R` (mod l), where R is the Montgomery modulus 2^260
     #[inline]
+    #[allow(dead_code)]
     pub(self) fn montgomery_mul(a: &Scalar, b: &Scalar) -> Scalar {
         Scalar::montgomery_reduce(&Scalar::mul_internal(a, b))
     }
 
     /// Puts a Scalar into Montgomery form, i.e. computes `a*R (mod l)`
     #[inline]
+    #[allow(dead_code)]
     pub(self) fn to_montgomery(&self) -> Scalar {
         Scalar::montgomery_mul(self, &constants::RR)
     }
 
     /// Takes a Scalar out of Montgomery form, i.e. computes `a/R (mod l)`
     #[inline]
+    #[allow(dead_code)]
     pub(self) fn from_montgomery(&self) -> Scalar {
         let mut limbs = [0u128; 9];
         for i in 0..5 {
@@ -508,25 +511,24 @@ impl Scalar {
 #[cfg(test)]
 mod tests {
     use super::*;
-    // Computed A and B, some Scalars defined over the modulo `l = 2^249 - 15145038707218910765482344729778085401`.
-    
-    /// A = 182687704666362864775460604089535377456991567872
+        
+    /// `A = 182687704666362864775460604089535377456991567872`.
     pub static A: Scalar = Scalar([0, 0, 0, 2, 0]);
 
-    /// B = 904625697166532776746648320197686575422163851717637391703244652875051672039
+    /// `B = 904625697166532776746648320197686575422163851717637391703244652875051672039`
     pub static B: Scalar = Scalar([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370493, 2199023255551]);
 
-    /// AB = A - B = -904625697166532776746648320014998870755800986942176787613709275418060104167 (mod r)
-    /// which is equal to: 365375409332725729550921208179070754913983135744
+    /// `AB = A - B = -904625697166532776746648320014998870755800986942176787613709275418060104167 (mod l)`.
+    /// which is equal to: `365375409332725729550921208179070754913983135744`.
     pub static AB: Scalar = Scalar([0, 0, 0, 4, 0]);
 
-    /// BA = B - A = 904625697166532776746648320014998870755800986942176787613709275418060104167
+    /// `BA = B - A = 904625697166532776746648320014998870755800986942176787613709275418060104167`.
     pub static BA: Scalar = Scalar([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370491, 2199023255551]);
 
-    /// A * AB. Result expected of the product mentioned before.
+    /// `A * AB (mod l). Result expected of the product mentioned before.
     pub static A_TIMES_AB: [u128; 9] = [0,0,0,0,0,0,0,8,0];
 
-    /// B * BA computed in Sage limb by limb. (Since we don't have any other way to verify it.)
+    /// `B * BA` computed in Sage limb by limb. (Since we don't have any other way to verify it.)
     pub static B_TIMES_BA: [u128; 9] = 
         [7652006990252481706224970522225, 
         23445622381543053554951959203660, 
