@@ -347,16 +347,7 @@ impl EdwardsPoint {
 
     /// Compress this point to `CompressedEdwardsY` format.
     pub fn compress(&self) -> CompressedEdwardsY {
-        let recip = self.Z.savas_koc_inverse();
-        let x = &self.X * &recip;
-        let y = &self.Y * &recip;
-        let mut s: [u8; 32];
-
-        s = y.to_bytes();
-        // The 31st byte is always even, so we can't have a one by default.
-        // That's why we can play with this bit to represent the sign info.
-        s[31] ^= x.is_negative().unwrap_u8() << 7;
-        CompressedEdwardsY(s)
+        unimplemented!()
     }
 
     /// Implementation of the standard algorithm of `double_and_add`.
@@ -533,6 +524,7 @@ impl ProjectivePoint {
 
 
 #[allow(dead_code)]
+#[cfg(test)]
 /// Module used for tesing `EdwardsPoint` operations and implementations.
 /// Also used to check the correctness of the transformation functions.
 pub mod tests {
