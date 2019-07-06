@@ -20,6 +20,15 @@ use core::ops::{Index, IndexMut};
 use std::ops::{Add, Sub, Mul, Neg};
 
 
+pub(self) trait DoubleAndAdd<T> {
+    type Output;
+
+    #[must_use]
+    /// Returns the square of the input: `x^2`.
+    fn double_and_add(self, _rhs: T) -> Self::Output;
+}
+
+
 /// The first 255 bits of a `CompressedEdwardsY` represent the
 /// (y)-coordinate.  The high bit of the 32nd byte gives the sign of (x).
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -556,6 +565,8 @@ impl Sub<ProjectivePoint> for ProjectivePoint {
         &self - &other
     }
 }
+
+
 
 impl ProjectivePoint {
     /// Double the given point following:
