@@ -76,6 +76,13 @@ impl Identity for FieldElement {
     }
 }
 
+impl Default for FieldElement {
+    ///Returns the default value for a FieldElement = Zero.
+    fn default() -> FieldElement {
+        FieldElement::zero()
+    }
+}
+
 //-------------- From Implementations -----------------//
 impl<'a> From<&'a u8> for FieldElement {
     /// Performs the conversion.
@@ -270,13 +277,6 @@ impl<'a> Square for &'a FieldElement {
     }
 }
 
-impl Default for FieldElement {
-    ///Returns the default value for a FieldElement = Zero.
-    fn default() -> FieldElement {
-        FieldElement::zero()
-    }
-}
-
 /// u64 * u64 = u128 inline func multiply helper
 #[inline]
 fn m(x: u64, y: u64) -> u128 {
@@ -312,6 +312,7 @@ impl FieldElement {
     /// results.
     #[inline]
     pub fn half(&self) -> FieldElement {
+        debug_assert!(self.is_even());
         let mut res = self.clone();
         let mut remainder = 0u64;
         for i in (0..5).rev() {
