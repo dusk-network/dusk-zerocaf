@@ -20,12 +20,16 @@ use core::ops::{Index, IndexMut};
 use std::ops::{Add, Sub, Mul, Neg};
 
 
-pub(self) trait DoubleAndAdd<T> {
+
+// ------------- Internal trait declarations ------------- //
+pub(self) trait Double {
     type Output;
 
     #[must_use]
-    /// Returns the square of the input: `x^2`.
-    fn double_and_add(self, _rhs: T) -> Self::Output;
+    /// Performs the point-doubling operation over the
+    /// coordinates which this trait has been implemented
+    /// for.
+    fn double(self) -> Self::Output;
 }
 
 
@@ -313,14 +317,18 @@ impl<'a, 'b> Mul<&'b EdwardsPoint> for &'a Scalar {
     }
 }
 
-
-impl EdwardsPoint {
-    /// Double the given point following:
+impl<'a> Double for &'a EdwardsPoint {
+    type Output = EdwardsPoint;
+    
+    /// Performs the point doubling operation
+    /// ie. `2*P` over the Twisted Edwards Extended
+    /// Coordinates.
+    /// 
     /// This implementation is specific for curves with `a = -1` as Doppio is.
     /// Source: 2008 Hisil–Wong–Carter–Dawson, 
     /// http://eprint.iacr.org/2008/522, Section 3.1.
     /// Cost: 4M+ 4S+ 1D
-    pub fn double(&self) -> EdwardsPoint {
+    fn double(self) -> EdwardsPoint {
         // This algorithm will be using point addition as base
         // until we find out what problem are we experiencing
         // with the doubling formulae on Extended Coords.
@@ -348,7 +356,25 @@ impl EdwardsPoint {
 
         self + self
     }
+}
 
+impl Double for EdwardsPoint {
+    type Output = EdwardsPoint;
+    /// Performs the point doubling operation
+    /// ie. `2*P` over the Twisted Edwards Extended
+    /// Coordinates.
+    /// 
+    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// Source: 2008 Hisil–Wong–Carter–Dawson, 
+    /// http://eprint.iacr.org/2008/522, Section 3.1.
+    /// Cost: 4M+ 4S+ 1D
+    fn double(self) -> EdwardsPoint {
+        *&self.double()
+    }
+}
+
+
+impl EdwardsPoint {
     /// Return the `EdwardsPoint` with Extended Coordinates
     /// eq to: {0, 0, 0, 0}.
     pub fn zero() -> EdwardsPoint {
@@ -379,8 +405,7 @@ impl EdwardsPoint {
     /// 
     /// We implement this and not `windowing algorithms` because we 
     /// prioritize less constraints on R1CS over the computational 
-    /// costs of the algorithm. Since, building circuits for ZK proofs
-    /// it'll be more important.
+    /// costs of the algorithm.
     pub fn double_and_add(&self, s: &Scalar) -> EdwardsPoint {
         let mut N = self.clone();
         let mut n = s.clone();
