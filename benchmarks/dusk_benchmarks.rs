@@ -109,12 +109,48 @@ mod scalar_benches {
 mod edwards_benches {
 
     use super::*;
+    use zerocaf::edwards::EdwardsPoint;
+    use zerocaf::scalar::Scalar;
+    use zerocaf::field::FieldElement;
 
-    pub fn bench_point_addition(c: &mut Criterion) {
-    c.bench(
-        "Extended Coordinates Point Addition",
-        Benchmark::new("2008 Hisil–Wong–Carter–Dawson, Section 3.1.", |b| b.iter(|| &EdwardsPoint::identity() + &EdwardsPoint::identity()))
-    );
+    pub(self) static P1_EXTENDED: EdwardsPoint = EdwardsPoint {
+        X: FieldElement([23, 0, 0, 0, 0]),
+        Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]),
+        Z: FieldElement([1, 0, 0, 0, 0]),
+        T: FieldElement([4351986304670635, 4020128726404030, 674192131526433, 1158854437106827, 6468984742885])
+    };
+
+    pub(self) static P2_EXTENDED: EdwardsPoint = EdwardsPoint {
+        X: FieldElement([68, 0, 0, 0, 0]),
+        Y: FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]),
+        Z: FieldElement([1, 0, 0, 0, 0]),
+        T: FieldElement([3505259403500377, 292342788271022, 2608000066641474, 796697979921534, 2995435405555])
+    };
+
+    /// `A = 182687704666362864775460604089535377456991567872`.
+    pub static A: Scalar = Scalar([0, 0, 0, 2, 0]);
+
+    pub fn bench_point_ops(c: &mut Criterion) {
+        c.bench(
+            "Extended Coordinates Point Addition",
+            Benchmark::new("2008 Hisil–Wong–Carter–Dawson, Section 3.1.", |b| b.iter(|| &P1_EXTENDED + &P2_EXTENDED))
+        );
+
+        c.bench(
+            "Extended Coordinates Point Subtraction",
+            Benchmark::new("2008 Hisil–Wong–Carter–Dawson, Section 3.1.", |b| b.iter(|| &P1_EXTENDED - &P2_EXTENDED))
+        );
+
+        c.bench(
+            "Extended Coordinates Point Doubling",
+            Benchmark::new("2008 Hisil–Wong–Carter–Dawson, Section 3.1.", |b| b.iter(|| P1_EXTENDED.double()))
+        );
+        
+        c.bench(
+            "Extended Coordinates Scalar Mul",
+            Benchmark::new("Hankerson, Darrel; Vanstone, Scott; Menezes, Alfred (2004) - Guide to Elliptic Curve Cryptography. ",
+            |b| b.iter(|| &P1_EXTENDED * &A))
+        );
     }
 }
 
@@ -122,6 +158,6 @@ criterion_group!(benchmarks,
                 field_benches::bench_field_element_ops,
                 field_benches::bench_modular_inverse,
                 scalar_benches::bench_scalar_element_ops,
-                edwards_benches::bench_point_addition);
+                edwards_benches::bench_point_ops);
 //criterion_group!(benchmarks, field_benches::bench_modular_inverse);
 criterion_main!(benchmarks);
