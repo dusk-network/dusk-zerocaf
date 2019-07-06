@@ -512,7 +512,7 @@ impl<'a, 'b> Add<&'b ProjectivePoint> for &'a ProjectivePoint {
     }
 }
 
-impl Add for ProjectivePoint {
+impl Add<ProjectivePoint> for ProjectivePoint {
     type Output = ProjectivePoint;
     /// Add two ProjectivePoints, negating the segond one, 
     /// and give the resulting `ProjectivePoint`.
@@ -524,6 +524,36 @@ impl Add for ProjectivePoint {
     #[inline]
     fn add(self, other: ProjectivePoint) -> ProjectivePoint {
         &self + &other
+    }
+}
+
+impl<'a, 'b> Sub<&'b ProjectivePoint> for &'a ProjectivePoint {
+    type Output = ProjectivePoint;
+    /// Add two ProjectivePoints, negating the second one,
+    /// and give the resulting `ProjectivePoint`.
+    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// 
+    /// [Source: 2008 Hisil–Wong–Carter–Dawson], 
+    /// (http://eprint.iacr.org/2008/522), Section 3.1.
+    /// Cost: 10M + 1S + 2D + 7a.
+    #[inline]
+    fn sub(self, other: &'b ProjectivePoint) -> ProjectivePoint {
+        self + &(-other)
+    }
+}
+
+impl Sub<ProjectivePoint> for ProjectivePoint {
+    type Output = ProjectivePoint;
+    /// Add two ProjectivePoints, negating the second one,
+    /// and give the resulting `ProjectivePoint`.
+    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// 
+    /// [Source: 2008 Hisil–Wong–Carter–Dawson], 
+    /// (http://eprint.iacr.org/2008/522), Section 3.1.
+    /// Cost: 10M + 1S + 2D + 7a.
+    #[inline]
+    fn sub(self, other: ProjectivePoint) -> ProjectivePoint {
+        &self - &other
     }
 }
 
