@@ -274,7 +274,15 @@ impl<'a, 'b> Sub<&'b EdwardsPoint> for &'a EdwardsPoint {
 
 impl<'a, 'b> Mul<&'b Scalar> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
-    /// Scalar multiplication: compute `scalar * self`.
+    /// Scalar multiplication: compute `self * Scalar`.
+    /// This implementation uses the algorithm:
+    /// `add_and_doubling` which is the standard one for
+    /// this operations and also adds less constraints on
+    /// R1CS.
+    /// 
+    /// Hankerson, Darrel; Vanstone, Scott; Menezes, Alfred (2004). 
+    /// Guide to Elliptic Curve Cryptography. 
+    /// Springer Professional Computing. New York: Springer-Verlag.
     fn mul(self, scalar: &'b Scalar) -> EdwardsPoint {
         self.double_and_add(scalar)
     }
@@ -282,11 +290,15 @@ impl<'a, 'b> Mul<&'b Scalar> for &'a EdwardsPoint {
 
 impl<'a, 'b> Mul<&'b EdwardsPoint> for &'a Scalar {
     type Output = EdwardsPoint;
-    /// Scalar multiplication: compute `scalar * self`.
+    /// Scalar multiplication: compute `Scalar * self`.
     /// This implementation uses the algorithm:
     /// `add_and_doubling` which is the standard one for
     /// this operations and also adds less constraints on
     /// R1CS.
+    /// 
+    /// Hankerson, Darrel; Vanstone, Scott; Menezes, Alfred (2004). 
+    /// Guide to Elliptic Curve Cryptography. 
+    /// Springer Professional Computing. New York: Springer-Verlag.
     fn mul(self, point: &'b EdwardsPoint) -> EdwardsPoint {
         point.double_and_add(self)
     }
@@ -478,6 +490,7 @@ impl<'a, 'b> Add<&'b ProjectivePoint> for &'a ProjectivePoint {
     type Output = ProjectivePoint;
     /// Add two ProjectivePoints and give the resulting `ProjectivePoint`.
     /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// 
     /// [Source: 2008 Hisil–Wong–Carter–Dawson], 
     /// (http://eprint.iacr.org/2008/522), Section 3.1.
     /// Cost: 10M + 1S + 2D + 7a.
@@ -496,6 +509,21 @@ impl<'a, 'b> Add<&'b ProjectivePoint> for &'a ProjectivePoint {
             Y: &A * &(&G * &(&D - &(&constants::EDWARDS_A * &C))),
             Z: &F * &G
         }
+    }
+}
+
+impl Add for ProjectivePoint {
+    type Output = ProjectivePoint;
+    /// Add two ProjectivePoints, negating the segond one, 
+    /// and give the resulting `ProjectivePoint`.
+    /// 
+    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// [Source: 2008 Hisil–Wong–Carter–Dawson], 
+    /// (http://eprint.iacr.org/2008/522), Section 3.1.
+    /// Cost: 10M + 1S + 2D + 7a.
+    #[inline]
+    fn add(self, other: ProjectivePoint) -> ProjectivePoint {
+        &self + &other
     }
 }
 
