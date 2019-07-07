@@ -22,7 +22,7 @@ use std::ops::{Add, Sub, Mul, Neg};
 
 
 
-// ------------- Edwards Internal trait & fn declarations ------------- //
+// ------------- Edwards Internal fn declarations ------------- //
 
 /// Implementation of the standard algorithm of `double_and_add`.
 /// This is a function implemented for Generic points that have
