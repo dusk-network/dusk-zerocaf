@@ -266,12 +266,23 @@ impl Mul<FieldElement> for FieldElement {
 
 impl<'a,'b> Div<&'a FieldElement> for &'b FieldElement {
     type Output = FieldElement;
-
     /// Performs the op: `x / y (mod l)`. 
-    /// Since on modular fields we don't divide, the op
-    /// is: `x * (y^-1 (mod l)).
+    /// Since on modular fields we don't divide, the equivanelnt op
+    /// is: `x * (y^-1 (mod l))`, which is equivalent to the naive
+    /// division but for Finite Fields. 
     fn div(self, _rhs: &'a FieldElement) -> FieldElement {
         self * &_rhs.inverse()
+    }
+}
+
+impl Div<FieldElement> for FieldElement {
+    type Output = FieldElement;
+    /// Performs the op: `x / y (mod l)`. 
+    /// Since on modular fields we don't divide, the equivanelnt op
+    /// is: `x * (y^-1 (mod l))`, which is equivalent to the naive
+    /// division but for Finite Fields. 
+    fn div(self, _rhs: FieldElement) -> FieldElement {
+        &self * &_rhs.inverse()
     }
 }
 
