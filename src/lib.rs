@@ -42,7 +42,7 @@
 //! # Usage
 //! To import the library as a dependency of your project, just add on your `Cargo.toml`s project file:
 //! ```toml
-//! zerocaf = "0"
+//! zerocaf = "0.1.1"
 //! ```
 //! 
 //! Then import the crate as:
@@ -96,6 +96,62 @@
 //! 
 //! All of the operatons have been implemented using bit-shifting techniques to allow better performance
 //! and a significant reduction in execution time.  
+//! 
+//! # Examples
+//! We are planning to add some examples about tha basics of the `Zerocaf` library usage.<br>
+//! They will be uploaded to the [examples](https://github.com/dusk-network/dusk-zerocaf/tree/master/docs) folder.<br>
+//! 
+//! This is a very basic usage example of the Zerocaf lib:
+//! ```rust
+//! extern crate zerocaf;
+//! extern crate rand;
+//! 
+//! use zerocaf::field::FieldElement;
+//! use zerocaf::scalar::Scalar;
+//! use zerocaf::edwards::EdwardsPoint;
+//! 
+//! use rand::{Rng, thread_rng};
+//! 
+//! fn main() -> () {
+//! 
+//!     // Let G be an `EdwardsPoint` which is a point over the Twisted Eds Extended Coordinates. 
+//!     let G: EdwardsPoint = EdwardsPoint {
+//!         X: FieldElement([23, 0, 0, 0, 0]),
+//!         Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]),
+//!         Z: FieldElement([1, 0, 0, 0, 0]),
+//!         T: FieldElement([4351986304670635, 4020128726404030, 674192131526433, 1158854437106827, 6468984742885])
+//!     };
+//! 
+//!     let scalar: Scalar = rand_scalar_generation();
+//!     println!("{:?}", scalar);
+//! 
+//!     // Perform G*k, Point mul uses the `add_and_double` standard algorithm.
+//!     let P = &G  * &scalar;
+//!     println!("{:?}", P);
+//! }
+//! 
+//! /// Generate a random `Scalar` defined over the sub-group field
+//! /// modulo: `2^249 - 15145038707218910765482344729778085401`
+//! pub fn rand_scalar_generation() -> Scalar {
+//!     // Gen random 32-byte array. 
+//!     let mut bytes = [0u8;32];
+//! 
+//!     // Fill the bytes varible with random bytes. We can use the 32 bytes co give
+//!     // total randomness but then we will need to be aware because we can generate
+//!     // values greater than `L = 2^252 + 27742317777372353535851937790883648493` and
+//!     // the program will panic if we don't catch the error correctly on the 
+//!     // `from_bytes()` Scalar method call.
+//!     thread_rng().try_fill(&mut bytes[..31]).expect("Error getting the random bytes");
+//! 
+//!     Scalar::from_bytes(&bytes)
+//! }
+//! ```
+//! <br>
+//! We will also publish some videos talking about how is the library built and
+//! the maths that are happening behind the scenes.<br>
+//! Videos can also include programming examples using `Zerocaf` as a dependency.<br>
+//! You can check them on the [Dusk Network Youtube Channel](https://www.youtube.com/channel/UCAfY3VcuaxAelPp44B253Rw).
+//! 
 
 
 // Used for traits related to constant-time code.
