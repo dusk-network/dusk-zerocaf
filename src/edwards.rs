@@ -7,7 +7,8 @@ use crate::field::FieldElement;
 use crate::scalar::Scalar;
 use crate::montgomery::MontgomeryPoint;
 use crate::constants;
-use crate::traits::*;
+use crate::traits::Identity;
+use crate::traits::ops::*;
 
 
 use subtle::Choice;
@@ -21,15 +22,36 @@ use std::ops::{Add, Sub, Mul, Neg};
 
 
 
-// ------------- Internal trait declarations ------------- //
-pub(self) trait Double {
-    type Output;
+// ------------- Edwards Internal trait & fn declarations ------------- //
 
-    #[must_use]
-    /// Performs the point-doubling operation over the
-    /// coordinates which this trait has been implemented
-    /// for.
-    fn double(self) -> Self::Output;
+/// Implementation of the standard algorithm of `double_and_add`.
+/// This is a function implemented for Generic points that have
+/// implemented `Add`, `Double`, `Identity` and `Clone`.
+/// 
+/// Hankerson, Darrel; Vanstone, Scott; Menezes, Alfred (2004). 
+/// Guide to Elliptic Curve Cryptography. 
+/// Springer Professional Computing. New York: Springer-Verlag. 
+/// 
+/// We implement this and not `windowing algorithms` because we 
+/// prioritize less constraints on R1CS over the computational 
+/// costs of the algorithm.
+pub fn double_and_add<'b, 'a, T>(point: &'a T, scalar: &'b Scalar) -> T 
+    where for<'c> &'c T: Add<Output = T>  + Double<Output = T>,
+    T: Identity + Clone {
+
+    let mut N = point.clone();
+    let mut n = scalar.clone();
+    let mut Q = T::identity();
+
+    while n != Scalar::zero() {
+        if !n.is_even() {
+            Q = &Q + &N;
+        };
+
+        N = N.double();
+        n = n.half();
+    }  
+    Q
 }
 
 
@@ -297,11 +319,11 @@ impl<'a, 'b> Mul<&'b Scalar> for &'a EdwardsPoint {
     /// Guide to Elliptic Curve Cryptography. 
     /// Springer Professional Computing. New York: Springer-Verlag.
     fn mul(self, scalar: &'b Scalar) -> EdwardsPoint {
-        self.double_and_add(scalar)
+        double_and_add(self, scalar)
     }
 }
 
-impl<'a, 'b> Mul<&'b EdwardsPoint> for &'a Scalar {
+impl Mul<EdwardsPoint> for Scalar {
     type Output = EdwardsPoint;
     /// Scalar multiplication: compute `Scalar * self`.
     /// This implementation uses the algorithm:
@@ -312,8 +334,8 @@ impl<'a, 'b> Mul<&'b EdwardsPoint> for &'a Scalar {
     /// Hankerson, Darrel; Vanstone, Scott; Menezes, Alfred (2004). 
     /// Guide to Elliptic Curve Cryptography. 
     /// Springer Professional Computing. New York: Springer-Verlag.
-    fn mul(self, point: &'b EdwardsPoint) -> EdwardsPoint {
-        point.double_and_add(self)
+    fn mul(self, point: EdwardsPoint) -> EdwardsPoint {
+        double_and_add(&point, &self)
     }
 }
 
@@ -369,7 +391,7 @@ impl Double for EdwardsPoint {
     /// http://eprint.iacr.org/2008/522, Section 3.1.
     /// Cost: 4M+ 4S+ 1D
     fn double(self) -> EdwardsPoint {
-        *&self.double()
+        self.double()
     }
 }
 
@@ -395,34 +417,7 @@ impl EdwardsPoint {
     /// Compress this point to `CompressedEdwardsY` format.
     pub fn compress(&self) -> CompressedEdwardsY {
         unimplemented!()
-    }
-
-    /// Implementation of the standard algorithm of `double_and_add`.
-    /// 
-    /// Hankerson, Darrel; Vanstone, Scott; Menezes, Alfred (2004). 
-    /// Guide to Elliptic Curve Cryptography. 
-    /// Springer Professional Computing. New York: Springer-Verlag. 
-    /// 
-    /// We implement this and not `windowing algorithms` because we 
-    /// prioritize less constraints on R1CS over the computational 
-    /// costs of the algorithm.
-    pub fn double_and_add(&self, s: &Scalar) -> EdwardsPoint {
-        let mut N = self.clone();
-        let mut n = s.clone();
-        let mut Q = EdwardsPoint::identity();
-
-        while n != Scalar::zero() {
-            if !n.is_even() {
-                Q = &Q + &N;
-            };
-
-            N = N.double();
-            n = n.half();
-        }  
-
-        Q
-    }
-    
+    }    
 
     /// Multiply by the cofactor: return (8 P).
     pub fn mul_by_cofactor(&self) -> EdwardsPoint {
@@ -590,8 +585,6 @@ impl Sub<ProjectivePoint> for ProjectivePoint {
         &self - &other
     }
 }
-
-
 
 impl ProjectivePoint {
     /// Double the given point following:
