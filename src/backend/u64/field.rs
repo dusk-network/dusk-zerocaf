@@ -279,6 +279,37 @@ impl<'a> Square for &'a FieldElement {
     }
 }
 
+impl<'a> Half for &'a FieldElement {
+    type Output = FieldElement;
+    /// Give the half of the FieldElement value (mod l).
+    /// This function SHOULD ONLY be used with even 
+    /// `FieldElements` otherways, can produce erroneus
+    /// results.
+    #[inline]
+    fn half(self) -> FieldElement {
+        debug_assert!(self.is_even());
+        let mut res = self.clone();
+        let mut remainder = 0u64;
+        for i in (0..5).rev() {
+            res[i] = res[i] + remainder;
+            match(res[i] == 1, res[i].is_even()){
+                (true, _) => {
+                    remainder = 4503599627370496u64;
+                }
+                (_, false) => {
+                    res[i] = res[i] - 1u64;
+                    remainder = 4503599627370496u64;
+                }
+                (_, true) => {
+                    remainder = 0;
+                }
+            }
+        res[i] = res[i] >> 1;
+        };
+        res
+    }
+}
+
 /// u64 * u64 = u128 inline func multiply helper
 #[inline]
 fn m(x: u64, y: u64) -> u128 {
@@ -306,34 +337,6 @@ impl FieldElement {
     /// Evaluate if a `FieldElement` is even or not.
     pub fn is_even(self) -> bool {
         self.0[0].is_even()
-    }
-
-    /// Give the half of the FieldElement value (mod l).
-    /// This function SHOULD ONLY be used with even 
-    /// `FieldElements` otherways, can produce erroneus
-    /// results.
-    #[inline]
-    pub fn half(&self) -> FieldElement {
-        debug_assert!(self.is_even());
-        let mut res = self.clone();
-        let mut remainder = 0u64;
-        for i in (0..5).rev() {
-            res[i] = res[i] + remainder;
-            match(res[i] == 1, res[i].is_even()){
-                (true, _) => {
-                    remainder = 4503599627370496u64;
-                }
-                (_, false) => {
-                    res[i] = res[i] - 1u64;
-                    remainder = 4503599627370496u64;
-                }
-                (_, true) => {
-                    remainder = 0;
-                }
-            }
-        res[i] = res[i] >> 1;
-        };
-        res
     }
 
     /// Performs the operation `((a + constants::FIELD_L) >> 2) % l)`.
