@@ -10,7 +10,7 @@ use std::default::Default;
 use std::cmp::{PartialOrd, Ordering, Ord};
 
 use core::ops::{Index, IndexMut};
-use core::ops::{Add, Sub, Mul, Neg};
+use core::ops::{Add, Sub, Mul, Div, Neg};
 
 use num::Integer;
 
@@ -261,6 +261,17 @@ impl Mul<FieldElement> for FieldElement {
     /// the modulo and the reduction to the `FieldElement` format: [u64; 5].
     fn mul(self, _rhs: FieldElement) -> FieldElement {
         &self * &_rhs
+    }
+}
+
+impl<'a,'b> Div<&'a FieldElement> for &'b FieldElement {
+    type Output = FieldElement;
+
+    /// Performs the op: `x / y (mod l)`. 
+    /// Since on modular fields we don't divide, the op
+    /// is: `x * (y^-1 (mod l)).
+    fn div(self, _rhs: &'a FieldElement) -> FieldElement {
+        self * &_rhs.inverse()
     }
 }
 
