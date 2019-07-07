@@ -14,15 +14,27 @@ pub trait Identity {
     fn identity() -> Self;
 }
 
-/// Trait that represents the `^2` operation for any
-/// kind of element on the library. 
-/// 
-/// This trait is implemented following the rules that
-/// mandate over the Type that is being implemented. 
-pub trait Square {
+pub mod ops {
+    /// Trait that represents the `^2` operation for any
+    /// kind of element on the library. 
+    /// 
+    /// This trait is implemented following the rules that
+    /// mandate over the Type that is being implemented. 
+    pub trait Square {
+        type Output;
+
+        #[must_use]
+        /// Returns the square of the input: `x^2`.
+        fn square(self) -> Self::Output;
+    }
+
+    pub trait Double {
     type Output;
 
     #[must_use]
-    /// Returns the square of the input: `x^2`.
-    fn square(self) -> Self::Output;
+    /// Performs the point-doubling operation over the
+    /// coordinates which this trait has been implemented
+    /// for.
+    fn double(self) -> Self::Output;
+}
 }

@@ -5,6 +5,7 @@
 
 use core::fmt::Debug;
 use core::convert::From;
+
 use std::default::Default;
 use std::cmp::{PartialOrd, Ordering, Ord};
 
@@ -17,7 +18,8 @@ use subtle::Choice;
 
 use crate::backend::u64::constants;
 use crate::scalar::Ristretto255Scalar;
-use crate::traits::{Identity, Square};
+use crate::traits::Identity;
+use crate::traits::ops::*;
 
 /// A `FieldElement` represents an element into the field
 /// `2^252 + 27742317777372353535851937790883648493`

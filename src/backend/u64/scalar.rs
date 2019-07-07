@@ -12,7 +12,8 @@ use std::cmp::{PartialOrd, Ordering, Ord};
 use num::Integer;
 
 use crate::backend::u64::constants;
-use crate::traits::{Square, Identity};
+use crate::traits::Identity;
+use crate::traits::ops::*;
 
 /// The `Scalar` struct represents an Scalar over the modulo
 /// `2^249 - 15145038707218910765482344729778085401` as 5 52-bit limbs
