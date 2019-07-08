@@ -7,8 +7,8 @@
 //! `ConstantTimeEq` and `PartialEq` traits have been implemented 
 //! here since they will be the samme across all of the different
 //! backends.
-
-
+//! 
+//! 
 //! # Examples
 //! ```rust
 //! use zerocaf::field::FieldElement;
@@ -45,7 +45,7 @@
 //! // trait implmementation since it's much faster.
 //! if a.is_even() {
 //!     let half_a = &a.half(); // This will panic if a isn't even.
-//! }
+//! };
 //! 
 //! We can finally perform inversion modulo l for a FieldElement:
 //! let inv_a = &a.inverse(); // Performs a^-1 (mod l).
