@@ -359,33 +359,6 @@ impl Scalar {
         ]
     }
 
-    /// Given a `k`: u64, compute `2^k` giving the result
-    /// as a `Scalar`.
-    /// Note that the input must be between the range => 0..248.
-    pub fn two_pow_k(exp: &u64) -> Scalar {
-        let mut res = Scalar::zero();
-
-        debug_assert!(exp < &248u64);
-        match exp {
-            0...51 => {
-               res[0]  = 1u64 << exp;
-            },
-            52...103 => {
-                res[1] = 1u64 << (exp - 52);
-            },
-            104...155 => {
-                res[2] = 1u64 << (exp - 104);
-            },
-            156...207 => {
-                res[3] = 1u64 << (exp - 156);
-            },
-            _ => {
-                res[4] = 1u64 << (exp - 208);
-            }
-        }
-        res
-    }
-
     /// Compute `limbs/R` (mod l), where R is the Montgomery modulus 2^260
     #[inline]
     pub fn montgomery_reduce(limbs: &[u128; 9]) -> Scalar {
@@ -507,12 +480,6 @@ mod tests {
     /// `X * Y (mod l) = 890263784947025690345271110799906008759402458672628420828189878638015362081`
     pub static X_TIMES_Y: Scalar = Scalar([3414372756436001, 1500062170770321, 4341044393209371, 2791496957276064, 2164111380879]); 
 
-    /// `2^197 (mod l) = 200867255532373784442745261542645325315275374222849104412672`
-    pub static TWO_POW_197: Scalar = Scalar([0, 0, 0, 2199023255552, 0]);
-
-    /// `2^104 (mod l) = 20282409603651670423947251286016`
-    pub static TWO_POW_104: Scalar = Scalar([0, 0, 1, 0, 0]);
-
     #[test]
     fn partial_ord_and_eq() {
         assert!(Y.is_even());
@@ -617,27 +584,6 @@ mod tests {
         for i in 0..5 {
             assert!(a_half[i] == A.half()[i]);
             assert!(a_half_half[i] == A.half().half()[i]);
-        }
-    }
-
-    #[test]
-    fn two_pow_k() {
-        // Check for 0 value
-        let zero = Scalar::two_pow_k(&0u64);
-        for i in 0..5 {
-            assert!(zero[i] == Scalar::one()[i]);
-        }
-      
-        // Check for non 52-multiple `k` values
-        let non_multiple = Scalar::two_pow_k(&197u64);
-        for i in 0..5 {
-            assert!(non_multiple[i] == TWO_POW_197[i]);
-        }
-
-        // Check for 52-multiple `k` values
-        let non_multiple = Scalar::two_pow_k(&104u64);
-        for i in 0..5 {
-            assert!(non_multiple[i] == TWO_POW_104[i]);
         }
     }
 
