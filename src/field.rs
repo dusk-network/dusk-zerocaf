@@ -55,7 +55,7 @@
 //! `FieldElement` type. 
 //! 
 //! All `std::core::ops traits -> (Add, Sub, Mul, Div)` are implemented
-//! bor both, `&FieldElement` and `FieldElement`.
+//! for both, `&FieldElement` and `FieldElement`.
 
 use core::cmp::PartialEq;
 
