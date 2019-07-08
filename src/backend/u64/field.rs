@@ -272,6 +272,7 @@ impl<'a,'b> Div<&'a FieldElement> for &'b FieldElement {
     /// is: `x * (y^-1 (mod l))`, which is equivalent to the naive
     /// division but for Finite Fields. 
     fn div(self, _rhs: &'a FieldElement) -> FieldElement {
+        assert!(_rhs != &FieldElement::zero(), "Cannot divide by zero.");
         self * &_rhs.inverse()
     }
 }
@@ -310,7 +311,7 @@ impl<'a> Half for &'a FieldElement {
     /// results.
     #[inline]
     fn half(self) -> FieldElement {
-        debug_assert!(self.is_even());
+        assert!(self.is_even(), "The FieldElement has to be even.");
         let mut res = self.clone();
         let mut remainder = 0u64;
         for i in (0..5).rev() {
