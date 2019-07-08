@@ -13,7 +13,7 @@
 //! ```rust
 //! use zerocaf::field::FieldElement;
 //! use zerocaf::traits::ops::*;
-//! use constants::EDWARDS_D;
+//! use zerocaf::constants::EDWARDS_D;
 //! 
 //! // You can create a FieldElement from a byte-array as follows:
 //! let a = FieldElement::from_bytes(&[0u8;32]); 
@@ -23,9 +23,9 @@
 //! let c = FieldElement::from(&86650u64);
 //! 
 //! // The last way of creating a FieldElement it by calling the
-//! // constructor. THIS IS NOT RECOMMENDED since ANY checks about
-//! // the correctness of the input will be done. It can be done as
-//! // follows: 
+//! // constructor. THIS IS NOT RECOMMENDED since NO checks about
+//! // the correctness of the input will be done at all. 
+//! // It can be done as follows: 
 //! let d: FieldElement = FieldElement([0, 1, 0, 0, 0]); // d = 2^52.
 //! assert!(d == FieldElement::two_pow_k(&52u64));
 //! 
