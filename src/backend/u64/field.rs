@@ -464,13 +464,14 @@ impl FieldElement {
     /// inversion we need to exponenciate to greater values, we set the
     /// max on the Montgomery modulo so `260`.
     pub fn two_pow_k(exp: &u64) -> FieldElement {
-        let mut res = FieldElement::zero();
-
+        
         // Check that exp has to be less than 260.
         // Note that a FieldElement can be as much
         // `2^252 + 27742317777372353535851937790883648493` so we pick
         // 253 knowing that 252 will be less than `FIELD_L`.
-        debug_assert!(exp < &260u64);
+        assert!(exp < &253u64, "Exponent can't be greater than 253");
+        
+        let mut res = FieldElement::zero();
         match exp {
             0...51 => {
                res[0]  = 1u64 << exp;
@@ -488,7 +489,6 @@ impl FieldElement {
                 res[4] = 1u64 << (exp - 208);
             }
         }
-
         res
     }
 
