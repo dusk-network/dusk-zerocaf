@@ -13,8 +13,8 @@ exclude = [
     "**/.gitignore",
     ".gitignore",
     "**/tools",
-    "**/sage_codes"
-
+    "**/sage_codes",
+    "**/examples"
 ]
 license = "MIT"
 edition = "2018"
@@ -26,6 +26,7 @@ curve25519-dalek = "1.1.3"
 
 [dev-dependencies]
 criterion = "0.2"
+rand = "0.7.0"
 
 
 # Criterion benchmarks
