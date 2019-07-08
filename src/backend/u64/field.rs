@@ -20,6 +20,7 @@ use crate::backend::u64::constants;
 use crate::scalar::Ristretto255Scalar;
 use crate::traits::Identity;
 use crate::traits::ops::*;
+use crate::constants::EDWARDS_D;
 
 /// A `FieldElement` represents an element into the field
 /// `2^252 + 27742317777372353535851937790883648493`
@@ -809,6 +810,7 @@ pub mod tests {
     use crate::backend::u64::constants as constants;
     #[allow(unused_imports)]
     use crate::scalar::Ristretto255Scalar;
+    use crate::constants::EDWARDS_D;
 
     /// Bytes representation of `-1 (mod l) = 7237005577332262213973186563042994240857116359379907606001950938285454250988`
     pub static MINUS_ONE_BYTES: [u8; 32] = [236, 211, 245, 92, 26, 99, 18, 88, 214, 156, 247, 162, 222, 249, 222, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16];
@@ -979,6 +981,18 @@ pub mod tests {
         for i in 0..5 {
             assert!(zero[i] == FieldElement::zero()[i]);
             assert!(one[i] == FieldElement::one()[i]);
+        }
+    }
+
+    #[test]
+    fn division() {
+        let a: FieldElement = FieldElement([86649, 0, 0, 0, 0]);
+        let b: FieldElement = FieldElement([86650, 0, 0, 0, 0]);
+
+        let res = -&a/b;
+
+        for _i in 0..5 {
+            assert!(res == EDWARDS_D);
         }
     }
 
