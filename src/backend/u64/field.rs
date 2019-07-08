@@ -382,7 +382,7 @@ impl FieldElement {
         res
     }
 
-    /// Given a `k`: u64, compute `2^k` giving the resulting result
+    /// Given a `k`: u64, compute `2^k` giving the result
     /// as a `FieldElement`.
     /// Note that the input must be between the range => 0..260.
     /// 
