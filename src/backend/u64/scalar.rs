@@ -249,7 +249,7 @@ impl<'a> Half for &'a Scalar {
     /// results.
     #[inline]
     fn half(self) -> Scalar {
-        debug_assert!(self.is_even());
+        assert!(self.is_even(), "The FieldElement has to be even.");
         let mut res = self.clone();
         let mut remainder = 0u64;
         for i in (0..5).rev() {
