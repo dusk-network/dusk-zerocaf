@@ -94,13 +94,15 @@ Note: the refactoring relations are expressed as indentations
     - [x] Add the required constants for computation.
       - [x] Implement Addition.
       - [x] implement Subtraction.
-      - [x] Implement Inner_Multiplication.
-      - [x] Implement Inner_Squaring.
+      - [x] Implement Byte-encoding/decoding.
+      - [x] Implement From for uint native types.
+      - [x] Implement Ord, PartialOrd, Eq & PartialEq.
+      - [x] Implement Multiplication on u64-backend with u128 usage.
+      - [x] Implement Squaring.
+      - [x] Implement Half for even numbers.
+      - [x] Implement Modular Negation.
       - [x] Implement Montgomery_reduction.
       - [x] Define Montgomery_reduction algorithm.
-        - [x] Implement Montgomery_Muliplication.
-        - [x] Implement Montgomery_Squaring.
-        - [x] Implement tests of Montgomery Arithmetics. (under revision)
 - [x] Create FieldElement Struct and implement the basic operations we need on a u64 backend.
   - [x] Find the proper radix value for FieldElement.
   - [x] Add basic and needed constants.
@@ -108,31 +110,43 @@ Note: the refactoring relations are expressed as indentations
     - [x] Implement Addition.
     - [x] Implement Subtraction.
     - [x] Implement Byte-encoding/decoding.
+    - [x] Implement From for uint native types.
+    - [x] Implement Ord, PartialOrd, Eq & PartialEq.
     - [x] Implement Multiplication on u64-backend with u128 usage.
+    - [x] Implement Squaring.
+    - [x] Implement Half for even numbers
+    - [x] Implement Modular Negation.
+    - [x] Implement Montgomery_reduction.
+    - [x] Define Montgomery_reduction algorithm.
     - [x] Implement Modular inversion.
     - [x] Research about addition chains inversion methods.
   - [x] Add proper tests for every function.
-- [ ] Implement Edwards points
-     - [x] Create projective coordiantes
-     - [x] Implement Point Addition for projective coordinates
-     - [x] Implement Point Subtraction for projective coordinates
-     - [x] Implement from byte conversions
-     - [x] Implement to byte conversions
-     - [x] Implement compressed Edwards point Y-coordinate 
-     - [x] Implement multiplication for scalar with Edwards basepoint
-    - [x] Represent Edwards points as Ristretto points using wrapping function (research)
-    - [ ] Cargo doc testing and improvement
-    - [ ] Re-define Edwards point struct
-    - [ ] Decide the best use cases of the various Edwards coordinate types (compressed, standard, extended, projective)
-    - [x] Benchmark different implementations and algorithms
-    - [ ] Create About Niels and ProjectiveNiels coordinates usage
-    - [ ] Implement Montgomery and Edwards operations & functions
-    - [ ] Implement Ristretto Mapping
-    - [ ] Build and test torsion points
-   
-
-
-
-  
-
+- [ ] Implement Edwards Points
+    - [ ] Implement Twisted Edwards Extended Coordiantes.
+       - [x] Implement Point Addition.
+       - [x] Implement Point Subtraction.
+       - [x] Implement Point Doubling.
+       - [x] Implement Scalar Mul.
+       - [ ] Implement from_bytes conversions.
+       - [ ] Implement to byte conversions.
+       - [ ] Implement compressed Edwards point Y-coordinate.
+    - [ ] Implement Twisted Edwards Projective Coordiates.
+       - [x] Implement Point Addition.
+       - [x] Implement Point Subtraction.
+       - [x] Implement Point Doubling.
+       - [x] Implement Scalar Mul.
+       - [ ] Implement from_bytes conversions.
+       - [ ] Implement to byte conversions.
+       - [ ] Implement compressed Edwards point Y-coordinate.
+    - [ ] Represent Edwards points as Ristretto points using wrapping function (research).
+    - [x] Cargo doc testing and improvement.
+    - [ ] Decide the best use cases of the various Edwards coordinate types (compressed, standard, extended, projective).
+    - [ ] Benchmark different implementations and algorithms.
+    - [ ] Research About Niels and ProjectiveNiels coordinates usage.
+    - [ ] Implement Ristretto Mapping.
+    - [ ] Build and test torsion points.
+    - [ ] Test all point operations for Edwards Points.
+ - [ ] Implement Montgomery and Edwards operations & functions.
+ 
+ 
 > Operations with large numbers are recommended to be done in `SageMath`, from which they can be converted in a continuous format with rust and compiled easily after each computation. 
