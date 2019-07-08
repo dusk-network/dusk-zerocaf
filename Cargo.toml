@@ -14,7 +14,7 @@ exclude = [
     ".gitignore",
     "**/tools",
     "**/sage_codes",
-    "**/examples/**.rs"
+    "**/examples"
 ]
 license = "MIT"
 edition = "2018"
