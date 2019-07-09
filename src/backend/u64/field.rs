@@ -481,6 +481,7 @@ impl FieldElement {
     /// 
     /// NOTE: This function implements an `assert!` statement that
     /// checks the correctness of the exponent provided as param.
+    #[inline]
     pub fn two_pow_k(exp: &u64) -> FieldElement {
         
         // Check that exp has to be less than 260.
