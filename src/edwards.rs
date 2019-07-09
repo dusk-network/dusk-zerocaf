@@ -405,7 +405,7 @@ impl EdwardsPoint {
 
     /// Multiply by the cofactor: return (8 P).
     pub fn mul_by_cofactor(&self) -> EdwardsPoint {
-        unimplemented!()
+        self * &Scalar::from(&8u8)
     }
 
     /// Compute ([2^k] * P (mod l)).
