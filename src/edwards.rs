@@ -408,9 +408,13 @@ impl EdwardsPoint {
         unimplemented!()
     }
 
-    /// Compute ([2^k] P)
+    /// Compute ([2^k] * P (mod l)).
+    /// 
+    /// Note: The maximum pow allowed is 249 since otherways
+    /// we will be able to get results greater than the
+    /// prime of the sub-group.
     pub fn mul_by_pow_2(&self, _k: u32) -> EdwardsPoint {
-        unimplemented!()
+        self * &Scalar::two_pow_k(&(_k as u64))
     }
 }
 
