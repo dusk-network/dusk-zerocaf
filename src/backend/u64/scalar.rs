@@ -385,6 +385,43 @@ impl Scalar {
         res
     }  
 
+    /// Given a `k`: u64, compute `2^k` giving the resulting result
+    /// as a `Scalar`.
+    /// 
+    /// See that the input must be between the range => 0..250.
+    /// 
+    /// NOTE: This function implements an `assert!` statement that
+    /// checks the correctness of the exponent provided as param.
+    pub fn two_pow_k(exp: &u64) -> Scalar {
+        
+        // Check that exp has to be less than 260.
+        // Note that a Scalar can be as much
+        // `2^249 - 15145038707218910765482344729778085401` so we pick
+        // 250 knowing that 249 will be lower than the prime of the
+        // sub group.
+        assert!(exp < &253u64, "Exponent can't be greater than 260");
+        
+        let mut res = Scalar::zero();
+        match exp {
+            0...51 => {
+               res[0]  = 1u64 << exp;
+            },
+            52...103 => {
+                res[1] = 1u64 << (exp - 52);
+            },
+            104...155 => {
+                res[2] = 1u64 << (exp - 104);
+            },
+            156...207 => {
+                res[3] = 1u64 << (exp - 156);
+            },
+            _ => {
+                res[4] = 1u64 << (exp - 208);
+            }
+        }
+        res
+    }
+
     /// Compute `a * b`.
     /// Note that this is just the normal way of performing a product. 
     /// This operation returns back a double precision result stored
