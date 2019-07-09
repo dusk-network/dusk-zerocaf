@@ -56,7 +56,7 @@ pub mod ops {
         type Output;
 
         #[must_use]
-        /// Returns the square of the input: `x/2`.
+        /// Returns the half of the input: `x/2`.
         fn half(self) -> Self::Output;
     }
 }

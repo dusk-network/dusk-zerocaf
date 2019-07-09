@@ -20,7 +20,6 @@ use crate::backend::u64::constants;
 use crate::scalar::Ristretto255Scalar;
 use crate::traits::Identity;
 use crate::traits::ops::*;
-use crate::constants::EDWARDS_D;
 
 /// A `FieldElement` represents an element into the field
 /// `2^252 + 27742317777372353535851937790883648493`
@@ -163,8 +162,10 @@ impl Into<Ristretto255Scalar> for FieldElement {
 impl<'a> Neg for &'a FieldElement {
     type Output = FieldElement;
     /// Computes `-self (mod l)`.
+    /// 
     /// Compute the negated value that correspond's to the
     /// two's complement of the input FieldElement.
+    #[inline]
     fn neg(self) -> FieldElement {
         &FieldElement::zero() - self
     }
@@ -173,8 +174,10 @@ impl<'a> Neg for &'a FieldElement {
 impl Neg for FieldElement {
     type Output = FieldElement;
     /// Computes `-self (mod l)`.
+    /// 
     /// Compute the negated value that correspond's to the
     /// two's complement of the input FieldElement.
+    #[inline]
     fn neg(self) -> FieldElement {
         -&self
     }
@@ -183,6 +186,7 @@ impl Neg for FieldElement {
 impl<'a, 'b> Add<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
     /// Compute `a + b (mod l)`.
+    #[inline]
     fn add(self, b: &'b FieldElement) -> FieldElement {
         let mut sum = FieldElement::zero();
         let mask = (1u64 << 52) - 1;
@@ -201,6 +205,7 @@ impl<'a, 'b> Add<&'b FieldElement> for &'a FieldElement {
 impl Add<FieldElement> for FieldElement {
     type Output = FieldElement;
     /// Compute `a + b (mod l)`.
+    #[inline]
     fn add(self, b: FieldElement) -> FieldElement {
         &self + &b
     }
@@ -210,6 +215,7 @@ impl Add<FieldElement> for FieldElement {
 impl<'a, 'b> Sub<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
     /// Compute `a - b (mod l)`
+    #[inline]
     fn sub(self, b: &'b FieldElement) -> FieldElement {
         let mut sub = 0u64;
         let mut difference: FieldElement = FieldElement::zero();
@@ -235,6 +241,7 @@ impl<'a, 'b> Sub<&'b FieldElement> for &'a FieldElement {
 impl Sub<FieldElement> for FieldElement {
     type Output = FieldElement;
     /// Compute `a + b (mod l)`.
+    #[inline]
     fn sub(self, b: FieldElement) -> FieldElement {
         &self - &b
     }
@@ -243,10 +250,12 @@ impl Sub<FieldElement> for FieldElement {
 impl<'a, 'b> Mul<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
     /// This Mul implementation returns a double precision result.
+    /// 
     /// The result of the standard mul is stored on a [u128; 9].
     /// 
     /// Then, we apply the Montgomery Reduction function to perform
     /// the modulo and the reduction to the `FieldElement` format: [u64; 5].
+    #[inline]
     fn mul(self, _rhs: &'b FieldElement) -> FieldElement {
         let prod = FieldElement::montgomery_reduce(&FieldElement::mul_internal(self, _rhs));
         FieldElement::montgomery_reduce(&FieldElement::mul_internal(&prod, &constants::RR_FIELD))
@@ -256,10 +265,12 @@ impl<'a, 'b> Mul<&'b FieldElement> for &'a FieldElement {
 impl Mul<FieldElement> for FieldElement {
     type Output = FieldElement;
     /// This Mul implementation returns a double precision result.
+    /// 
     /// The result of the standard mul is stored on a [u128; 9].
     /// 
     /// Then, we apply the Montgomery Reduction function to perform
     /// the modulo and the reduction to the `FieldElement` format: [u64; 5].
+    #[inline]
     fn mul(self, _rhs: FieldElement) -> FieldElement {
         &self * &_rhs
     }
@@ -268,9 +279,11 @@ impl Mul<FieldElement> for FieldElement {
 impl<'a,'b> Div<&'a FieldElement> for &'b FieldElement {
     type Output = FieldElement;
     /// Performs the op: `x / y (mod l)`. 
+    /// 
     /// Since on modular fields we don't divide, the equivanelnt op
     /// is: `x * (y^-1 (mod l))`, which is equivalent to the naive
     /// division but for Finite Fields. 
+    #[inline]
     fn div(self, _rhs: &'a FieldElement) -> FieldElement {
         assert!(_rhs != &FieldElement::zero(), "Cannot divide by zero.");
         self * &_rhs.inverse()
@@ -280,9 +293,11 @@ impl<'a,'b> Div<&'a FieldElement> for &'b FieldElement {
 impl Div<FieldElement> for FieldElement {
     type Output = FieldElement;
     /// Performs the op: `x / y (mod l)`. 
+    /// 
     /// Since on modular fields we don't divide, the equivanelnt op
     /// is: `x * (y^-1 (mod l))`, which is equivalent to the naive
     /// division but for Finite Fields. 
+    #[inline]
     fn div(self, _rhs: FieldElement) -> FieldElement {
         &self * &_rhs.inverse()
     }
@@ -297,6 +312,7 @@ impl<'a> Square for &'a FieldElement {
     /// 
     /// Then, we apply the Montgomery Reduction function to perform
     /// the modulo and the reduction to the `FieldElement` format: [u64; 5]. 
+    #[inline]
     fn square(self) -> FieldElement {
         let aa = FieldElement::montgomery_reduce(&FieldElement::square_internal(self)); 
         FieldElement::montgomery_reduce(&FieldElement::mul_internal(&aa, &constants::RR_FIELD))
@@ -306,6 +322,7 @@ impl<'a> Square for &'a FieldElement {
 impl<'a> Half for &'a FieldElement {
     type Output = FieldElement;
     /// Give the half of the FieldElement value (mod l).
+    /// 
     /// This function SHOULD ONLY be used with even 
     /// `FieldElements` otherways, can produce erroneus
     /// results.
@@ -377,14 +394,14 @@ impl FieldElement {
             res[i] += constants::FIELD_L[i];
         };
         
-        res.half()
+        res.inner_half()
     }
 
-    /// Load a `FieldElement` from the low 253b   bits of a 256-bit
+    /// Load a `FieldElement` from the low 253b bits of a 256-bit
     /// input. So Little Endian representation in bytes of a FieldElement.
-    // @TODO: Macro for Inline load8 function as has variadic arguments.
+    // @TODO: Macro for Inline load8 function as it has variadic arguments.
     #[warn(dead_code)]
-    pub fn from_bytes(bytes: &[u8;32]) -> Self {
+    pub fn from_bytes(bytes: &[u8;32]) -> FieldElement {
         let load8 = |input: &[u8]| -> u64 {
                (input[0] as u64)
             | ((input[1] as u64) << 8)
@@ -459,18 +476,80 @@ impl FieldElement {
 
     /// Given a `k`: u64, compute `2^k` giving the resulting result
     /// as a `FieldElement`.
-    /// Note that the input must be between the range => 0..260.
     /// 
-    /// NOTE: Usually, we will say 253, but since on some operations as
-    /// inversion we need to exponenciate to greater values, we set the
-    /// max on the Montgomery modulo so `260`.
+    /// See that the input must be between the range => 0..253.
+    /// 
+    /// NOTE: This function implements an `assert!` statement that
+    /// checks the correctness of the exponent provided as param.
     pub fn two_pow_k(exp: &u64) -> FieldElement {
         
         // Check that exp has to be less than 260.
         // Note that a FieldElement can be as much
         // `2^252 + 27742317777372353535851937790883648493` so we pick
         // 253 knowing that 252 will be less than `FIELD_L`.
-        assert!(exp < &253u64, "Exponent can't be greater than 253");
+        assert!(exp < &253u64, "Exponent can't be greater than 260");
+        
+        let mut res = FieldElement::zero();
+        match exp {
+            0...51 => {
+               res[0]  = 1u64 << exp;
+            },
+            52...103 => {
+                res[1] = 1u64 << (exp - 52);
+            },
+            104...155 => {
+                res[2] = 1u64 << (exp - 104);
+            },
+            156...207 => {
+                res[3] = 1u64 << (exp - 156);
+            },
+            _ => {
+                res[4] = 1u64 << (exp - 208);
+            }
+        }
+        res
+    }
+
+    #[inline]
+    #[doc(hidden)]
+    pub(self) fn inner_half(self) -> FieldElement {
+        debug_assert!(self.is_even(), "The FieldElement has to be even.");
+        let mut res = self.clone();
+        let mut remainder = 0u64;
+        for i in (0..5).rev() {
+            res[i] = res[i] + remainder;
+            match(res[i] == 1, res[i].is_even()){
+                (true, _) => {
+                    remainder = 4503599627370496u64;
+                }
+                (_, false) => {
+                    res[i] = res[i] - 1u64;
+                    remainder = 4503599627370496u64;
+                }
+                (_, true) => {
+                    remainder = 0;
+                }
+            }
+        res[i] = res[i] >> 1;
+        };
+        res
+    }
+
+    /// Given a `k`: u64, compute `2^k` giving the resulting result
+    /// as a `FieldElement`.
+    /// Note that the input must be between the range => 0..260.
+    /// 
+    /// NOTE: Usually, we will say 253, but since on some operations as
+    /// inversion we need to exponenciate to greater values, we set the
+    /// max on the Montgomery modulo so `260`.
+    #[doc(hidden)]
+    pub(self) fn inner_two_pow_k(exp: &u64) -> FieldElement {
+        
+        // Check that exp has to be less than 260.
+        // Note that a FieldElement can be as much
+        // `2^252 + 27742317777372353535851937790883648493` so we pick
+        // 253 knowing that 252 will be less than `FIELD_L`.
+        debug_assert!(exp < &260u64, "Exponent can't be greater than 260");
         
         let mut res = FieldElement::zero();
         match exp {
@@ -495,7 +574,7 @@ impl FieldElement {
 
     /// Compute `a * b` with the function multiplying helper
     #[inline]
-    pub fn mul_internal(a: &FieldElement, b: &FieldElement) -> [u128; 9] {
+    pub(self) fn mul_internal(a: &FieldElement, b: &FieldElement) -> [u128; 9] {
         let mut res = [0u128; 9];
         // Note that this is just the normal way of performing a product.
         // We need to store the results on u128 as otherwise we'll end
@@ -639,20 +718,20 @@ impl FieldElement {
                     // u is even
                     (true, _, _, _) => {
 
-                        u = u.half();
+                        u = u.inner_half();
                         s = &s * &two;
                     },
                     // u isn't even but v is even
                     (false, true, _, _) => {
 
-                        v = v.half();
+                        v = v.inner_half();
                         r = &r * &two;
                     },
                     // u and v aren't even and u > v
                     (false, false, true, _) => {
 
                         u = &u - &v;
-                        u = u.half();
+                        u = u.inner_half();
                         r = &r + &s;
                         s = &s * &two;
                     },
@@ -660,7 +739,7 @@ impl FieldElement {
                     (false, false, false, true) => {
 
                         v = &v - &u;
-                        v = v.half();
+                        v = v.inner_half();
                         s = &r + &s;
                         r = &r * &two;
                     },
@@ -686,7 +765,7 @@ impl FieldElement {
             for _i in 0..(k-253) {
                 match rr.is_even() {
                     true => {
-                        rr = rr.half();
+                        rr = rr.inner_half();
                     },
                     false => {
                         rr = rr.plus_p_and_half();
@@ -707,7 +786,7 @@ impl FieldElement {
         //
         // In this case: `R = 2^260` & `n = 2^253`. 
         // So we multiply `r * 2^7` to get R on the Montgomery domain.
-        r = &r * &FieldElement::two_pow_k(&7);
+        r = &r * &FieldElement::inner_two_pow_k(&7);
 
         // Now we apply `from_montgomery()` function which performs
         // `r/2^260` carrying the `FieldElement` out of the 
@@ -723,10 +802,10 @@ impl FieldElement {
     /// The `PhaseII` it's substituded by 1 or 2 Montgomery Multiplications,
     /// what makes the second part compute in almost ConstTime.
     /// 
-    /// SPECIAL ISSUE ON MONTGOMERY ARITHMETIC. 
+    /// Special issue on Montgomery arithmetic. 
     /// Montgomery inversion - Erkay Sava ̧s & Çetin Kaya Koç
     /// J Cryptogr Eng (2018) 8:201–210
-    /// https://doi.org/10.1007/s13389-017-0161-x 
+    /// https://doi.org/10.1007/s13389-017-0161-x. 
     #[inline]
     pub fn inverse(&self) -> FieldElement {
 
@@ -753,20 +832,20 @@ impl FieldElement {
                     // u is even
                     (true, _, _, _) => {
 
-                        u = u.half();
+                        u = u.inner_half();
                         s = &s * &two;
                     },
                     // u isn't even but v is even
                     (false, true, _, _) => {
 
-                        v = v.half();
+                        v = v.inner_half();
                         r = &r * &two;
                     },
                     // u and v aren't even and u > v
                     (false, false, true, _) => {
 
                         u = &u - &v;
-                        u = u.half();
+                        u = u.inner_half();
                         r = &r + &s;
                         s = &s * &two;
                     },
@@ -774,7 +853,7 @@ impl FieldElement {
                     (false, false, false, true) => {
 
                         v = &v - &u;
-                        v = v.half();
+                        v = v.inner_half();
                         s = &r + &s;
                         r = &r * &two;
                     },
@@ -793,7 +872,7 @@ impl FieldElement {
             r = FieldElement::montgomery_mul(&r, &FieldElement::one());
             z = z - 260;
         }
-        let fact = FieldElement::two_pow_k(&(260 - z));
+        let fact = FieldElement::inner_two_pow_k(&(260 - z));
         r = FieldElement::montgomery_mul(&r, &fact);
         r
     }
@@ -1091,28 +1170,28 @@ pub mod tests {
     }
 
     #[test]
-    fn two_pow_k() {
+    fn inner_two_pow_k() {
         // Check for 0 value
-        let zero = FieldElement::two_pow_k(&0u64);
+        let zero = FieldElement::inner_two_pow_k(&0u64);
         for i in 0..5 {
             assert!(zero[i] == FieldElement::one()[i]);
         }
 
         // Check for MAX value
-        let max = FieldElement::two_pow_k(&252u64);
+        let max = FieldElement::inner_two_pow_k(&252u64);
         for i in 0..5 {
             assert!(max[i] == TWO_POW_252[i]);
         }
 
       
         // Check for non 52-multiple `k` values
-        let non_multiple = FieldElement::two_pow_k(&197u64);
+        let non_multiple = FieldElement::inner_two_pow_k(&197u64);
         for i in 0..5 {
             assert!(non_multiple[i] == TWO_POW_197[i]);
         }
 
         // Check for 52-multiple `k` values
-        let non_multiple = FieldElement::two_pow_k(&104u64);
+        let non_multiple = FieldElement::inner_two_pow_k(&104u64);
         for i in 0..5 {
             assert!(non_multiple[i] == TWO_POW_104[i]);
         }

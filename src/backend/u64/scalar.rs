@@ -244,12 +244,16 @@ impl<'a> Square for &'a Scalar {
 impl<'a> Half for &'a Scalar {
     type Output = Scalar;
     /// Give the half of the Scalar value (mod l).
-    /// This function SHOULD ONLY be used with even 
+    /// 
+    /// This op **SHOULD ONLY** be used with even 
     /// `Scalars` otherways, can produce erroneus
     /// results.
+    /// 
+    /// The implementation for `Scalar` has indeed 
+    /// an `assert!` statement to check this.
     #[inline]
     fn half(self) -> Scalar {
-        assert!(self.is_even(), "The FieldElement has to be even.");
+        assert!(self.is_even(), "The Scalar has to be even.");
         let mut res = self.clone();
         let mut remainder = 0u64;
         for i in (0..5).rev() {
@@ -448,6 +452,35 @@ impl Scalar {
                                                                         m(a_sqrt[3],a[4]),
                                                                         m(a[4],a[4])
         ]
+    }
+
+    /// Give the half of the Scalar value (mod l).
+    /// 
+    /// This op **SHOULD NEVER** be used by the end-user
+    /// since it's designed to allow some behaviours
+    /// needed on certain points of algorithm implementations.
+    #[inline]
+    #[doc(hidden)]
+    pub(crate) fn inner_half(self) -> Scalar {
+        let mut res = self.clone();
+        let mut remainder = 0u64;
+        for i in (0..5).rev() {
+            res[i] = res[i] + remainder;
+            match(res[i] == 1, res[i].is_even()){
+                (true, _) => {
+                    remainder = 4503599627370496u64;
+                }
+                (_, false) => {
+                    res[i] = res[i] - 1u64;
+                    remainder = 4503599627370496u64;
+                }
+                (_, true) => {
+                    remainder = 0;
+                }
+            }
+            res[i] = res[i] >> 1;
+        };
+        res
     }
 
     /// Compute `limbs/R` (mod l), where R is the Montgomery modulus 2^260
