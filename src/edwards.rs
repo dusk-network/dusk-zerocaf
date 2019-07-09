@@ -380,22 +380,6 @@ impl<'a> Double for &'a EdwardsPoint {
     }
 }
 
-impl Double for EdwardsPoint {
-    type Output = EdwardsPoint;
-    /// Performs the point doubling operation
-    /// ie. `2*P` over the Twisted Edwards Extended
-    /// Coordinates.
-    /// 
-    /// This implementation is specific for curves with `a = -1` as Doppio is.
-    /// Source: 2008 Hisil–Wong–Carter–Dawson, 
-    /// http://eprint.iacr.org/2008/522, Section 3.1.
-    /// Cost: 4M+ 4S+ 1D
-    fn double(self) -> EdwardsPoint {
-        self.double()
-    }
-}
-
-
 impl EdwardsPoint {
     /// Return the `EdwardsPoint` with Extended Coordinates
     /// eq to: {0, 0, 0, 0}.
