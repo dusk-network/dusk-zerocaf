@@ -22,7 +22,7 @@ use std::ops::{Add, Sub, Mul, Neg};
 
 
 
-// ------------- Edwards Internal fn declarations ------------- //
+// ------------- Common Point fn declarations ------------- //
 
 /// Implementation of the standard algorithm of `double_and_add`.
 /// This is a function implemented for Generic points that have
@@ -53,6 +53,24 @@ pub fn double_and_add<'b, 'a, T>(point: &'a T, scalar: &'b Scalar) -> T
     }  
     Q
 }
+
+ /// Multiply by the cofactor: return (8 P).
+pub fn mul_by_cofactor<'a, T>(point: &'a T) -> T 
+    where for<'c> &'c T: Mul<&'c Scalar, Output = T> {
+    point * &Scalar::from(&8u8)
+}
+
+/// Compute ([2^k] * P (mod l)).
+/// 
+/// Note: The maximum pow allowed is 249 since otherways
+/// we will be able to get results greater than the
+/// prime of the sub-group.
+pub fn mul_by_pow_2<'a, 'b, T>(point: &'a T, _k: &'b u64) -> T 
+    where for<'c> &'c T: Mul<&'c Scalar, Output = T> {
+    point * &Scalar::two_pow_k(_k)
+}
+
+// Declare mul by cofactor and mul 2_pow_k
 
 
 /// The first 255 bits of a `CompressedEdwardsY` represent the
@@ -402,20 +420,6 @@ impl EdwardsPoint {
     pub fn compress(&self) -> CompressedEdwardsY {
         unimplemented!()
     }    
-
-    /// Multiply by the cofactor: return (8 P).
-    pub fn mul_by_cofactor(&self) -> EdwardsPoint {
-        self * &Scalar::from(&8u8)
-    }
-
-    /// Compute ([2^k] * P (mod l)).
-    /// 
-    /// Note: The maximum pow allowed is 249 since otherways
-    /// we will be able to get results greater than the
-    /// prime of the sub-group.
-    pub fn mul_by_pow_2(&self, _k: u32) -> EdwardsPoint {
-        self * &Scalar::two_pow_k(&(_k as u64))
-    }
 }
 
 /// A `ProjectivePoint` represents a point on the Doppio Curve expressed
