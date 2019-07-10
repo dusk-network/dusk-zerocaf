@@ -37,7 +37,7 @@ use std::ops::{Add, Sub, Mul, Neg};
 /// costs of the algorithm.
 pub fn double_and_add<'b, 'a, T>(point: &'a T, scalar: &'b Scalar) -> T 
     where for<'c> &'c T: Add<Output = T>  + Double<Output = T>,
-    T: Identity + Clone + Debug {
+    T: Identity + Clone {
 
     let mut N = point.clone();
     let mut n = scalar.clone();
@@ -50,7 +50,6 @@ pub fn double_and_add<'b, 'a, T>(point: &'a T, scalar: &'b Scalar) -> T
 
         N = N.double();
         n = n.inner_half();
-        println!("{:?}", Q);
     }  
     Q
 }
@@ -517,10 +516,11 @@ impl<'a, 'b> Add<&'b ProjectivePoint> for &'a ProjectivePoint {
     /// Add two ProjectivePoints and give the resulting `ProjectivePoint`.
     /// This implementation is specific for curves with `a = -1` as Doppio is.
     /// 
-    /// [Source: Twisted Edwards Curves, section 6]
-    /// Daniel J. Bernstein, Peter Birkner, 
-    /// Marc Joye, Tanja Lange, and Christiane Peters.
-    /// See: https://eprint.iacr.org/2008/013.pdf
+    /// Bernstein D.J., Birkner P., Joye M., Lange T., Peters C. 
+    /// (2008) Twisted Edwards Curves. In: Vaudenay S. (eds) 
+    /// Progress in Cryptology – AFRICACRYPT 2008. AFRICACRYPT 2008. 
+    /// Lecture Notes in Computer Science, vol 5023. Springer, Berlin, Heidelberg.
+    /// See: https://eprint.iacr.org/2008/013.pdf - Section 6.
     #[inline]
     fn add(self, other: &'b ProjectivePoint) -> ProjectivePoint {
         let A = self.Z + other.Z;
@@ -544,10 +544,11 @@ impl Add<ProjectivePoint> for ProjectivePoint {
     /// Add two ProjectivePoints and give the resulting `ProjectivePoint`.
     /// This implementation is specific for curves with `a = -1` as Doppio is.
     /// 
-    /// [Source: Twisted Edwards Curves, section 6]
-    /// Daniel J. Bernstein, Peter Birkner, 
-    /// Marc Joye, Tanja Lange, and Christiane Peters.
-    /// See: https://eprint.iacr.org/2008/013.pdf
+    /// Bernstein D.J., Birkner P., Joye M., Lange T., Peters C. 
+    /// (2008) Twisted Edwards Curves. In: Vaudenay S. (eds) 
+    /// Progress in Cryptology – AFRICACRYPT 2008. AFRICACRYPT 2008. 
+    /// Lecture Notes in Computer Science, vol 5023. Springer, Berlin, Heidelberg.
+    /// See: https://eprint.iacr.org/2008/013.pdf - Section 6.
     #[inline]
     fn add(self, other: ProjectivePoint) -> ProjectivePoint {
         &self + &other
@@ -559,10 +560,11 @@ impl<'a, 'b> Sub<&'b ProjectivePoint> for &'a ProjectivePoint {
     /// Add two ProjectivePoints, negating the second one,
     /// This implementation is specific for curves with `a = -1` as Doppio is.
     /// 
-    /// [Source: Twisted Edwards Curves, section 6]
-    /// Daniel J. Bernstein, Peter Birkner, 
-    /// Marc Joye, Tanja Lange, and Christiane Peters.
-    /// See: https://eprint.iacr.org/2008/013.pdf
+    /// Bernstein D.J., Birkner P., Joye M., Lange T., Peters C. 
+    /// (2008) Twisted Edwards Curves. In: Vaudenay S. (eds) 
+    /// Progress in Cryptology – AFRICACRYPT 2008. AFRICACRYPT 2008. 
+    /// Lecture Notes in Computer Science, vol 5023. Springer, Berlin, Heidelberg.
+    /// See: https://eprint.iacr.org/2008/013.pdf - Section 6.
     fn sub(self, other: &'b ProjectivePoint) -> ProjectivePoint {
         self + &(-other)
     }
@@ -573,10 +575,11 @@ impl Sub<ProjectivePoint> for ProjectivePoint {
     /// Add two ProjectivePoints, negating the second one,
     /// This implementation is specific for curves with `a = -1` as Doppio is.
     /// 
-    /// [Source: Twisted Edwards Curves, section 6]
-    /// Daniel J. Bernstein, Peter Birkner, 
-    /// Marc Joye, Tanja Lange, and Christiane Peters.
-    /// See: https://eprint.iacr.org/2008/013.pdf
+    /// Bernstein D.J., Birkner P., Joye M., Lange T., Peters C. 
+    /// (2008) Twisted Edwards Curves. In: Vaudenay S. (eds) 
+    /// Progress in Cryptology – AFRICACRYPT 2008. AFRICACRYPT 2008. 
+    /// Lecture Notes in Computer Science, vol 5023. Springer, Berlin, Heidelberg.
+    /// See: https://eprint.iacr.org/2008/013.pdf - Section 6.
     #[inline]
     fn sub(self, other: ProjectivePoint) -> ProjectivePoint {
         &self - &other
@@ -621,8 +624,13 @@ impl<'a> Double for &'a ProjectivePoint {
     type Output = ProjectivePoint;
     /// Double the given point following:
     /// This implementation is specific for curves with `a = -1` as Doppio is.
-    /// Source: 2008 Hisil–Wong–Carter–Dawson, 
-    /// http://eprint.iacr.org/2008/522, Section 3.1.
+    /// 
+    /// /// Bernstein D.J., Birkner P., Joye M., Lange T., Peters C. 
+    /// (2008) Twisted Edwards Curves. In: Vaudenay S. (eds) 
+    /// Progress in Cryptology – AFRICACRYPT 2008. AFRICACRYPT 2008. 
+    /// Lecture Notes in Computer Science, vol 5023. Springer, Berlin, Heidelberg.
+    /// See: https://eprint.iacr.org/2008/013.pdf - Section 6.
+    /// 
     /// Cost: 3M+ 4S+ +7a + 1D.
     fn double(self) -> ProjectivePoint {
         let B = (&self.X + &self.Y).square();
