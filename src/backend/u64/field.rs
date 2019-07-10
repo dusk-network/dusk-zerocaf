@@ -14,7 +14,7 @@ use core::ops::{Add, Sub, Mul, Div, Neg};
 
 use num::Integer;
 
-use subtle::Choice;
+//use subtle::Choice;
 
 use crate::backend::u64::constants;
 use crate::scalar::Ristretto255Scalar;
@@ -803,6 +803,9 @@ impl FieldElement {
     /// The `PhaseII` it's substituded by 1 or 2 Montgomery Multiplications,
     /// what makes the second part compute in almost ConstTime.
     /// 
+    /// Note: It is not possible to invert `0` by obvious reasons. So an 
+    /// assert! check has been implemented to prevent errors.
+    /// 
     /// Special issue on Montgomery arithmetic. 
     /// Montgomery inversion - Erkay Sava ̧s & Çetin Kaya Koç
     /// J Cryptogr Eng (2018) 8:201–210
@@ -819,6 +822,8 @@ impl FieldElement {
         /// Stein, J.: Computational problems associated with Racah algebra.J. Comput. Phys.1, 397–405 (1967).
         #[inline]
         fn phase1(a: &FieldElement) -> (FieldElement, u64) {
+            assert!(a != &FieldElement::zero());
+
             // Declare L = 2^252 + 27742317777372353535851937790883648493
             let p = FieldElement([671914833335277, 3916664325105025, 1367801, 0, 17592186044416]);
             let mut u = p.clone();
