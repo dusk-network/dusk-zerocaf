@@ -47,6 +47,10 @@
 //! 
 //! // We can finally perform inversion modulo l for a FieldElement:
 //! let inv_a = &c.inverse(); // Performs a^-1 (mod l).
+//! 
+//! // You can export your `FieldElement` as an slice of 32 bytes in Little
+//! // Endian encoding by:
+//! let c_bytes: [u8; 32] = c.to_bytes();
 //! ```
 //! 
 //! `PartialOrd`, `Ord`, `PartialEq` and `Eq` are also implemented for
