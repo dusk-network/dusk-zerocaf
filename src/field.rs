@@ -5,12 +5,8 @@
 //! implementations. 
 //! 
 //! `ConstantTimeEq` and `PartialEq` traits have been implemented 
-//! here since they will be the samme across all of the different
-//! backends.
-<<<<<<< HEAD
-=======
-//! 
-//! 
+//! here since they will be the samme across all of the different backends.
+//!  
 //! # Examples
 //! ```rust
 //! use zerocaf::field::FieldElement;
@@ -34,14 +30,14 @@
 //! // All of the basuc modular operations are implemented 
 //! // for FieldElement type:  
 //! let mut res = &a + &b; // Performs a + b (mod l).
-//! res = &a - &b; // Performs a - b (mod l).
-//! res = &a * &b; // Performs a * b (mod l).
-//! res = &a.square(); // Performs a^2 (mod l).
+//! res = a - b; // Performs a - b (mod l).
+//! res = a * b; // Performs a * b (mod l).
+//! res = a.square(); // Performs a^2 (mod l).
 //! res = -&a; // Performs Negation over the modulo l.
 //! 
 //! // Division has been also implemented. Remember that when we write
 //! // a/b (mod l), we are indeed performing a * inverse_mod(b, l) (mod l).
-//! assert!(-&b / &d == EDWARDS_D);
+//! assert!(-&(b / c) == EDWARDS_D);
 //! 
 //! // Dividing by two even FieldElements is recommended through the `Half`
 //! // trait implmementation since it's much faster.
@@ -49,8 +45,8 @@
 //!     let half_a = &a.half(); // This will panic if a isn't even.
 //! };
 //! 
-//! We can finally perform inversion modulo l for a FieldElement:
-//! let inv_a = &a.inverse(); // Performs a^-1 (mod l).
+//! // We can finally perform inversion modulo l for a FieldElement:
+//! let inv_a = &c.inverse(); // Performs a^-1 (mod l).
 //! ```
 //! 
 //! `PartialOrd`, `Ord`, `PartialEq` and `Eq` are also implemented for
@@ -58,7 +54,6 @@
 //! 
 //! All `std::core::ops traits -> (Add, Sub, Mul, Div)` are implemented
 //! for both, `&FieldElement` and `FieldElement`.
->>>>>>> docs
 
 use core::cmp::PartialEq;
 
