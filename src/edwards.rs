@@ -583,6 +583,40 @@ impl Sub<ProjectivePoint> for ProjectivePoint {
     }
 }
 
+impl<'a, 'b> Mul<&'a Scalar> for &'b ProjectivePoint {
+    type Output = ProjectivePoint;
+
+    /// Scalar multiplication: compute `Scalar * self`.
+    /// This implementation uses the algorithm:
+    /// `add_and_doubling` which is the standard one for
+    /// this operations and also adds less constraints on
+    /// R1CS.
+    /// 
+    /// Hankerson, Darrel; Vanstone, Scott; Menezes, Alfred (2004). 
+    /// Guide to Elliptic Curve Cryptography. 
+    /// Springer Professional Computing. New York: Springer-Verlag.
+    fn mul(self, scalar: &'a Scalar) -> ProjectivePoint {
+        double_and_add(self, scalar)
+    }
+}
+
+impl Mul<Scalar> for ProjectivePoint {
+    type Output = ProjectivePoint;
+
+    /// Scalar multiplication: compute `Scalar * self`.
+    /// This implementation uses the algorithm:
+    /// `add_and_doubling` which is the standard one for
+    /// this operations and also adds less constraints on
+    /// R1CS.
+    /// 
+    /// Hankerson, Darrel; Vanstone, Scott; Menezes, Alfred (2004). 
+    /// Guide to Elliptic Curve Cryptography. 
+    /// Springer Professional Computing. New York: Springer-Verlag.
+    fn mul(self, scalar: Scalar) -> ProjectivePoint {
+        &self * &scalar
+    }
+}
+
 impl<'a> Double for &'a ProjectivePoint {
     type Output = ProjectivePoint;
     /// Double the given point following:
