@@ -8,8 +8,11 @@ use criterion::{Criterion, Benchmark};
 
 use zerocaf::backend::u64::{scalar, field};
 use zerocaf::edwards::EdwardsPoint;
+
+use zerocaf::traits::ops::*;
+
 #[allow(unused_imports)]
-use zerocaf::traits::{Identity, Square};
+use zerocaf::traits::Identity;
 
 
 
@@ -109,7 +112,7 @@ mod scalar_benches {
 mod edwards_benches {
 
     use super::*;
-    use zerocaf::edwards::{EdwardsPoint, ProjectivePoint}:;
+    use zerocaf::edwards::{EdwardsPoint, ProjectivePoint};
     use zerocaf::scalar::Scalar;
     use zerocaf::field::FieldElement;
 
@@ -167,24 +170,25 @@ mod edwards_benches {
         );
     }
 
-    pub fn bench_extended_point_ops(c: &mut Criterion) {
+    pub fn bench_projective_point_ops(c: &mut Criterion) {
+
         c.bench(
-            "Extended Coordinates Point Addition",
-            Benchmark::new("2008 Hisil–Wong–Carter–Dawson, Section 3.1.", |b| b.iter(|| &P1_PROJECTIVE + &P2_PROJECTIVE))
+            "Projective Coordinates Point Addition",
+            Benchmark::new("D. J. Bernstein, P. Birkner, M. Joye, T. Lange, C. Peters. AFRICACRYPT 2008 - Section 6.", |b| b.iter(|| &P1_PROJECTIVE + &P2_PROJECTIVE))
         );
 
         c.bench(
-            "Extended Coordinates Point Subtraction",
-            Benchmark::new("2008 Hisil–Wong–Carter–Dawson, Section 3.1.", |b| b.iter(|| &P1_PROJECTIVE - &P2_PROJECTIVE))
+            "Projective Coordinates Point Subtraction",
+            Benchmark::new("D. J. Bernstein, P. Birkner, M. Joye, T. Lange, C. Peters. AFRICACRYPT 2008 - Section 6.", |b| b.iter(|| &P1_PROJECTIVE - &P2_PROJECTIVE))
         );
 
         c.bench(
-            "Extended Coordinates Point Doubling",
-            Benchmark::new("2008 Hisil–Wong–Carter–Dawson, Section 3.1.", |b| b.iter(|| P1_PROJECTIVE.double()))
+            "Projective Coordinates Point Doubling",
+            Benchmark::new("D. J. Bernstein, P. Birkner, M. Joye, T. Lange, C. Peters. AFRICACRYPT 2008 - Section 6.", |b| b.iter(|| P1_PROJECTIVE.double()))
         );
         
         c.bench(
-            "Extended Coordinates Scalar Mul",
+            "Projective Coordinates Scalar Mul",
             Benchmark::new("Hankerson, Darrel; Vanstone, Scott; Menezes, Alfred (2004) - Guide to Elliptic Curve Cryptography. ",
             |b| b.iter(|| &P1_PROJECTIVE * &A))
         );
@@ -195,6 +199,7 @@ criterion_group!(benchmarks,
                 field_benches::bench_field_element_ops,
                 field_benches::bench_modular_inverse,
                 scalar_benches::bench_scalar_element_ops,
-                edwards_benches::bench_extended_point_ops);
+                edwards_benches::bench_extended_point_ops,
+                edwards_benches::bench_projective_point_ops);
 //criterion_group!(benchmarks, field_benches::bench_modular_inverse);
 criterion_main!(benchmarks);
