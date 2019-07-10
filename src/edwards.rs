@@ -37,19 +37,20 @@ use std::ops::{Add, Sub, Mul, Neg};
 /// costs of the algorithm.
 pub fn double_and_add<'b, 'a, T>(point: &'a T, scalar: &'b Scalar) -> T 
     where for<'c> &'c T: Add<Output = T>  + Double<Output = T>,
-    T: Identity + Clone {
+    T: Identity + Clone + Debug {
 
     let mut N = point.clone();
     let mut n = scalar.clone();
     let mut Q = T::identity();
 
     while n != Scalar::zero() {
-        if !n.is_even() {
+        if n.is_even() {
             Q = &Q + &N;
         };
 
         N = N.double();
         n = n.inner_half();
+        println!("{:?}", Q);
     }  
     Q
 }
@@ -69,8 +70,6 @@ pub fn mul_by_pow_2<'a, 'b, T>(point: &'a T, _k: &'b u64) -> T
     where for<'c> &'c T: Mul<&'c Scalar, Output = T> {
     point * &Scalar::two_pow_k(_k)
 }
-
-// Declare mul by cofactor and mul 2_pow_k
 
 
 /// The first 255 bits of a `CompressedEdwardsY` represent the
@@ -272,6 +271,7 @@ impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Add two EdwardsPoints and give the resulting `EdwardsPoint`.
     /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// 
     /// [Source: 2008 Hisil–Wong–Carter–Dawson], 
     /// (http://eprint.iacr.org/2008/522), Section 3.1.
     #[inline]
@@ -283,7 +283,7 @@ impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
         let E = &(&(&(&self.X + &self.Y) * &(&other.X + &other.Y)) - &A) - &B;
         let F = &D - &C;
         let G = &D + &C;
-        let H = &B - &(&constants::EDWARDS_A * &A);
+        let H = &B + &A;
 
         EdwardsPoint {
             X: &E * &F,
@@ -375,26 +375,31 @@ impl<'a> Double for &'a EdwardsPoint {
         //
         // TODO: Fix this as prio to reduce ops number.
 
-        /*let two: FieldElement = FieldElement::from(&2u8);
-
-        let A = &self.X * &self.X;
-        let B = &self.Y * &self.Y;
-        let C = &two * &(&self.Z * &self.Z);
-        // a = -1
-        let D = -&A;
-        let E = &(&(&(&self.X + &self.Y) * &(&self.X + &self.Y)) - &A) - &B;
-        let G = &D + &B;
-        let F = &G - &C;
-        let H = &D - &B;
-
+        let two: FieldElement = FieldElement::from(&2u8);
+        /*
         EdwardsPoint {
-            X: &E * &F,
-            Y: &G * &H,
-            Z: &F * &G,
-            T: &E * &H
+            X: (two*(self.X*self.Y))*((two*self.Z.square()) - self.Y.square() + self.X.square()),
+            Y: (self.Y.square() -self.X)
+            Z: F * G,
+            T: E * H
         }*/
 
-        self + self
+        let A = self.X.square();
+        let B = self.Y.square();
+        let C = two * self.Z.square();
+        let D = -A;
+        let E = (self.X + self.Y) * (self.X + self.Y) -A -B;
+        let G = D + B;
+        let F = G - C;
+        let H = D - B;
+
+        EdwardsPoint {
+            X: E * F,
+            Y: G * H,
+            Z: F * G,
+            T: E * H
+        }
+        //self + self
     }
 }
 
@@ -512,36 +517,37 @@ impl<'a, 'b> Add<&'b ProjectivePoint> for &'a ProjectivePoint {
     /// Add two ProjectivePoints and give the resulting `ProjectivePoint`.
     /// This implementation is specific for curves with `a = -1` as Doppio is.
     /// 
-    /// [Source: 2008 Hisil–Wong–Carter–Dawson], 
-    /// (http://eprint.iacr.org/2008/522), Section 3.1.
-    /// Cost: 10M + 1S + 2D + 7a.
+    /// [Source: Twisted Edwards Curves, section 6]
+    /// Daniel J. Bernstein, Peter Birkner, 
+    /// Marc Joye, Tanja Lange, and Christiane Peters.
+    /// See: https://eprint.iacr.org/2008/013.pdf
     #[inline]
     fn add(self, other: &'b ProjectivePoint) -> ProjectivePoint {
-        let A = self.Z.square();
+        let A = self.Z + other.Z;
         let B = A.square();
-        let C = &self.X + &other.X;
-        let D = &self.Y + &other.Y;
-        let E = &constants::EDWARDS_D * &(&C * &D);
-        let F = &B - &E;
-        let G = &B + &E;
+        let C = self.X * other.X;
+        let D = self.Y * other.Y;
+        let E = constants::EDWARDS_D * C * D;
+        let F = B - E;
+        let G = B + E;
 
         ProjectivePoint {
-            X: &(&A * &F) * &(&(&(&(&self.X + &self.Y) * &(&other.X + &other.Y)) - &C) - &D),
-            Y: &A * &(&G * &(&D - &(&constants::EDWARDS_A * &C))),
-            Z: &F * &G
+            X: A * (F * (((self.X + self.Y) * (other.X + other.Y) - C) - D)),
+            Y: A * G * (D + C),
+            Z: F * G
         }
     }
 }
 
 impl Add<ProjectivePoint> for ProjectivePoint {
     type Output = ProjectivePoint;
-    /// Add two ProjectivePoints, negating the segond one, 
-    /// and give the resulting `ProjectivePoint`.
-    /// 
+    /// Add two ProjectivePoints and give the resulting `ProjectivePoint`.
     /// This implementation is specific for curves with `a = -1` as Doppio is.
-    /// [Source: 2008 Hisil–Wong–Carter–Dawson], 
-    /// (http://eprint.iacr.org/2008/522), Section 3.1.
-    /// Cost: 10M + 1S + 2D + 7a.
+    /// 
+    /// [Source: Twisted Edwards Curves, section 6]
+    /// Daniel J. Bernstein, Peter Birkner, 
+    /// Marc Joye, Tanja Lange, and Christiane Peters.
+    /// See: https://eprint.iacr.org/2008/013.pdf
     #[inline]
     fn add(self, other: ProjectivePoint) -> ProjectivePoint {
         &self + &other
@@ -551,13 +557,12 @@ impl Add<ProjectivePoint> for ProjectivePoint {
 impl<'a, 'b> Sub<&'b ProjectivePoint> for &'a ProjectivePoint {
     type Output = ProjectivePoint;
     /// Add two ProjectivePoints, negating the second one,
-    /// and give the resulting `ProjectivePoint`.
     /// This implementation is specific for curves with `a = -1` as Doppio is.
     /// 
-    /// [Source: 2008 Hisil–Wong–Carter–Dawson], 
-    /// (http://eprint.iacr.org/2008/522), Section 3.1.
-    /// Cost: 10M + 1S + 2D + 7a.
-    #[inline]
+    /// [Source: Twisted Edwards Curves, section 6]
+    /// Daniel J. Bernstein, Peter Birkner, 
+    /// Marc Joye, Tanja Lange, and Christiane Peters.
+    /// See: https://eprint.iacr.org/2008/013.pdf
     fn sub(self, other: &'b ProjectivePoint) -> ProjectivePoint {
         self + &(-other)
     }
@@ -566,25 +571,26 @@ impl<'a, 'b> Sub<&'b ProjectivePoint> for &'a ProjectivePoint {
 impl Sub<ProjectivePoint> for ProjectivePoint {
     type Output = ProjectivePoint;
     /// Add two ProjectivePoints, negating the second one,
-    /// and give the resulting `ProjectivePoint`.
     /// This implementation is specific for curves with `a = -1` as Doppio is.
     /// 
-    /// [Source: 2008 Hisil–Wong–Carter–Dawson], 
-    /// (http://eprint.iacr.org/2008/522), Section 3.1.
-    /// Cost: 10M + 1S + 2D + 7a.
+    /// [Source: Twisted Edwards Curves, section 6]
+    /// Daniel J. Bernstein, Peter Birkner, 
+    /// Marc Joye, Tanja Lange, and Christiane Peters.
+    /// See: https://eprint.iacr.org/2008/013.pdf
     #[inline]
     fn sub(self, other: ProjectivePoint) -> ProjectivePoint {
         &self - &other
     }
 }
 
-impl ProjectivePoint {
+impl<'a> Double for &'a ProjectivePoint {
+    type Output = ProjectivePoint;
     /// Double the given point following:
     /// This implementation is specific for curves with `a = -1` as Doppio is.
     /// Source: 2008 Hisil–Wong–Carter–Dawson, 
     /// http://eprint.iacr.org/2008/522, Section 3.1.
     /// Cost: 3M+ 4S+ +7a + 1D.
-    pub fn double(&self) -> ProjectivePoint {
+    fn double(self) -> ProjectivePoint {
         let B = (&self.X + &self.Y).square();
         let C = self.X.square();
         let D = self.Y.square();
@@ -732,6 +738,24 @@ pub mod tests {
         assert!(res == P3_EXTENDED);
     }
 
+    // Not passing
+    #[test]
+    #[ignore]
+    fn extended_point_doubling() {
+        let res = P1_EXTENDED.double();
+        
+        assert!(res == P3_EXTENDED);
+    }
+
+    // Not passing
+    #[test]
+    #[ignore]
+    fn extended_double_and_add() {
+        let res = &P1_EXTENDED * &Scalar::from(&2u8);
+        
+        assert!(res == P3_EXTENDED);
+    }
+
     #[test]
     fn projective_point_neg() {
         let inv_a: ProjectivePoint = ProjectivePoint{
@@ -758,25 +782,29 @@ pub mod tests {
     }
 
     // Not Passing
-    #[ignore]
     #[test]
+    #[ignore]
     fn projective_point_addition() {
-        let res = &P1_PROJECTIVE + &P2_PROJECTIVE;
-        print!("{:?}", EdwardsPoint::from(&res));
+        let res = P1_PROJECTIVE + P2_PROJECTIVE;
+        
         assert!(res == P4_PROJECTIVE);
     }
 
     // Not Passing
-    #[ignore]
     #[test]
+    #[ignore]
     fn projective_point_doubling() {
-        // Double in extended
-        let res = ProjectivePoint::from(&P1_EXTENDED).double();
-        // Double in projective
-        let res2 = ProjectivePoint::from(&P1_EXTENDED.double());
-        println!("{:?}", res);
-        println!("{:?}", res2);
-        println!("P3_EXTENDED in projective.{:?}", ProjectivePoint::from(&P3_EXTENDED));
-        //assert!(res == ProjectivePoint::from(&P3_EXTENDED));
+        let res = P1_PROJECTIVE.double();
+
+        assert!(res == P3_PROJECTIVE);
+    }
+
+    // Not Passing
+    #[test]
+    #[ignore]
+    fn projective_doube_and_add() {
+        let res = P1_PROJECTIVE * Scalar::from(&8u8);
+
+        // Compute ( 8 P1 )
     }
 }
