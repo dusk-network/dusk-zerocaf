@@ -1,3 +1,4 @@
+#![allow(non_snake_case)]
 /// The purpose of this implementation is to provide support for one of the most 
 /// commonly used operations over EC which is Random Scalar Mul. 
 /// 

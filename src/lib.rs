@@ -1,3 +1,5 @@
+#![doc(html_logo_url = "https://lh3.googleusercontent.com/SmwswGxtgIANTbDrCOn5EKcRBnVdHjmYsHYxLq2HZNXWCQ9-fZyaea-bNgdX9eR0XGSqiMFi=w128-h128-e365")]
+#![doc(html_favicon_url = "https://dusk.network/lib/img/favicon-16x16.png")]
 //! <a href="https://codecov.io/gh/dusk-network/Dusk-Zerocaf">
 //! <img src="https://codecov.io/gh/dusk-network/Dusk-Zerocaf/branch/master/graph/badge.svg" />
 //! </a>

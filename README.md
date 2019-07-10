@@ -4,6 +4,7 @@
  width="100%"
  src="https://camo.githubusercontent.com/db129d98b9686d0db27a9fd27c8e54086b14a6a7/68747470733a2f2f692e696d6775722e636f6d2f496a61645a50592e6a7067">
 
+# WARNING: WIP Repo.
 
 ## Fast, efficient and bulletproof-friendly cryptographic operations.
 

@@ -5,14 +5,15 @@
 
 use core::fmt::Debug;
 use core::ops::{Index, IndexMut};
-use core::ops::Add;
-use core::ops::Sub;
+use core::ops::{Add, Sub, Mul, Neg};
 
 use std::cmp::{PartialOrd, Ordering, Ord};
 
 use num::Integer;
 
 use crate::backend::u64::constants;
+use crate::traits::Identity;
+use crate::traits::ops::*;
 
 /// The `Scalar` struct represents an Scalar over the modulo
 /// `2^249 - 15145038707218910765482344729778085401` as 5 52-bit limbs
@@ -113,9 +114,35 @@ impl<'a> From<&'a u128> for Scalar {
     }
 }
 
-impl<'b> Add<&'b Scalar> for Scalar {
+impl<'a> Neg for &'a Scalar {
     type Output = Scalar;
-    /// Compute `a + b` (mod l)
+    /// Performs the negate operation over the
+    /// sub-group modulo l. 
+    fn neg(self) -> Scalar {
+        &Scalar::zero() - &self
+    }
+}
+
+impl Neg for Scalar {
+    type Output = Scalar;
+    /// Performs the negate operation over the
+    /// sub-group modulo l.
+    fn neg(self) -> Scalar {
+        -&self
+    }
+}
+
+impl Identity for Scalar {
+    /// Returns the `Identity` element for `Scalar`
+    /// which equals `1 (mod l)`. 
+    fn identity() -> Scalar {
+        Scalar::one()
+    }
+}
+
+impl<'a, 'b> Add<&'b Scalar> for &'a Scalar {
+    type Output = Scalar;
+    /// Compute `a + b (mod l)`.
     fn add(self, b: &'b Scalar) -> Scalar {
         let mut sum = Scalar::zero();
         let mask = (1u64 << 52) - 1;
@@ -126,14 +153,22 @@ impl<'b> Add<&'b Scalar> for Scalar {
             carry = self.0[i] + b[i] + (carry >> 52);
             sum[i] = carry & mask;
         }
-        // subtract r if the sum is >= l
-        sum.sub(&constants::L)
+        // subtract l if the sum is >= l
+        sum - constants::L
     }
 } 
 
-impl<'b> Sub<&'b Scalar> for Scalar {
+impl Add<Scalar> for Scalar {
     type Output = Scalar;
-    /// Compute `a - b` (mod r)
+    /// Compute `a + b (mod l)`.
+    fn add(self, b: Scalar) -> Scalar {
+        &self + &b
+    }
+}
+
+impl<'a, 'b> Sub<&'b Scalar> for &'a Scalar {
+    type Output = Scalar;
+    /// Compute `a - b (mod l)`.
     fn sub(self, b: &'b Scalar) -> Scalar {
         let mut difference = Scalar::zero();
         let mask = (1u64 << 52) - 1;
@@ -160,7 +195,88 @@ impl<'b> Sub<&'b Scalar> for Scalar {
     }
 }
 
-/// u64 * u64 = u128 inline func multiply helper
+impl Sub<Scalar> for Scalar {
+    type Output = Scalar;
+    /// Compute `a - b (mod l)`.
+    fn sub(self, b: Scalar) -> Scalar {
+        &self - &b
+    }
+}
+
+impl<'a, 'b> Mul<&'a Scalar> for &'b Scalar {
+    type Output = Scalar;
+    /// This `Mul` implementation returns a double precision result.
+    /// The result of the standard mul is stored on a [u128; 9].
+    /// 
+    /// Then, we apply the Montgomery Reduction function to perform
+    /// the modulo and the reduction to the `Scalar` format: [u64; 5].
+    fn mul(self, b: &'a Scalar) -> Scalar {
+        let ab = Scalar::montgomery_reduce(&Scalar::mul_internal(self, b)); 
+        Scalar::montgomery_reduce(&Scalar::mul_internal(&ab, &constants::RR))
+    }
+}
+
+impl Mul<Scalar> for Scalar {
+    type Output = Scalar;
+    /// This `Mul` implementation returns a double precision result.
+    /// The result of the standard mul is stored on a [u128; 9].
+    /// 
+    /// Then, we apply the Montgomery Reduction function to perform
+    /// the modulo and the reduction to the `Scalar` format: [u64; 5].
+    fn mul(self, b: Scalar) -> Scalar {
+        &self * &b
+    }
+}
+
+impl<'a> Square for &'a Scalar {
+    type Output = Scalar;
+    /// This `Square` implementation returns a double precision result.
+    /// The result of the standard mul is stored on a [u128; 9].
+    /// 
+    /// Then, we apply the Montgomery Reduction function to perform
+    /// the modulo and the reduction to the `Scalar` format: [u64; 5]. 
+    fn square(self) -> Scalar {
+        let aa = Scalar::montgomery_reduce(&Scalar::square_internal(self)); 
+        Scalar::montgomery_reduce(&Scalar::mul_internal(&aa, &constants::RR))
+    }
+}
+
+impl<'a> Half for &'a Scalar {
+    type Output = Scalar;
+    /// Give the half of the Scalar value (mod l).
+    /// 
+    /// This op **SHOULD ONLY** be used with even 
+    /// `Scalars` otherways, can produce erroneus
+    /// results.
+    /// 
+    /// The implementation for `Scalar` has indeed 
+    /// an `assert!` statement to check this.
+    #[inline]
+    fn half(self) -> Scalar {
+        assert!(self.is_even(), "The Scalar has to be even.");
+        let mut res = self.clone();
+        let mut remainder = 0u64;
+        for i in (0..5).rev() {
+            res[i] = res[i] + remainder;
+            match(res[i] == 1, res[i].is_even()){
+                (true, _) => {
+                    remainder = 4503599627370496u64;
+                }
+                (_, false) => {
+                    res[i] = res[i] - 1u64;
+                    remainder = 4503599627370496u64;
+                }
+                (_, true) => {
+                    remainder = 0;
+                }
+            }
+            res[i] = res[i] >> 1;
+        };
+        res
+    }
+}
+
+/// u64 * u64 = u128 inline func multiply helper.
 #[inline]
 fn m(x: u64, y: u64) -> u128 {
     (x as u128) * (y as u128)
@@ -269,40 +385,51 @@ impl Scalar {
         res
     }  
 
-    /// Give the half of the `Scalar` value (mod l).
-    /// This function SHOULD ONLY be used with even 
-    /// `Scalars` otherways, can produce erroneus
-    /// results.
-    #[inline]
-    pub fn half(&self) -> Scalar {
-        let mut res = self.clone();
-        let mut remainder = 0u64;
-        for i in (0..5).rev() {
-            res[i] = res[i] + remainder;
-            match(res[i] == 1, res[i].is_even()){
-                (true, _) => {
-                    remainder = 4503599627370496u64;
-                }
-                (_, false) => {
-                    res[i] = res[i] - 1u64;
-                    remainder = 4503599627370496u64;
-                }
-                (_, true) => {
-                    remainder = 0;
-                }
+    /// Given a `k`: u64, compute `2^k` giving the resulting result
+    /// as a `Scalar`.
+    /// 
+    /// See that the input must be between the range => 0..250.
+    /// 
+    /// NOTE: This function implements an `assert!` statement that
+    /// checks the correctness of the exponent provided as param.
+    pub fn two_pow_k(exp: &u64) -> Scalar {
+        
+        // Check that exp has to be less than 260.
+        // Note that a Scalar can be as much
+        // `2^249 - 15145038707218910765482344729778085401` so we pick
+        // 250 knowing that 249 will be lower than the prime of the
+        // sub group.
+        assert!(exp < &253u64, "Exponent can't be greater than 260");
+        
+        let mut res = Scalar::zero();
+        match exp {
+            0...51 => {
+               res[0]  = 1u64 << exp;
+            },
+            52...103 => {
+                res[1] = 1u64 << (exp - 52);
+            },
+            104...155 => {
+                res[2] = 1u64 << (exp - 104);
+            },
+            156...207 => {
+                res[3] = 1u64 << (exp - 156);
+            },
+            _ => {
+                res[4] = 1u64 << (exp - 208);
             }
-            res[i] = res[i] >> 1;
-        };
+        }
         res
-    } 
+    }
 
-    /// Compute `a * b` with the function multiplying helper
+    /// Compute `a * b`.
+    /// Note that this is just the normal way of performing a product. 
+    /// This operation returns back a double precision result stored
+    /// on a `[u128; 9] in order to avoid overflowings.
     #[inline]
-    pub fn mul_internal(a: &Scalar, b: &Scalar) -> [u128; 9] {
+    pub(self) fn mul_internal(a: &Scalar, b: &Scalar) -> [u128; 9] {
         let mut res = [0u128; 9];
-        // Note that this is just the normal way of performing a product.
-        // We need to store the results on u128 as otherwise we'll end
-        // up having overflowings.
+        
         res[0] = m(a[0],b[0]);
         res[1] = m(a[0],b[1]) + m(a[1],b[0]);
         res[2] = m(a[0],b[2]) + m(a[1],b[1]) + m(a[2],b[0]);
@@ -316,13 +443,15 @@ impl Scalar {
         res
     }
 
-    /// Compute `a * b` with the macro multiplying helper
+    #[allow(dead_code)]
     #[inline]
-    pub fn mul_internal_macros(a: &Scalar, b: &Scalar) -> [u128; 9] {
+    /// Compute `a * b`.
+    /// Note that this is just the normal way of performing a product. 
+    /// This operation returns back a double precision result stored
+    /// on a `[u128; 9] in order to avoid overflowings.
+    pub(self) fn mul_internal_macros(a: &Scalar, b: &Scalar) -> [u128; 9] {
         let mut res = [0u128; 9];
-        // Note that this is just the normal way of performing a product.
-        // We need to store the results on u128 as otherwise we'll end
-        // up having overflows.
+        
         res[0] = m!(a[0],b[0]);
         res[1] = m!(a[0],b[1]) + m!(a[1],b[0]);
         res[2] = m!(a[0],b[2]) + m!(a[1],b[1]) + m!(a[2],b[0]);
@@ -336,9 +465,12 @@ impl Scalar {
         res
     }
 
-    /// Compute `a^2`
+    /// Compute `a^2`. 
+    /// 
+    /// This operation returns a double precision result. 
+    /// So it gives back a `[u128; 9]` with the result of the squaring.
     #[inline]
-    pub fn square_internal(a: &Scalar) -> [u128; 9] {
+    pub(self) fn square_internal(a: &Scalar) -> [u128; 9] {
         let a_sqrt = [
             a[0]*2,
             a[1]*2,
@@ -359,9 +491,38 @@ impl Scalar {
         ]
     }
 
+    /// Give the half of the Scalar value (mod l).
+    /// 
+    /// This op **SHOULD NEVER** be used by the end-user
+    /// since it's designed to allow some behaviours
+    /// needed on certain points of algorithm implementations.
+    #[inline]
+    #[doc(hidden)]
+    pub(crate) fn inner_half(self) -> Scalar {
+        let mut res = self.clone();
+        let mut remainder = 0u64;
+        for i in (0..5).rev() {
+            res[i] = res[i] + remainder;
+            match(res[i] == 1, res[i].is_even()){
+                (true, _) => {
+                    remainder = 4503599627370496u64;
+                }
+                (_, false) => {
+                    res[i] = res[i] - 1u64;
+                    remainder = 4503599627370496u64;
+                }
+                (_, true) => {
+                    remainder = 0;
+                }
+            }
+            res[i] = res[i] >> 1;
+        };
+        res
+    }
+
     /// Compute `limbs/R` (mod l), where R is the Montgomery modulus 2^260
     #[inline]
-    pub fn montgomery_reduce(limbs: &[u128; 9]) -> Scalar {
+    pub(self) fn montgomery_reduce(limbs: &[u128; 9]) -> Scalar {
 
         #[inline]
         fn adjustment_fact(sum: u128) -> (u128, u64) {
@@ -392,31 +553,27 @@ impl Scalar {
         let         r4 = carry as u64;
 
         // result may be >= r, so attempt to subtract l
-        Scalar::sub(Scalar([r0,r1,r2,r3,r4]), l)
-    }
-
-    /// Compute `a * b` (mod l)
-    #[inline]
-    pub fn mul(a: &Scalar, b: &Scalar) -> Scalar {
-        let ab = Scalar::montgomery_reduce(&Scalar::mul_internal(a, b)); 
-        Scalar::montgomery_reduce(&Scalar::mul_internal(&ab, &constants::RR))
+        &Scalar([r0,r1,r2,r3,r4]) - l
     }
 
     /// Compute `(a * b) / R` (mod l), where R is the Montgomery modulus 2^260
     #[inline]
-    pub fn montgomery_mul(a: &Scalar, b: &Scalar) -> Scalar {
+    #[allow(dead_code)]
+    pub(self) fn montgomery_mul(a: &Scalar, b: &Scalar) -> Scalar {
         Scalar::montgomery_reduce(&Scalar::mul_internal(a, b))
     }
 
     /// Puts a Scalar into Montgomery form, i.e. computes `a*R (mod l)`
     #[inline]
-    pub fn to_montgomery(&self) -> Scalar {
+    #[allow(dead_code)]
+    pub(self) fn to_montgomery(&self) -> Scalar {
         Scalar::montgomery_mul(self, &constants::RR)
     }
 
     /// Takes a Scalar out of Montgomery form, i.e. computes `a/R (mod l)`
     #[inline]
-    pub fn from_montgomery(&self) -> Scalar {
+    #[allow(dead_code)]
+    pub(self) fn from_montgomery(&self) -> Scalar {
         let mut limbs = [0u128; 9];
         for i in 0..5 {
             limbs[i] = self[i] as u128;
@@ -429,25 +586,24 @@ impl Scalar {
 #[cfg(test)]
 mod tests {
     use super::*;
-    // Computed A and B, some Scalars defined over the modulo `l = 2^249 - 15145038707218910765482344729778085401`.
-    
-    /// A = 182687704666362864775460604089535377456991567872
+        
+    /// `A = 182687704666362864775460604089535377456991567872`.
     pub static A: Scalar = Scalar([0, 0, 0, 2, 0]);
 
-    /// B = 904625697166532776746648320197686575422163851717637391703244652875051672039
+    /// `B = 904625697166532776746648320197686575422163851717637391703244652875051672039`
     pub static B: Scalar = Scalar([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370493, 2199023255551]);
 
-    /// AB = A - B = -904625697166532776746648320014998870755800986942176787613709275418060104167 (mod r)
-    /// which is equal to: 365375409332725729550921208179070754913983135744
+    /// `AB = A - B = -904625697166532776746648320014998870755800986942176787613709275418060104167 (mod l)`.
+    /// which is equal to: `365375409332725729550921208179070754913983135744`.
     pub static AB: Scalar = Scalar([0, 0, 0, 4, 0]);
 
-    /// BA = B - A = 904625697166532776746648320014998870755800986942176787613709275418060104167
+    /// `BA = B - A = 904625697166532776746648320014998870755800986942176787613709275418060104167`.
     pub static BA: Scalar = Scalar([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370491, 2199023255551]);
 
-    /// A * AB. Result expected of the product mentioned before.
+    /// `A * AB (mod l). Result expected of the product mentioned before.
     pub static A_TIMES_AB: [u128; 9] = [0,0,0,0,0,0,0,8,0];
 
-    /// B * BA computed in Sage limb by limb. (Since we don't have any other way to verify it.)
+    /// `B * BA` computed in Sage limb by limb. (Since we don't have any other way to verify it.)
     pub static B_TIMES_BA: [u128; 9] = 
         [7652006990252481706224970522225, 
         23445622381543053554951959203660, 
@@ -465,8 +621,11 @@ mod tests {
     /// `X = 1809251394333065553493296640760748560207343510400633813116524750123642650623`
     pub static X: Scalar = Scalar([4503599627370495, 4503599627370495, 4503599627370495, 4503599627370495, 4398046511103]);
     
-    /// `Y = 6145104759870991071742105800796537629880401874866217824609283457819451087098 (mod l) = 717350576871794411262215878514291949349241575907629849852603275827191647632`
+    /// `Y = 717350576871794411262215878514291949349241575907629849852603275827191647632`.
     pub static Y: Scalar = Scalar([138340288859536, 461913478537005, 1182880083788836, 1688835920473363, 1743782656037]);
+
+    /// `Y^2 (mod l) = 351405481126033478170820083848817267677692781462667634162278835827410585241`. 
+    pub static Y_SQ: Scalar = Scalar([2359521284310681, 3823495160731511, 2863901539039406, 2131140264591444, 854219405379]);
 
     /// `Y/2 = 358675288435897205631107939257145974674620787953814924926301637913595823816`.
     pub static Y_HALF: Scalar = Scalar([2320969958115016, 230956739268502, 2843239855579666, 3096217773921929, 871891328018]);
@@ -479,6 +638,9 @@ mod tests {
 
     /// `X * Y (mod l) = 890263784947025690345271110799906008759402458672628420828189878638015362081`
     pub static X_TIMES_Y: Scalar = Scalar([3414372756436001, 1500062170770321, 4341044393209371, 2791496957276064, 2164111380879]); 
+
+
+    //------------------ Tests ------------------//
 
     #[test]
     fn partial_ord_and_eq() {
@@ -494,7 +656,7 @@ mod tests {
 
     #[test]
     fn add_with_modulo() {
-        let res = A.add(&B);
+        let res = A + B;
         let zero = Scalar::zero();;
         for i in 0..5 {
             assert!(res[i] == zero[i]);
@@ -503,7 +665,7 @@ mod tests {
 
     #[test]
     fn sub_with_modulo() {
-        let res = A.sub(&B);
+        let res = A - B;
         for i in 0..5 {
             assert!(res[i] == AB[i]);
         }
@@ -511,7 +673,7 @@ mod tests {
 
     #[test]
     fn sub_without_modulo() {
-        let res = B.sub(&A);
+        let res = B - A;
         for i in 0..5 {
             assert!(res[i] == BA[i]);
         }
@@ -556,10 +718,28 @@ mod tests {
     }
 
     #[test]
-    fn full_montgomery_mul() {
-        let res = Scalar::mul(&X, &Y);
+    fn scalar_mul() {
+        let res = &X * &Y;
         for i in 0..5 {
             assert!(res[i] == X_TIMES_Y[i]);
+        }
+    }
+
+    #[test]
+    fn mul_by_identity() {
+        let res = &Y * &Scalar::identity();
+
+        println!("{:?}", res);
+        for i in 0..5 {
+            assert!(res[i] == Y[i]);
+        }
+    }
+
+    #[test]
+    fn mul_by_zero() {
+        let res = &Y * &Scalar::zero();
+        for i in 0..5 {
+            assert!(res[i] == Scalar::zero()[i]);
         }
     }
 
@@ -567,7 +747,27 @@ mod tests {
     fn montgomery_mul() {
         let res = Scalar::montgomery_mul(&X, &Y);
         for i in 0..5 {
-            assert!( res[i] == X_TIMES_Y_MONT[i]);
+            assert!(res[i] == X_TIMES_Y_MONT[i]);
+        }
+    }
+
+    #[test]
+    fn square() {
+        let res = &Y.square();
+
+        for i in 0..5 {
+            assert!(res[i] == Y_SQ[i]);
+        }
+    }
+
+    #[test]
+    fn square_zero_and_identity() {
+        let zero = &Scalar::zero().square();
+        let one = &Scalar::identity().square();
+
+        for i in 0..5 {
+            assert!(zero[i] == Scalar::zero()[i]);
+            assert!(one[i] == Scalar::one()[i]);
         }
     }
 

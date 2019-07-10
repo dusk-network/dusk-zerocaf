@@ -11,6 +11,52 @@
 //! Here it is also defined the `Ristretto255Scalar` type,
 //! which is a type-alias for the curve25519-dalek Scalar Struct.
 //! 
+//! # Examples
+//! ```rust
+//! use zerocaf::scalar::Scalar;
+//! use zerocaf::traits::ops::*;
+//! 
+//! // You can create a Scalar from a byte-array as follows:
+//! let a = Scalar::from_bytes(&[0u8;32]); 
+//! 
+//! // You ca also create a Scalar from an uint type as follows:
+//! let b = Scalar::from(&43325u128);
+//! let c = Scalar::from(&86650u64);
+//! 
+//! // The last way of creating a Scalar it by calling the
+//! // constructor. THIS IS NOT RECOMMENDED since ANY checks about
+//! // the correctness of the input will be done. It can be done as
+//! // follows: 
+//! let d: Scalar = Scalar([0, 1, 0, 0, 0]); // d = 2^52.
+//! assert!(d == Scalar::two_pow_k(&52u64));
+//! 
+//! // All of the basuc modular operations are implemented 
+//! // for Scalar type:  
+//! let mut res = a + b; // Performs a + b (mod l).
+//! res = a - b; // Performs a - b (mod l).
+//! res = c * d; // Performs c * d (mod l).
+//! res = a.square(); // Performs a^2 (mod l).
+//! res = -&a; // Performs Negation over the modulo l.
+//! 
+//! // Dividing by two even Scalars is recommended through the `Half`
+//! // trait implmementation since it's much faster.
+//! if a.is_even() {
+//!     let half_c = c.half(); // This will panic if a isn't even.
+//!     assert!(half_c == b);
+//! }
+//! 
+//! // You can export your `Scalar` as an slice of 32 bytes in Little
+//! // Endian encoding by:
+//! let d_bytes: [u8; 32] = d.to_bytes();
+//! ```
+//! 
+//! 
+//! 
+//! `PartialOrd`, `Ord`, `PartialEq` and `Eq` are also implemented for
+//! `Scalar` type. 
+//! 
+//! All `std::core::ops traits -> (Add, Sub, Mul)` are implemented
+//! for both, `&Scalar` and `Scalar`.
 
 use crate::backend;
 
