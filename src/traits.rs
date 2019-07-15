@@ -59,4 +59,18 @@ pub mod ops {
         /// Returns the half of the input: `x/2`.
         fn half(self) -> Self::Output;
     }
+
+    /// Trait that represents the modular exponentiation 
+    /// operation, ie.`a ^ b (mod l)`, for any
+    /// kind of element on the library (except points).
+    ///
+    /// This trait is implemented following the rules that
+    /// mandate over the Type that is being implemented.
+    pub trait Pow<T> {
+        type Output;
+
+        #[must_use]
+        /// Returns  `a^b (mod l)`. 
+        fn pow(self, exp: T) -> Self::Output;
+    }
 }
