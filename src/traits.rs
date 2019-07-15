@@ -73,4 +73,12 @@ pub mod ops {
         /// Returns  `a^b (mod l)`. 
         fn pow(self, exp: T) -> Self::Output;
     }
+
+    pub trait ModSqrt {
+        type Output;
+
+        #[must_use]
+        /// Returns the result (if exists) for `sqrt(x) (mod l).
+        fn mod_sqrt(self) -> Self::Output;
+    }
 }
