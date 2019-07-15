@@ -351,6 +351,23 @@ impl<'a> Half for &'a FieldElement {
     }
 }
 
+impl<'a, 'b> Pow<&'b FieldElement> for &'a FieldElement {
+    type Output = FieldElement;
+
+    fn pow(self, exp: &'b FieldElement) -> FieldElement {
+        let mut c = FieldElement::one();
+        let mut ee = FieldElement::zero();
+
+        ee = ee + FieldElement::one(); 
+        while &ee < exp {
+            ee = ee + FieldElement::one();
+            c = self * &c;
+        };
+
+        c
+    }
+}
+
 /// u64 * u64 = u128 inline func multiply helper
 #[inline]
 fn m(x: u64, y: u64) -> u128 {
@@ -509,6 +526,19 @@ impl FieldElement {
             }
         }
         res
+    }
+
+    /// Given a FieldElement, this function evaluates if it is a quadratic
+    /// residue (mod l).
+    /// 
+    /// Returns: 
+    /// `-1` -> Non-quadratic residue (mod l).
+    /// `1`  -> Quadratic residue (mod l).
+    /// `0`  -> `Input mod l == 0`. 
+    #[inline]
+    pub fn legendre_symbol(&self) -> FieldElement {
+
+        unimplemented!()
     }
 
     #[inline]
