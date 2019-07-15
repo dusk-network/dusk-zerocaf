@@ -12,9 +12,9 @@ use std::cmp::{PartialOrd, Ordering, Ord};
 use core::ops::{Index, IndexMut};
 use core::ops::{Add, Sub, Mul, Div, Neg};
 
-use num::Integer;
+use subtle::Choice;
 
-//use subtle::Choice;
+use num::Integer;
 
 use crate::backend::u64::constants;
 use crate::scalar::Ristretto255Scalar;
@@ -546,20 +546,27 @@ impl FieldElement {
     /// Given a FieldElement, this function evaluates if it is a quadratic
     /// residue (mod l).
     /// 
+    /// See: [https://en.wikipedia.org/wiki/Legendre_symbol](https://en.wikipedia.org/wiki/Legendre_symbol).
+    /// 
     /// Returns: 
-    /// `-1` -> Non-quadratic residue (mod l).
-    /// `1`  -> Quadratic residue (mod l).
-    /// `0`  -> `Input mod l == 0`. 
+    /// `-1` -> Non-quadratic residue (mod l). Represented as 0.
+    /// `1`  -> Quadratic residue (mod l). Represented as 1.
+    /// `0`  -> `Input mod l == 0`. Not implemented since you can't pass
+    /// an input which is multiple of `FIELD_L`.
     #[inline]
-    pub fn legendre_symbol(&self) -> FieldElement {
-
-        unimplemented!()
+    pub fn legendre_symbol(&self) -> bool {
+        let res = self.pow(&FieldElement::minus_one().half());
+        if res == FieldElement::minus_one() {return false;}
+        true
     }
+
 
     #[inline]
     #[doc(hidden)]
+    /// This half implementation has no restriction for odd values
+    /// and is used in some parts of algorithms which impl require
+    /// to divide by 2 odd numbers at some parts.
     pub(self) fn inner_half(self) -> FieldElement {
-        debug_assert!(self.is_even(), "The FieldElement has to be even.");
         let mut res = self.clone();
         let mut remainder = 0u64;
         for i in (0..5).rev() {
@@ -1140,6 +1147,17 @@ pub mod tests {
 
         assert!(res == A_POW_C);
         assert!(res2 == A_POW_B);
+    }
+
+    #[test]
+    fn legendre_symbol() {
+        let res1 = A.legendre_symbol();
+        let res2 = FieldElement::from(&17u8).legendre_symbol();
+        println!("{:?}", res1);
+        println!("{:?}", res2);
+
+        assert!(!res1);
+        assert!(res2);
     }
 
     #[test]
