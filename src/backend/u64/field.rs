@@ -351,20 +351,35 @@ impl<'a> Half for &'a FieldElement {
     }
 }
 
+/// Performs the op: `a^b (mod l)`.
+/// 
+/// Exponentiation by squaring classical algorithm
+/// implementation for `FieldElement`.
+/// 
+/// Schneier, Bruce (1996). Applied Cryptography: Protocols, 
+/// Algorithms, and Source Code in C, Second Edition (2nd ed.).
 impl<'a, 'b> Pow<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
 
     fn pow(self, exp: &'b FieldElement) -> FieldElement {
-        let mut c = FieldElement::one();
-        let mut ee = FieldElement::zero();
+        let mut base = self.clone();
+        let mut res = FieldElement::one();
+        let mut expon = exp.clone();
+        
+        while expon > FieldElement::zero() {
+            if expon.is_even() {
+                expon = expon.half();
+                base = &base * &base;
+            } else {
+                expon = expon - FieldElement::one();
+            res = res * base;
 
-        ee = ee + FieldElement::one(); 
-        while &ee < exp {
-            ee = ee + FieldElement::one();
-            c = self * &c;
-        };
+            expon = expon.half();
+            base = &base * &base;
+            }
+        }
 
-        c
+        res
     }
 }
 
@@ -1110,6 +1125,12 @@ pub mod tests {
         for _i in 0..5 {
             assert!(res == EDWARDS_D);
         }
+    }
+
+    #[test]
+    fn a_pow_b() {
+        let res = &A.pow(&C);
+        println!("{:?}", res);
     }
 
     #[test]
