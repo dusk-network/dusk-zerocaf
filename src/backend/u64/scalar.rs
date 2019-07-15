@@ -276,6 +276,38 @@ impl<'a> Half for &'a Scalar {
     }
 }
 
+/// Performs the op: `a^b (mod l)`.
+/// 
+/// Exponentiation by squaring classical algorithm
+/// implementation for `Scalar`.
+/// 
+/// Schneier, Bruce (1996). Applied Cryptography: Protocols, 
+/// Algorithms, and Source Code in C, Second Edition (2nd ed.).
+impl<'a, 'b> Pow<&'b Scalar> for &'a Scalar {
+    type Output = Scalar;
+
+    fn pow(self, exp: &'b Scalar) -> Scalar {
+        let mut base = self.clone();
+        let mut res = Scalar::one();
+        let mut expon = exp.clone();
+        
+        while expon > Scalar::zero() {
+            if expon.is_even() {
+                expon = expon.half();
+                base = &base * &base;
+            } else {
+                expon = expon - Scalar::one();
+            res = res * base;
+
+            expon = expon.half();
+            base = &base * &base;
+            }
+        }
+
+        res
+    }
+}
+
 /// u64 * u64 = u128 inline func multiply helper.
 #[inline]
 fn m(x: u64, y: u64) -> u128 {
@@ -603,6 +635,9 @@ mod tests {
     /// `A * AB (mod l). Result expected of the product mentioned before.
     pub static A_TIMES_AB: [u128; 9] = [0,0,0,0,0,0,0,8,0];
 
+    /// `A ^ B (mod l) = 722079218299359393463304261975695272152587797512052686822897975048879125727`.
+    pub static A_POW_B: Scalar = Scalar([2197299320239327, 2988757086270933, 664937775028450, 3208806950237120, 1755277346602]);
+
     /// `B * BA` computed in Sage limb by limb. (Since we don't have any other way to verify it.)
     pub static B_TIMES_BA: [u128; 9] = 
         [7652006990252481706224970522225, 
@@ -785,6 +820,13 @@ mod tests {
             assert!(a_half[i] == A.half()[i]);
             assert!(a_half_half[i] == A.half().half()[i]);
         }
+    }
+
+    #[test]
+    fn a_pow_b() {
+        let res = A.pow(&B);
+
+        assert!(res == A_POW_B);
     }
 
     #[test]
