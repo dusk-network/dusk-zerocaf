@@ -30,4 +30,6 @@ sage: res
 
  (17 : 1014685013428497365422144808165958100622560545891891747637198454693655077041 : 1))
 
- 
+
+/// Computation of edwards points in twisted format to produce (X:Y:T:Z) from given X value.
+/// Using a manipputaites verydsopn
