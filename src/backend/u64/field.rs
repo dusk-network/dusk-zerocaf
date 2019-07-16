@@ -703,7 +703,7 @@ impl FieldElement {
 
 
 /// Module with constants used for `FieldElement` u64 implementation
-/// testing. It also includes the tests but remain hidden on the docs.
+/// testing. It also includes the tests but they remain hidden on the docs.
 pub mod tests {
 
     use crate::backend::u64::field::FieldElement;

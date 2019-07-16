@@ -223,7 +223,7 @@ impl<'a, 'b> Sub<&'b EdwardsPoint> for &'a EdwardsPoint {
     /// Source: 2008 Hisil–Wong–Carter–Dawson, 
     /// http://eprint.iacr.org/2008/522, Section 3.1.
     /// 
-    /// The only thing we do is to negate the second `EdwardsPoint`
+    /// The only thing we do is negate the second `EdwardsPoint`
     /// and add it following the same addition algorithm.
     fn sub(self, other: &'b EdwardsPoint) -> EdwardsPoint {
         let other_neg = -other;
