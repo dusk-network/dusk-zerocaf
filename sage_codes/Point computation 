@@ -1,4 +1,4 @@
-\\\ base point compututation
+/// base point compututation in Montgomery form
 
 sage: prime = 2^252 + 27742317777372353535851937790883648493
 
