@@ -1254,6 +1254,12 @@ pub mod tests {
     }
 
     #[test]
+    fn non_QRmod_sqrt_tonelli_shanks() {
+        // Test for non-valid Quadratic-residue values.
+        assert!(A.mod_sqrt().is_none());
+    }
+
+    #[test]
     fn from_bytes_conversion() {
         let num = FieldElement::from_bytes(&MINUS_ONE_BYTES);
         for i in 0..5 {
