@@ -78,7 +78,8 @@ pub mod ops {
         type Output;
 
         #[must_use]
-        /// Returns the result (if exists) for `sqrt(x) (mod l).
+        /// Returns `Some(result)` (if exists) for `sqrt(x) (mod l)`.
+        /// Otherways it should return `None`
         fn mod_sqrt(self) -> Self::Output;
     }
 }
