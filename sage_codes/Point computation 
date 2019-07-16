@@ -24,12 +24,73 @@ sage: res
 
 (17,
 
- 100171752,
+100171752,
 
- 1014685013428497365422144808165958100622560545891891747637198454693655077041,
+1014685013428497365422144808165958100622560545891891747637198454693655077041,
 
- (17 : 1014685013428497365422144808165958100622560545891891747637198454693655077041 : 1))
+(17 : 1014685013428497365422144808165958100622560545891891747637198454693655077041 : 1))
 
 
 /// Computation of edwards points in twisted format to produce (X:Y:T:Z) from given X value.
-/// Using a manipputaites verydsopn
+/// Using a manipulated version of the Edwards equation, written below, allows for the computation.
+/// a*x^2+y^2 = 1+d*x^2*y^2
+/// a = -1, d = -86649/86650
+/// In fractions in the mod l need to be `inverse_mod`, calculated for d as below:
+
+sage: p = 2^252 + 27742317777372353535851937790883648493
+sage: d = -(86649)/(86650)
+sage: d = ((-86649)*inverse_mod(86650,p))%p
+sage: d
+1201935917638644956968126114584555454358623906841733991436515590915937358637
+
+/// For use in the equation y^2 will be written as y, as sage will attempt to compute the square root.
+/// For arbitrarlily chosen x = 23 
+
+sage: x = 23 
+sage: y = (-(x)^2-1)*inverse_mod(d*(x)^2-1,p)%p
+sage: y
+
+6536923810004159332831702809452452174451353762940761092345538667656658715568
+
+/// It needs to be checked if the y here is a quadratic residue in p, 
+/// using the legendre symbol [http://people.bath.ac.uk/masgks/XX10190/legendresymbol.pdf], 
+/// if confirmed as QR in p, then tonelli-shanks is used to find the corresponing Y coordiantes.
+
+sage: legendre_symbol(y,p)
+1
+sage:         z += 1
+....:     c = pow(z, q, p)
+....: 
+....:     # Search for a solution
+....:     x = pow(a, (q + 1)/2, p)
+....:     t = pow(a, q, p)
+....:     m = s
+....:     while t != 1:
+....:         # Find the lowest i such that t^(2^i) = 1
+....:         i, e = 0, 2
+....:         for i in xrange(1, m):
+....:             if pow(t, e, p) == 1:
+....:                 break
+....:             e *= 2
+....: 
+....:         # Update next value to iterate
+....:         b = pow(c, 2**(m - i - 1), p)
+....:         x = (x * b) % p
+....:         t = (t * b * b) % p
+....:         c = (b * b) % p
+....:         m = i
+....: 
+....:     return [x, p-x]
+....: 
+sage: prime_mod_sqrt(y,p)
+[5464794816676661649783249706827271879994893912039750480019443499440603127256,
+1772210760655600564189936856215722360862222447340157125982507438844851123733]
+
+/// Using formulae from (http://eprint.iacr.org/2008/522), Section 3.1., compute T. 
+/// Set initial Z = 1 
+
+y = 1772210760655600564189936856215722360862222447340157125982507438844851
+....: 123733
+sage: t = (x*y)%p
+sage: t
+4575819608417501906502614877746643095545534491924075867587916402004304590914
