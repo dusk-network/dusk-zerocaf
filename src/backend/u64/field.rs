@@ -1,5 +1,5 @@
 //! Field arithmetic modulo `2^252 + 27742317777372353535851937790883648493`
-//! using 64-bit limbs with 128-bit products.
+//! which makes use of 64-bit limbs with 128-bit products.
 //! In the 64-bit backend implementation, the `FieldElement` is
 //! represented in radix `2^52`.
 
@@ -19,8 +19,8 @@ use crate::backend::u64::constants;
 use crate::scalar::Ristretto255Scalar;
 use crate::traits::Identity;
 
-/// A `FieldElement` represents an element into the field
-/// `2^252 + 27742317777372353535851937790883648493`
+/// A `FieldElement` represents an element of the field
+/// which has order of `2^252 + 27742317777372353535851937790883648493`
 ///
 /// In the 64-bit backend implementation, the `FieldElement` is
 /// represented in radix `2^52`
@@ -69,7 +69,7 @@ impl Identity for FieldElement {
     /// Returns the Identity element over the finite field
     /// modulo `2^252 + 27742317777372353535851937790883648493`.
     /// 
-    /// It is defined as 1 on `FieldElement` format, so:
+    /// It is defined as 1 on `FieldElement` format, and is therefore written as:
     /// `[1, 0, 0, 0, 0]`.
     fn identity() -> FieldElement {
         FieldElement([1, 0, 0, 0 ,0])
@@ -121,8 +121,8 @@ impl<'a> From<&'a u128> for FieldElement {
         let mut res = FieldElement::zero();
         let mask = (1u128 << 52) - 1;
 
-        // Since 128 / 52 < 4 , we only need to care
-        // about the first three limbs.
+        // Since 128 / 52 < 4 , we only need to be attentive to 
+        // the first three limbs.
         res[0] = (_inp & mask) as u64;
         res[1] = ((_inp >> 52) & mask) as u64;
         res[2] = (_inp >> 104) as u64;
@@ -134,8 +134,8 @@ impl<'a> From<&'a u128> for FieldElement {
 impl<'a> Neg for &'a FieldElement {
     type Output = FieldElement;
     /// Computes `-self (mod l)`.
-    /// Compute the negated value that correspond's to the
-    /// two's complement of the input FieldElement.
+    /// Compute the negated value that corresponds to the
+    /// complement of the two, of the input FieldElement.
     fn neg(self) -> FieldElement {
         &FieldElement::zero() - self
     }
@@ -173,7 +173,7 @@ impl<'a, 'b> Sub<&'b FieldElement> for &'a FieldElement {
         }
         // Conditionaly add l, if difference is negative.
         // Be aware that here `sub` tells us the most significant bit of the last limb
-        // so then we know if it is greater than `l` or not.
+        // so then we know whether or not the value is greater than `l`.
         let underflow_mask = ((sub >> 63) ^ 1).wrapping_sub(1);
         let mut carry = 0u64;
         for i in 0..5 {
@@ -200,8 +200,8 @@ impl Default for FieldElement {
 }
 
 impl<'a> From<&'a Ristretto255Scalar> for FieldElement {
-    /// Given a Ristretto255Scalar on canonical bytes representation
-    /// get it's FieldElement equivalent value as 5 limbs and
+    /// Given a Ristretto255Scalar on canonical bytes representation, 
+    /// here we obtain the FieldElement equivalent value as 5 limbs and
     /// radix-52.
     fn from(origin: &'a Ristretto255Scalar) -> FieldElement {
         let origin_bytes = origin.to_bytes();
@@ -247,9 +247,8 @@ impl FieldElement {
         self.0[0].is_even()
     }
 
-    /// Determine if this `FieldElement` is negative, in the sense
-    /// used in the ed25519 paper: `x` is negative if the low bit is
-    /// set.
+    /// Determine if this `FieldElement` is negative, similary to how it 
+    /// is used in the ed25519 paper: `x` is negative if the low bit is set.
     /// 
     /// Taken from the Curve25519-dalek implementation.
     /// 
@@ -305,8 +304,8 @@ impl FieldElement {
         res.half()
     }
 
-    /// Load a `FieldElement` from the low 253b   bits of a 256-bit
-    /// input. So Little Endian representation in bytes of a FieldElement.
+    /// Load a `FieldElement` from the low 253 bits of a 256-bit
+    /// input. So that Little Endian representation in bytes are for a FieldElement.
     // @TODO: Macro for Inline load8 function as has variadic arguments.
     #[warn(dead_code)]
     pub fn from_bytes(bytes: &[u8;32]) -> Self {
@@ -512,9 +511,9 @@ impl FieldElement {
     #[inline]
     pub fn kalinski_inverse(&self) -> FieldElement {
 
-        /// This Phase I indeed is the Binary GCD algorithm , a version o Stein's algorithm
+        /// This Phase I indeed is the Binary GCD algorithm, a version of Steins algorithm
         /// which tries to remove the expensive division operation away from the Classical
-        /// Euclidean GDC algorithm replacing it for Bit-shifting, subtraction and comparaison.
+        /// Euclidean GDC algorithm by replacing it with Bit-shifting, subtraction and comparison.
         /// 
         /// Output = `a^(-1) * 2^k (mod l)` where `k = log2(FIELD_L) == 253`.
         /// 
@@ -632,9 +631,9 @@ impl FieldElement {
     #[inline]
     pub fn savas_koc_inverse(&self) -> FieldElement {
 
-        /// This Phase I indeed is the Binary GCD algorithm , a version o Stein's algorithm
-        /// which tries to remove the expensive division operation away from the Classical
-        /// Euclidean GDC algorithm replacing it for Bit-shifting, subtraction and comparaison.
+        /// This Phase I is indeed the Binary GCD algorithm , a version of Stein's algorithm
+        /// which tries to remove the expensive division operation from the Classical
+        /// Euclidean GDC algorithm by replacing it with Bit-shifting, subtraction and comparison.
         /// 
         /// Output = `a^(-1) * 2^k (mod l)` where `k = log2(FIELD_L) == 253`.
         /// 
