@@ -41,9 +41,8 @@ Special thanks to [@ebfull](https://github.com/ebfull) who triggered this work w
 
 | Montgomery | y²=x³+346598*x²+x |
 |--|--|
-| A | 346598 | |
 | u(P) | 17 | `u` coordinate of the Montgomery Basepoint, X-coordinate | \
-| v(P) | 1014685013428497365422144808165958100622560545891891747637198454693655077041  | Basepoint Y-coordinate|
+| A | 346598 | |
 
 <br/>
 
