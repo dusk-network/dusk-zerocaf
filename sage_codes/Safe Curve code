@@ -380,6 +380,52 @@ def verify():
 
 originaldir = os.open('.',os.O_RDONLY)
 for i in range(1,len(sys.argv)):
-  os.fchdir(originaldir)
-  os.chdir(sys.argv[i])
-  verify()
+os.fchdir(originaldir)
+os.chdir(sys.argv[i])
+verify()
+
+## Curve Paramaters section. 
+/// The size of the prime field when Doppio is 
+/// a curve defined as E where #E(Fp), and p 
+/// is the prime of the field, defined as:
+sage: p
+723700557733226221397318656304299424085711635937990760600195093828545425098
+/// also written as 
+sage: p 
+2^252 - 27742317777372353535851937790883648493
+
+/// Basepoint calculation
+sage: prime = 2^252 + 27742317777372353535851937790883648493
+
+sage: A = 346598
+
+sage:  def findBasepoint(prime, A):
+F = GF(prime)
+E = EllipticCurve(F, [0, A, 0, 1, 0])
+for uInt in range(1, 1e3):
+u = F(uInt)
+v2 = u^3 + A*u^2 + u
+if not v2.is_square():
+v = v2.sqrt()
+point = E(u, v)
+pointOrder = point.order()
+if pointOrder > 8 and pointOrder.is_prime():
+Q=u^3 + A*u^2 + u
+return u, Q, sqrt(Q), point
+
+sage: res = findBasepoint(prime, A)
+
+sage: res
+
+(17,
+
+100171752,
+
+1014685013428497365422144808165958100622560545891891747637198454693655077041,
+
+(17 : 1014685013428497365422144808165958100622560545891891747637198454693655077041 : 1))
+
+/// Hexidecimal representation
+(11 : 23E4A96ED9E13AF0600EA21DB1007D9FB6E47BDD233BBBD82EB8E634305E0B1 : 1)
+
+/// Prime order of curve, l
