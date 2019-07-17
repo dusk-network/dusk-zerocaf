@@ -59,6 +59,11 @@ mod field_benches {
             "Field Element",
             Benchmark::new("Two Pow k (2^k)", |b| b.iter(|| FieldElement::two_pow_k(&213u64)))
         );
+
+        c.bench(
+            "Field Element",
+            Benchmark::new("Pow (a^b (mod l))", |b| b.iter(|| A.pow(&B)))
+        );
     }
 
     pub fn bench_modular_inverse(c: &mut Criterion) {
