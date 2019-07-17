@@ -437,10 +437,10 @@ impl EdwardsPoint {
     /// `+-X = mod_sqrt((y^2 -1)/(dy^2 - a))`. 
     /// 
     /// The sign of `x` is choosen with a `Choice` parameter. 
-    /// ```
-    /// Choice(0) -> 
-    /// Choice(1) ->
-    /// ```
+    /// 
+    /// For Choice(0) -> Negative result. 
+    /// For Choice(1) -> Positive result.
+    /// 
     /// Then Z is always equal to `1`.
     /// 
     /// # Returns
@@ -699,10 +699,10 @@ impl ProjectivePoint {
     /// `+-X = mod_sqrt((y^2 -1)/(dy^2 - a))`. 
     /// 
     /// The sign of `x` is choosen with a `Choice` parameter. 
-    /// ```
-    /// Choice(0) -> 
-    /// Choice(1) ->
-    /// ```
+    /// 
+    /// For Choice(0) -> Negative result. 
+    /// For Choice(1) -> Positive result.
+    /// 
     /// Then Z is always equal to `1`.
     /// 
     /// # Returns

@@ -395,10 +395,10 @@ impl<'a> ModSqrt for &'a FieldElement {
     /// Conditionally selects and returns the positive or the 
     /// negative result of the `mod_sqrt` by analyzing the 
     /// `Choice` sent as input:
-    /// ```
+    /// 
     /// For Choice(0) -> Negative result. 
     /// For Choice(1) -> Positive result.
-    /// ```
+    /// 
     /// 
     /// Daniel Shanks. Five Number Theoretic Algorithms. 
     /// Proceedings of the Second Manitoba Conference on 
