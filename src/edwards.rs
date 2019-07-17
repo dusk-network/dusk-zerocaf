@@ -690,18 +690,18 @@ impl ProjectivePoint {
     }
 }
 
-/// A `NielsPoint` represents a point on the Doppio Curve expressed
-/// over the Twisted Edwards Niels Coordinates also known as 
+/// A `AffinePoint` represents a point on the Doppio Curve expressed
+/// over the Twisted Edwards Affine Coordinates also known as 
 /// cartesian coordinates: (X, Y).  
-pub struct NielsPoint {
+pub struct AffinePoint {
     pub X: FieldElement,
     pub Y: FieldElement
 }
 
-impl Debug for NielsPoint {
+impl Debug for AffinePoint {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "
-        NielsPoint {{
+        AffinePoint {{
             X: {:?},
             Y: {:?}
         }};", self.X, self.Y)
