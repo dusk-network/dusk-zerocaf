@@ -888,4 +888,12 @@ pub mod tests {
 
         // Compute ( 8 P1 )
     }
+
+    #[test]
+    fn projective_point_generation() {
+        let y = FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]);
+        let p2 = ProjectivePoint::new_from_y_coord(&y, Choice::from(0u8)).unwrap();
+
+        assert!(p2 == P2_PROJECTIVE); 
+    }   
 }
