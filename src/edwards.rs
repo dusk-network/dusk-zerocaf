@@ -11,8 +11,7 @@ use crate::traits::Identity;
 use crate::traits::ops::*;
 
 
-use subtle::Choice;
-use subtle::ConstantTimeEq;
+use subtle::{Choice, ConditionallySelectable, ConstantTimeEq};
 
 use std::default::Default;
 use std::fmt::Debug;
@@ -70,6 +69,9 @@ pub fn mul_by_pow_2<'a, 'b, T>(point: &'a T, _k: &'b u64) -> T
     point * &Scalar::two_pow_k(_k)
 }
 
+
+
+// ---------------- Point Structs ---------------- //
 
 /// The first 255 bits of a `CompressedEdwardsY` represent the
 /// (y)-coordinate.  The high bit of the 32nd byte gives the sign of (x).
@@ -646,6 +648,43 @@ impl<'a> Double for &'a ProjectivePoint {
             Y: &F * &(&E - &D),
             Z: &F *&J
         }
+    }
+}
+
+impl ProjectivePoint {
+
+    /// This function tries to build a Point over the Doppio Curve from
+    /// a `Y` coordinate and a Choice that determines the Sign o the `X`
+    /// coordinate that the user wants to use.
+    /// 
+    /// The function gets `X` by solving: 
+    /// `+-X = mod_sqrt((y^2 -1)/(dy^2 - a))`. 
+    /// 
+    /// The sign of `x` is choosen with a `Choice` parameter. 
+    /// ```
+    /// Choice(0) -> 
+    /// Choice(1) ->
+    /// ```
+    /// Then Z is always equal to `1`.
+    /// 
+    /// # Returns
+    /// `Some(ProjectivePoint)` if there exists a result for the `mod_sqrt`
+    /// and `None` if the resulting `x^2` isn't a QR modulo `FIELD_L`. 
+    pub fn new_from_y_coord(y: &FieldElement, sign: Choice) -> Option<ProjectivePoint> {
+        let x;
+        let xx = (y.square() - FieldElement::one()) / ((constants::EDWARDS_D * y.square()) - constants::EDWARDS_A);
+        // Match the sqrt(x) Option.
+        match xx.mod_sqrt(sign) {
+            // If we get `None`, we know that 
+            None => return None,
+            Some(_x) => x = _x,
+        };
+
+        Some(ProjectivePoint {
+            X: x,
+            Y: y.clone(),
+            Z: FieldElement::one()
+        })
     }
 }
 
