@@ -912,9 +912,19 @@ pub mod tests {
 
     #[test]
     fn projective_point_generation() {
-        let y = FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]);
-        let p2 = ProjectivePoint::new_from_y_coord(&y, Choice::from(0u8)).unwrap();
+        let y2 = FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]);
+        let p2 = ProjectivePoint::new_from_y_coord(&y2, Choice::from(0u8)).unwrap();
 
         assert!(p2 == P2_PROJECTIVE); 
+
+        let y1 = FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]);
+        let p1 = ProjectivePoint::new_from_y_coord(&y1, Choice::from(1u8)).unwrap();
+
+        assert!(p1 == P1_PROJECTIVE);
+
+        // `A = 15` which is not a QR over the prime of the field.
+        let y_failure = FieldElement::from(&15u8);
+        let p_fail = ProjectivePoint::new_from_y_coord(&y_failure, Choice::from(0u8));
+        assert!(p_fail.is_none())
     }   
 }
