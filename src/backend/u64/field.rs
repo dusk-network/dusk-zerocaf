@@ -16,6 +16,8 @@ use subtle::{Choice, ConstantTimeEq, ConditionallySelectable};
 
 use num::Integer;
 
+use rand::{thread_rng, Rng};
+
 use crate::backend::u64::constants;
 use crate::scalar::Ristretto255Scalar;
 use crate::traits::Identity;
@@ -487,6 +489,21 @@ impl FieldElement {
         self.0[0].is_even()
     }
 
+    pub fn generate_random() -> FieldElement {
+        let mut bytes = [0u8;32];
+
+        // Generate a 31-byte random array
+        thread_rng().try_fill(&mut bytes[0..31]).unwrap();
+
+        // On the last byte we can only add 16 bits since
+        // `FIELD_L` has 252-bits as much. So all of the inputs
+        // should be lower. 
+        //
+        // Create a `FieldElement` taking the random byte 
+        // array as source.
+        FieldElement::from_bytes(&bytes)
+    }
+
     /// Performs the operation `((a + constants::FIELD_L) >> 2) % l)`.
     /// This function SHOULD only be used on the Kalinski's modular 
     /// inverse algorithm, since it's the only way we have to add `l`
@@ -507,7 +524,6 @@ impl FieldElement {
     /// Load a `FieldElement` from the low 253b bits of a 256-bit
     /// input. So Little Endian representation in bytes of a FieldElement.
     // @TODO: Macro for Inline load8 function as it has variadic arguments.
-    #[warn(dead_code)]
     pub fn from_bytes(bytes: &[u8;32]) -> FieldElement {
         let load8 = |input: &[u8]| -> u64 {
                (input[0] as u64)
