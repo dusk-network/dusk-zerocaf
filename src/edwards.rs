@@ -688,6 +688,12 @@ impl ProjectivePoint {
     }
 }
 
+pub struct NielsPoint {
+    pub X: FieldElement,
+    pub Y: FieldElement
+}
+
+
 
 #[allow(dead_code)]
 #[cfg(test)]
