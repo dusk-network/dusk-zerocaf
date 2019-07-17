@@ -452,6 +452,16 @@ impl EdwardsPoint {
             Some(point) => return Some(EdwardsPoint::from(&point)),
         }
     } 
+
+    /// This function tries to build a Point over the Doppio Curve from
+    /// a random `Y` coordinate and a random Choice that determines the 
+    /// Sign o the `X` coordinate.
+    pub fn new_random_point() -> EdwardsPoint {
+        // Simply generate a random `ProjectivePoint`
+        // and once we get one that is valid, switch 
+        // it to Extended Coordinates.
+        EdwardsPoint::from(&ProjectivePoint::new_random_point())   
+    }
 }
 
 /// A `ProjectivePoint` represents a point on the Doppio Curve expressed
