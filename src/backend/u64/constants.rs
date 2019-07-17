@@ -28,5 +28,5 @@ pub const LFACTOR_FIELD: u64 = 1439961107955227;
 
 /// Montgomery modulus defined for FieldElements on `inverse()` functions scope. 
 /// It is used for the Montgomery Mul operation that takes place on the `Inversion
-/// operation`. It's defined as: `R^2 = (2^253)^2 % L`
+// operation`. It's defined as: `R^2 = (2^253)^2 % L`
 pub const INV_RR: FieldElement = FieldElement([2210115751650724, 3809421927348411, 2357176729341513, 3420097284349172, 7483527818736]);
