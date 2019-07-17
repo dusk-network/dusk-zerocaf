@@ -21,6 +21,7 @@ mod field_benches {
     use super::*;
     use zerocaf::field::FieldElement;
     use zerocaf::scalar::Scalar;
+    use subtle::Choice;
 
     /// `B = 904625697166532776746648320197686575422163851717637391703244652875051672039`
     pub static B: field::FieldElement = field::FieldElement([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370493, 2199023255551]);
@@ -58,6 +59,16 @@ mod field_benches {
         c.bench(
             "Field Element",
             Benchmark::new("Two Pow k (2^k)", |b| b.iter(|| FieldElement::two_pow_k(&213u64)))
+        );
+
+        c.bench(
+            "Field Element",
+            Benchmark::new("Pow (a^b (mod l))", |b| b.iter(|| A.pow(&B)))
+        );
+
+        c.bench(
+            "Field Element",
+            Benchmark::new("Modular Sqrt", |b| b.iter(|| A.mod_sqrt(Choice::from(1u8))))
         );
     }
 
@@ -115,6 +126,7 @@ mod edwards_benches {
     use zerocaf::edwards::{EdwardsPoint, ProjectivePoint};
     use zerocaf::scalar::Scalar;
     use zerocaf::field::FieldElement;
+    use subtle::Choice;
 
     pub static P1_EXTENDED: EdwardsPoint = EdwardsPoint {
         X: FieldElement([23, 0, 0, 0, 0]),
@@ -191,6 +203,14 @@ mod edwards_benches {
             "Projective Coordinates Scalar Mul",
             Benchmark::new("Hankerson, Darrel; Vanstone, Scott; Menezes, Alfred (2004) - Guide to Elliptic Curve Cryptography. ",
             |b| b.iter(|| &P1_PROJECTIVE * &A))
+        );
+
+        c.bench(
+            "Projective Coordinates Point Generation.",
+            Benchmark::new("From y coordinate.",
+            |b| b.iter(|| ProjectivePoint::new_from_y_coord(
+                &FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]),
+                Choice::from(1u8))))
         );
     }
 }
