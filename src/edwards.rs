@@ -434,7 +434,9 @@ impl EdwardsPoint {
 /// For Z1≠0 the point (X1:Y1:Z1) represents the affine point (x1= X1/Z1, y1= Y1/Z1)
 /// on EE,a,d.
 /// Projective coordinates represent `x` `y` as `(X Y Z`) satisfying the following equations:
+/// 
 /// x=X/Z
+/// 
 /// y=Y/Z
 /// 
 /// Expressing an elliptic curve in twisted Edwards form saves time in arithmetic, 
@@ -688,9 +690,22 @@ impl ProjectivePoint {
     }
 }
 
+/// A `NielsPoint` represents a point on the Doppio Curve expressed
+/// over the Twisted Edwards Niels Coordinates also known as 
+/// cartesian coordinates: (X, Y).  
 pub struct NielsPoint {
     pub X: FieldElement,
     pub Y: FieldElement
+}
+
+impl Debug for NielsPoint {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "
+        NielsPoint {{
+            X: {:?},
+            Y: {:?}
+        }};", self.X, self.Y)
+    }
 }
 
 
