@@ -80,8 +80,16 @@ pub mod ops {
         type Output;
 
         #[must_use]
-        /// Returns `Some(result)` (if exists) for `sqrt(x) (mod l)`.
-        /// Otherways it should return `None`
+        /// Performs the modular Square Root operation over a finite
+        /// field ie. `sqrt(x) (mod l)`. 
+        /// 
+        /// With the given `Choice`, the impl is able to provide the 
+        /// result that corresponds to the positive or negative sign choosen.
+        /// 
+        /// # Returns 
+        /// 
+        /// `Some(symb_choosen_result)` if the input is a QR for the prime modulo.
+        /// Otherways it returns `None`
         fn mod_sqrt(self, choice: Choice) -> Self::Output;
     }
 }
