@@ -6,6 +6,7 @@ use num::{Zero, One, Integer, Num};
 use std::str::FromStr;
 use num_traits::cast::ToPrimitive;
 use num_traits::pow;
+use core::fmt::Debug;
 
 
 
@@ -40,30 +41,19 @@ fn main() {
     let mont_x = to_scalar_base_52("658448296334113745583381664921721413881518248721417041768778176391714104386");
     println!("{:?}", mont_x);
     */
-   
-    //let _ = from_scalar_base_52(&[1682248870925813, 4078880264703668, 2289123149127681, 4169238435752846, 2104335664921]);
-    //let mut x = from_scalar_base_52(&[0, 1, 0, 0, 0]);
-    //let x = from_scalar_base_52(&[3986048181299919, 3661573232122943, 4503599627233715, 4503599627370495, 17592186044415]);
-    //let x = phase1(&BigUint::from_str("182687704666362864775460604089535377456991567872").unwrap());
     let x = to_scalar_base_52("8108506296627193477490729223701222799225673175682397919993808421104884006301");
     println!("Y1 {:?}", x);
-    let x = to_scalar_base_52("12973610074603509563985166757921956478761077081091836671990093473767814410081");
-    println!("T1 {:?}", x);
-    let x = to_scalar_base_52("66843114562324818831166116375914673748969480642761593456607783791255343778951");
-    println!("Y2 {:?}", x);
-    let x = to_scalar_base_52("93580360387254746363632562926280543248557272899866230839250897307757481290531");
-    println!("T2 {:?}", x);
-    let x = to_scalar_base_52("3771693123018309868394037764583333364782633584138337130509874216957315574454");
-    println!("X4 {:?}", x);
-    let x = to_scalar_base_52("1878858348700824378648997267329577667354308477622780062148428165462851226657");
-    println!("Y4 {:?}", x);
-    let x = to_scalar_base_52("2596094084097232104334970348707613454870694952315503566494631613535716743897");
-    println!("T4 {:?}", x);
-    let x = to_scalar_base_52("3046615346498363260970360470518420442929621375403911391541097501391609630248");
-    println!("Z4 {:?}", x);
 
-    //let res = phase1(&BigUint::from_str("2009874587549").unwrap());
-    //println!("res: {} as FieldELEM: {:?}", res, to_scalar_base_52(&res.to_str_radix(10)));
+    let edp: EdwardsPoint = EdwardsPoint::new(
+        "1809251394333065553493296640760748560207343510400633813116524750123642650623", 
+        "1809251394333065553493296640760748560207343510400633813116524750123642650623", 
+        "1809251394333065553493296640760748560207343510400633813116524750123642650623", 
+        "1809251394333065553493296640760748560207343510400633813116524750123642650623"
+    );
+
+    println!("{:?}", edp);
+
+    
 
 }
 
@@ -242,4 +232,45 @@ pub fn phase1(input: &BigUint) -> BigUint {
     }
     println!("Outside if: {}", (&p - &r));
     &p - &r
+ }
+
+
+ pub struct EdwardsPoint {
+    pub X: [u64; 5],
+    pub Y: [u64; 5],
+    pub Z: [u64; 5],
+    pub T: [u64; 5]
+}
+
+impl Debug for EdwardsPoint {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "
+        EdwardsPoint {{
+            X: FieldElement({:?}),
+            Y: FieldElement({:?}),
+            Z: FieldElement({:?}),
+            T: FieldElement({:?})
+        }};", self.X, self.Y, self.Z, self.T)
+    }
+}
+
+
+
+ impl EdwardsPoint {
+
+     pub fn new(x: &str, y: &str, z: &str, t: &str) -> EdwardsPoint {
+
+        let mut res: EdwardsPoint = EdwardsPoint{
+            X: [0u64; 5],
+            Y: [0u64; 5],
+            Z: [0u64; 5],
+            T: [0u64; 5]
+        };
+        res.X = to_scalar_base_52(x);
+        res.Y = to_scalar_base_52(y);
+        res.Z = to_scalar_base_52(z);
+        res.T = to_scalar_base_52(t);
+        
+        res
+     }
  }
