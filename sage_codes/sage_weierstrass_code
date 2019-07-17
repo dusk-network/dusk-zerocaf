@@ -104,6 +104,8 @@ NameError                                 Traceback (most recent call last)
 <ipython-input-23-c7e47e11af57> in <module>()
 ----> 1 P
 
+NameError: name 'P' is not defined
+sage: 
 sage: p
 57896044618658097711785492504343953926634992332820282019728792003956564819949
 sage: a_w
