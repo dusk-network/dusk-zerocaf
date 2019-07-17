@@ -15,6 +15,8 @@ pub trait Identity {
 }
 
 pub mod ops {
+    use subtle::Choice;
+
     /// Trait that represents the `^2` operation for any
     /// kind of element on the library. 
     /// 
@@ -80,6 +82,6 @@ pub mod ops {
         #[must_use]
         /// Returns `Some(result)` (if exists) for `sqrt(x) (mod l)`.
         /// Otherways it should return `None`
-        fn mod_sqrt(self) -> Self::Output;
+        fn mod_sqrt(self, choice: Choice) -> Self::Output;
     }
 }
