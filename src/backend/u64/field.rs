@@ -275,13 +275,6 @@ impl Mul<FieldElement> for FieldElement {
     }
 }
 
-impl<'a> From<&'a Ristretto255Scalar> for FieldElement {
-    /// Given a Ristretto255Scalar on canonical bytes representation, 
-    /// here we obtain the FieldElement equivalent value as 5 limbs and
-    /// radix-52.
-    fn from(origin: &'a Ristretto255Scalar) -> FieldElement {
-        let origin_bytes = origin.to_bytes();
-        FieldElement::from_bytes(&origin_bytes)
 
 impl<'a,'b> Div<&'a FieldElement> for &'b FieldElement {
     type Output = FieldElement;
