@@ -427,7 +427,31 @@ impl EdwardsPoint {
     /// Compress this point to `CompressedEdwardsY` format.
     pub fn compress(&self) -> CompressedEdwardsY {
         unimplemented!()
-    }    
+    }  
+
+    /// This function tries to build a Point over the Doppio Curve from
+    /// a `Y` coordinate and a Choice that determines the Sign o the `X`
+    /// coordinate that the user wants to use.
+    /// 
+    /// The function gets `X` by solving: 
+    /// `+-X = mod_sqrt((y^2 -1)/(dy^2 - a))`. 
+    /// 
+    /// The sign of `x` is choosen with a `Choice` parameter. 
+    /// ```
+    /// Choice(0) -> 
+    /// Choice(1) ->
+    /// ```
+    /// Then Z is always equal to `1`.
+    /// 
+    /// # Returns
+    /// `Some(EdwardsPoint)` if there exists a result for the `mod_sqrt`
+    /// and `None` if the resulting `x^2` isn't a QR modulo `FIELD_L`. 
+    pub fn new_from_y_coord(y: &FieldElement, sign: Choice) -> Option<EdwardsPoint> {
+        match ProjectivePoint::new_from_y_coord(&y, sign) {
+            None => return None,
+            Some(point) => return Some(EdwardsPoint::from(&point)),
+        }
+    } 
 }
 
 /// A `ProjectivePoint` represents a point on the Doppio Curve expressed
@@ -875,6 +899,24 @@ pub mod tests {
         let res = &P1_EXTENDED * &Scalar::from(&2u8);
         
         assert!(res == P3_EXTENDED);
+    }
+
+    #[test]
+    fn extended_point_generation() {
+        let y2 = FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]);
+        let p2 = EdwardsPoint::new_from_y_coord(&y2, Choice::from(0u8)).unwrap();
+
+        assert!(p2 == P2_EXTENDED); 
+
+        let y1 = FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]);
+        let p1 = EdwardsPoint::new_from_y_coord(&y1, Choice::from(1u8)).unwrap();
+
+        assert!(p1 == P1_EXTENDED);
+
+        // `A = 15` which is not a QR over the prime of the field.
+        let y_failure = FieldElement::from(&15u8);
+        let p_fail = EdwardsPoint::new_from_y_coord(&y_failure, Choice::from(0u8));
+        assert!(p_fail.is_none())
     }
 
     #[test]
