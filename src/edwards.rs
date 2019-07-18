@@ -787,7 +787,12 @@ impl ProjectivePoint {
 
 /// A `AffinePoint` represents a point on the Doppio Curve expressed
 /// over the Twisted Edwards Affine Coordinates also known as 
-/// cartesian coordinates: (X, Y).  
+/// cartesian coordinates: (X, Y). 
+/// 
+/// This Twisted Edwards coordinates are ONLY implemented for
+/// equalty testing, since all of the Point operations
+/// defined over them are much slower than the same ones 
+/// defined over Extended or Projective coordinates. 
 pub struct AffinePoint {
     pub X: FieldElement,
     pub Y: FieldElement
@@ -819,6 +824,20 @@ impl Identity for AffinePoint {
         }
     }
 }
+
+impl ConstantTimeEq for AffinePoint {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        self.X.ct_eq(&other.X) & self.Y.ct_eq(&other.Y)
+    }
+}
+
+impl PartialEq for AffinePoint {
+    fn eq(&self, other: &Self) -> bool {
+        bool::from(self.ct_eq(&other))
+    }
+}
+
+impl Eq for AffinePoint {}
 
 impl<'a> From<&'a EdwardsPoint> for AffinePoint {
     /// Given (X:Y:Z:T) in εε, passing to affine can be 
@@ -891,6 +910,18 @@ impl Neg for AffinePoint {
 /// Also used to check the correctness of the transformation functions.
 pub mod tests {
     use super::*;
+
+    pub(self) static P1_AFFINE: AffinePoint = AffinePoint {
+        X: FieldElement([23, 0, 0, 0, 0]),
+        Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998])
+    };
+
+    pub(self) static P2_AFFINE: AffinePoint = AffinePoint {
+        X: FieldElement([68, 0, 0, 0, 0]),
+        Y: FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]),
+    };
+
+
 
     pub(self) static P1_EXTENDED: EdwardsPoint = EdwardsPoint {
         X: FieldElement([23, 0, 0, 0, 0]),
@@ -1119,5 +1150,28 @@ pub mod tests {
         let y_failure = FieldElement::from(&15u8);
         let p_fail = ProjectivePoint::new_from_y_coord(&y_failure, Choice::from(0u8));
         assert!(p_fail.is_none())
-    }   
+    } 
+
+    #[test]
+    fn affine_point_ct_eq() {
+        // Test true case for equalty.
+        assert!(P1_AFFINE.ct_eq(&P2_AFFINE).unwrap_u8() == 0u8);
+
+        // Test false case for equalty.
+        assert!(P1_AFFINE.ct_eq(&P1_AFFINE).unwrap_u8() == 1u8);
+
+        // After Point doubling case. Z's are different but points are equivalent.
+        assert!(AffinePoint::from(&P3_PROJECTIVE)
+            .ct_eq(&AffinePoint::from(&P1_PROJECTIVE.double())).
+            unwrap_u8() 
+        == 1u8);
+    }  
+
+    #[test]
+    fn affine_point_eq() {
+        assert!(P1_AFFINE == P1_AFFINE);
+        assert!(P1_AFFINE != P2_AFFINE);
+
+        assert!(AffinePoint::from(&P3_PROJECTIVE) == AffinePoint::from(&P1_PROJECTIVE.double()));
+    }
 }
