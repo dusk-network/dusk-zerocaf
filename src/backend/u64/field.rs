@@ -2,6 +2,10 @@
 //! using 64-bit limbs with 128-bit products.
 //! In the 64-bit backend implementation, a `FieldElement` is
 //! represented in radix `2^52`.
+//! 
+//! The basic modular operations have been taken from the 
+//! [Curve25519-dalek repository](https://github.com/dalek-cryptography/curve25519-dalek) and refactored to work 
+//! for the Doppio finite field.
 
 use core::fmt::Debug;
 use core::convert::From;
@@ -441,7 +445,7 @@ impl<'a> ModSqrt for &'a FieldElement {
             // Find the lowest i such that t^(2^i) = 1. 
             let mut i = FieldElement::zero();
             let mut e = FieldElement::from(&2u8);
-            let mut b;
+            let b;
             while i < m {
                 i = i + one;
                 if bool::from(t.pow(&e).ct_eq(&one)) {break;}
