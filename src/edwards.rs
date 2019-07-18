@@ -594,7 +594,7 @@ impl<'a, 'b> Add<&'b ProjectivePoint> for &'a ProjectivePoint {
     /// See: https://eprint.iacr.org/2008/013.pdf - Section 6.
     #[inline]
     fn add(self, other: &'b ProjectivePoint) -> ProjectivePoint {
-        let A = self.Z + other.Z;
+        let A = self.Z * other.Z;
         let B = A.square();
         let C = self.X * other.X;
         let D = self.Y * other.Y;
@@ -1081,9 +1081,7 @@ pub mod tests {
         assert!(res == ProjectivePoint::identity())
     }
 
-    // Not Passing
     #[test]
-    #[ignore]
     fn projective_point_addition() {
         let res = P1_PROJECTIVE + P2_PROJECTIVE;
         
