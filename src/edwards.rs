@@ -778,6 +778,46 @@ impl Identity for AffinePoint {
     }
 }
 
+impl<'a> From<&'a EdwardsPoint> for AffinePoint {
+    /// Given (X:Y:Z:T) in εε, passing to affine can be 
+    /// performed in 3M+ 1I by computing:
+    /// 
+    /// First, move to Projective Coordinates by removing `T`.
+    ///  
+    /// Then, reduce the point from Projective to Affine
+    /// coordinates computing: (X*Zinv, Y*Zinv, Z*Zinv).
+    /// 
+    /// And once Z coord = `1` we can simply remove it. 
+    /// 
+    /// Twisted Edwards Curves Revisited - 
+    /// Huseyin Hisil, Kenneth Koon-Ho Wong, Gary Carter, 
+    /// and Ed Dawson, Section 3.
+    fn from(point: &'a EdwardsPoint) -> AffinePoint {
+        let A = point.Z.inverse();
+        ProjectivePoint {
+            X: point.X * A,
+            Y: point.Y * A
+        }
+    }
+}
+
+impl<'a> From<&'a ProjectivePoint> for AffinePoint {
+    /// Reduce the point from Projective to Affine
+    /// coordinates computing: (X*Zinv, Y*Zinv, Z*Zinv).
+    /// 
+    /// And once Z coord = `1` we can simply remove it. 
+    /// 
+    /// Twisted Edwards Curves Revisited - 
+    /// Huseyin Hisil, Kenneth Koon-Ho Wong, Gary Carter, 
+    /// and Ed Dawson, Section 3.
+    fn from(point: &'a ProjectivePoint) -> AffinePoint {
+        AffinePoint {
+            X: point.X * point.Z.inverse(),
+            Y: point.Y * point.Z.inverse()
+        }
+    }
+}
+
 
 
 #[allow(dead_code)]
