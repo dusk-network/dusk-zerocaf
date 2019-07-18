@@ -10,10 +10,15 @@
 
 This repository contains an implementation of the Doppio curve over the `Ristretto Scalar field`: a pure Rust implementation designed by [Dusk](https://dusk.network) team.
 
+Special thanks to Isis Agora Lovecruft and Henry de Valence for them implementation of [Curve25519-dalek library](https://github.com/dalek-cryptography/curve25519-dalek),
+which has been so useful in order to get some of the basic arithmetic ops and the structure of our library.
+
 ### Ristretto curve 
 
-Ristretto is a technique for constructing prime order elliptic curve groups with non-malleable encodings. The [Ristretto protocol](https://ristretto.group/ristretto.html) arose as an extension of [Mike Hamburg's Decaf](https://www.shiftleft.org/papers/decaf/decaf.pdf) approach to cofactor elimination, which is applicable to curves of
-cofactor 4, whereas the Ristretto is designed for non-prime-order curves of cofactor 8 or 4.
+Ristretto is a technique for constructing prime order elliptic curve groups with non-malleable encodings. 
+
+The [Ristretto protocol](https://ristretto.group/ristretto.html) arose as an extension of [Mike Hamburg's Decaf](https://www.shiftleft.org/papers/decaf/decaf.pdf) approach to cofactor elimination, which is applicable to curves of cofactor 4, whereas the Ristretto is designed for non-prime-order curves of cofactor 8 or 4.
+Ristretto was designed by the [dalek-cryprography](https://github.com/dalek-cryptography) team, specifically, Henry de Valence and Isis Agora Lovecruft to whom we greatly appreciate their work and dedication.
 
 ### Ristretto Scalar Field And Bulletproofs.
 
