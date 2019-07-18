@@ -921,8 +921,6 @@ pub mod tests {
         Y: FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]),
     };
 
-
-
     pub(self) static P1_EXTENDED: EdwardsPoint = EdwardsPoint {
         X: FieldElement([23, 0, 0, 0, 0]),
         Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]),
@@ -1035,9 +1033,7 @@ pub mod tests {
         assert!(res == P3_EXTENDED);
     }
 
-    // Not passing
     #[test]
-    #[ignore]
     fn extended_point_doubling() {
         let res = P1_EXTENDED.double();
         
