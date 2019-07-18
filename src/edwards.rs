@@ -473,7 +473,7 @@ impl EdwardsPoint {
 /// 
 /// Expressing an elliptic curve in twisted Edwards form saves time in arithmetic, 
 /// even when the same curve can be expressed in the Edwards form. 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone)]
 pub struct ProjectivePoint {
     pub X: FieldElement,
     pub Y: FieldElement,
@@ -490,6 +490,20 @@ impl Debug for ProjectivePoint {
         }};", self.X, self.Y, self.Z)
     }
 }
+
+impl ConstantTimeEq for ProjectivePoint {
+    fn ct_eq(&self, other: &ProjectivePoint) -> Choice {
+        AffinePoint::from(self).ct_eq(&AffinePoint::from(other))
+    }
+}
+
+impl PartialEq for ProjectivePoint {
+    fn eq(&self, other: &ProjectivePoint) -> bool {
+        self.ct_eq(other).unwrap_u8() == 1u8
+    }
+}
+
+impl Eq for ProjectivePoint {}
 
 impl Default for ProjectivePoint {
     /// Returns the default ProjectivePoint Extended Coordinates: (0, 1, 1). 
@@ -981,7 +995,12 @@ pub mod tests {
     #[test]
     fn extended_point_neg() {
         let a = EdwardsPoint::default();
-        let inv_a = -a;
+        let inv_a = EdwardsPoint {
+            X: FieldElement::zero(),
+            Y: FieldElement::one(),
+            Z: FieldElement::one(),
+            T: FieldElement::zero()
+        };
 
         let res = -a;
         assert!(res == inv_a);
@@ -1044,16 +1063,11 @@ pub mod tests {
 
     #[test]
     fn projective_point_neg() {
-        let inv_a: ProjectivePoint = ProjectivePoint{
-           X: FieldElement::minus_one(),
-           Y: FieldElement::zero(),
-           Z: FieldElement::zero()
-        };
-
-        let a: ProjectivePoint = ProjectivePoint{
-           X: FieldElement::one(),
-           Y: FieldElement::zero(),
-           Z: FieldElement::zero()
+        let a = ProjectivePoint::default();
+        let inv_a = ProjectivePoint {
+            X: FieldElement::zero(),
+            Y: FieldElement::one(),
+            Z: FieldElement::one()
         };
 
         let res = -a;
@@ -1076,9 +1090,7 @@ pub mod tests {
         assert!(res == P4_PROJECTIVE);
     }
 
-    // Not Passing
     #[test]
-    #[ignore]
     fn projective_point_doubling() {
         let res = P1_PROJECTIVE.double();
 
