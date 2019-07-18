@@ -529,6 +529,27 @@ impl<'a> From<&'a EdwardsPoint> for ProjectivePoint {
     }
 }
 
+impl<'a> From<&'a AffinePoint> for ProjectivePoint {
+    /// The key idea of projective coordinates is that instead of 
+    /// performing every division immediately, we defer the 
+    /// divisions by multiplying them into a denominator.
+    /// 
+    /// In affine form, each elliptic curve point has 2 coordinates, 
+    /// like (x,y). In the new projective form, 
+    /// each point will have 3 coordinates, like (X,Y,Z), 
+    /// with the restriction that Z is never zero.
+    ///  
+    /// The forward mapping is given by (x,y)→(xz,yz,z), 
+    /// for any non-zero z (usually chosen to be 1 for convenience).
+    fn from(point: &'a AffinePoint) -> ProjectivePoint {
+        ProjectivePoint {
+            X: point.X,
+            Y: point.Y,
+            Z: FieldElement::one()
+        }
+    }
+}
+
 impl<'a> Neg for &'a ProjectivePoint {
     type Output = ProjectivePoint;
     /// Negates an `ProjectivePoint` giving it as a result.
@@ -791,10 +812,10 @@ impl<'a> From<&'a EdwardsPoint> for AffinePoint {
     /// 
     /// Twisted Edwards Curves Revisited - 
     /// Huseyin Hisil, Kenneth Koon-Ho Wong, Gary Carter, 
-    /// and Ed Dawson, Section 3.
+    /// and Ed Dawson.
     fn from(point: &'a EdwardsPoint) -> AffinePoint {
         let A = point.Z.inverse();
-        ProjectivePoint {
+        AffinePoint {
             X: point.X * A,
             Y: point.Y * A
         }
@@ -809,7 +830,7 @@ impl<'a> From<&'a ProjectivePoint> for AffinePoint {
     /// 
     /// Twisted Edwards Curves Revisited - 
     /// Huseyin Hisil, Kenneth Koon-Ho Wong, Gary Carter, 
-    /// and Ed Dawson, Section 3.
+    /// and Ed Dawson.
     fn from(point: &'a ProjectivePoint) -> AffinePoint {
         AffinePoint {
             X: point.X * point.Z.inverse(),
