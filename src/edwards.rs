@@ -45,7 +45,7 @@ pub fn double_and_add<'b, 'a, T>(point: &'a T, scalar: &'b Scalar) -> T
     let mut Q = T::identity();
 
     while n != Scalar::zero() {
-        if n.is_even() {
+        if !n.is_even() {
             Q = &Q + &N;
         };
 
@@ -365,7 +365,7 @@ impl<'a, 'b> Mul<&'b Scalar> for &'a EdwardsPoint {
     }
 }
 
-impl Mul<EdwardsPoint> for Scalar {
+impl Mul<Scalar> for EdwardsPoint {
     type Output = EdwardsPoint;
     /// Scalar multiplication: compute `Scalar * self`.
     /// This implementation uses the algorithm:
@@ -376,8 +376,8 @@ impl Mul<EdwardsPoint> for Scalar {
     /// Hankerson, Darrel; Vanstone, Scott; Menezes, Alfred (2004). 
     /// Guide to Elliptic Curve Cryptography. 
     /// Springer Professional Computing. New York: Springer-Verlag.
-    fn mul(self, point: EdwardsPoint) -> EdwardsPoint {
-        double_and_add(&point, &self)
+    fn mul(self, scalar: Scalar) -> EdwardsPoint {
+        double_and_add(&self, &scalar)
     }
 }
 
@@ -1034,13 +1034,14 @@ pub mod tests {
         assert!(res == P3_EXTENDED);
     }
 
-    // Not passing
     #[test]
-    #[ignore]
     fn extended_double_and_add() {
-        let res = &P1_EXTENDED * &Scalar::from(&2u8);
-        
-        assert!(res == P3_EXTENDED);
+        // Since we compute ( 8* P ) we don't need
+        // to test `mul_by_cofactor` if this passes.
+        let expect = P1_EXTENDED.double().double().double();
+        let res = P1_EXTENDED * Scalar::from(&8u8);
+
+        assert!(expect == res);
     }
 
     #[test]
@@ -1095,13 +1096,14 @@ pub mod tests {
         assert!(res == P3_PROJECTIVE);
     }
 
-    // Not Passing
     #[test]
-    #[ignore]
-    fn projective_doube_and_add() {
+    fn projective_double_and_add() {
+        // Since we compute ( 8* P ) we don't need
+        // to test `mul_by_cofactor` if this passes.
+        let expect = P1_PROJECTIVE.double().double().double();
         let res = P1_PROJECTIVE * Scalar::from(&8u8);
 
-        // Compute ( 8 P1 )
+        assert!(expect == res);
     }
 
     #[test]
