@@ -394,6 +394,10 @@ sage: p
 sage: p 
 2^252 - 27742317777372353535851937790883648493
 
+/// A montgomery form of the curve
+/// Y^2 = X^3 + A*X^2 + B*X, 
+/// A = 346598, B = 1 
+
 /// Basepoint calculation
 sage: prime = 2^252 + 27742317777372353535851937790883648493
 
@@ -429,3 +433,40 @@ sage: res
 (11 : 23E4A96ED9E13AF0600EA21DB1007D9FB6E47BDD233BBBD82EB8E634305E0B1 : 1)
 
 /// Prime order of curve, l
+sage: E
+Elliptic Curve defined by y^2 = x^3 + 346598*x^2 + x over Finite Field of size 7237005577332262213973186563042994240857116359379907606001950938285454250989
+sage: q = E.cardinality()
+sage: print q
+7237005577332262213973186563042994240708213731944783966342240242656345919288
+sage: l = q/8;
+sage: print l
+904625697166532776746648320380374280088526716493097995792780030332043239911
+
+/// Hexidecimal representation
+
+///Curve complex multiplicative(CM) discriminant must be > 2^100
+///For this to hold true a calculation of varying values must be 
+///obtained. 
+/// The first step is to obtain the trace of frobenius.
+/// Then check is the trace of frobenius satisfies:
+/// -2*sqrt(q) < t < 2*sqrt(q)
+/// Then compute D using 
+
+sage: E.frobenius_order()
+Order in Number Field in phi with defining polynomial x^2 - 148902627435123639659710695629108331702*x + 7237005577332262213973186563042994240857116359379907606001950938285454250989
+sage: t = -148902627435123639659710695629108331702
+
+/// Alternatively, the trace of frobenius 
+/// can be computed using #E(Fp) = q + 1 - t, 
+/// where #E(Fp) is P, the prime of the field.
+/// As shown below.
+
+sage: P
+7237005577332262213973186563042994240857116359379907606001950938285454250989
+sage: q
+7237005577332262213973186563042994240708213731944783966342240242656345919288
+sage: t = q+1-P
+sage: t
+-148902627435123639659710695629108331700
+
+/// the principle
