@@ -247,6 +247,27 @@ impl<'a> From<&'a ProjectivePoint> for EdwardsPoint {
     }
 }
 
+impl<'a> From<&'a AffinePoint> for EdwardsPoint {
+    /// In affine form, each elliptic curve point has 2 coordinates, 
+    /// like (x,y). In the new projective form, 
+    /// each point will have 3 coordinates, like (X,Y,Z), 
+    /// with the restriction that Z is never zero.
+    ///  
+    /// The forward mapping is given by (x,y)→(xz,yz,z), 
+    /// for any non-zero z (usually chosen to be 1 for convenience).
+    /// 
+    /// After this is done, we move from Projective to Extended by
+    /// setting the new coordinate `T = X * Y`.
+    fn from(point: &'a AffinePoint) -> EdwardsPoint {
+        EdwardsPoint {
+            X: point.X,
+            Y: point.Y,
+            Z: FieldElement::one(),
+            T: point.X * point.Y
+        }
+    }
+}
+
 impl<'a> Neg for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Negates an `EdwardsPoint` giving it as a result.
