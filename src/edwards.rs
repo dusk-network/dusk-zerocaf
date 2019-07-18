@@ -860,6 +860,29 @@ impl<'a> From<&'a ProjectivePoint> for AffinePoint {
     }
 }
 
+impl<'a> Neg for &'a AffinePoint {
+    type Output = AffinePoint;
+    /// Negates an `AffinePoint` giving it as a result.
+    /// Since the negative of a point is (-X:Y), it
+    /// gives as a result: `(-X, Y)`.
+    fn neg(self) -> AffinePoint {
+       AffinePoint{
+           X: -&self.X,
+           Y:   self.Y
+       }
+    }
+}
+
+impl Neg for AffinePoint {
+    type Output = AffinePoint;
+    /// Negates an `AffinePoint` giving it as a result.
+    /// Since the negative of a point is (-X:Y), it
+    /// gives as a result: `(-X, Y)`.
+    fn neg(self) -> AffinePoint {
+        -&self
+    }
+}
+
 
 
 #[allow(dead_code)]
