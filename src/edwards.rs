@@ -383,7 +383,6 @@ impl Mul<EdwardsPoint> for Scalar {
 
 impl<'a> Double for &'a EdwardsPoint {
     type Output = EdwardsPoint;
-    
     /// Performs the point doubling operation
     /// ie. `2*P` over the Twisted Edwards Extended
     /// Coordinates.
@@ -393,21 +392,8 @@ impl<'a> Double for &'a EdwardsPoint {
     /// http://eprint.iacr.org/2008/522, Section 3.1.
     /// Cost: 4M+ 4S+ 1D
     fn double(self) -> EdwardsPoint {
-        // This algorithm will be using point addition as base
-        // until we find out what problem are we experiencing
-        // with the doubling formulae on Extended Coords.
-        //
-        // TODO: Fix this as prio to reduce ops number.
-
         let two: FieldElement = FieldElement::from(&2u8);
-        /*
-        EdwardsPoint {
-            X: (two*(self.X*self.Y))*((two*self.Z.square()) - self.Y.square() + self.X.square()),
-            Y: (self.Y.square() -self.X)
-            Z: F * G,
-            T: E * H
-        }*/
-
+        
         let A = self.X.square();
         let B = self.Y.square();
         let C = two * self.Z.square();
@@ -423,21 +409,10 @@ impl<'a> Double for &'a EdwardsPoint {
             Z: F * G,
             T: E * H
         }
-        //self + self
     }
 }
 
 impl EdwardsPoint {
-    /// Return the `EdwardsPoint` with Extended Coordinates
-    /// eq to: {0, 0, 0, 0}.
-    pub fn zero() -> EdwardsPoint {
-        EdwardsPoint {
-            X: FieldElement::zero(),
-            Y: FieldElement::zero(),
-            Z: FieldElement::zero(),
-            T: FieldElement::zero(),
-        }
-    }
 
     /// Convert this `EdwardsPoint` on the Edwards model to the
     /// corresponding `MontgomeryPoint` on the Montgomery model.
