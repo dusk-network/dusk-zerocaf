@@ -177,7 +177,7 @@ impl CompressedEdwardsY {
 /// x=X/Z
 /// y=Y/Z
 /// x*y=T/Z
-#[derive(Copy, Clone, Eq, PartialEq)] 
+#[derive(Copy, Clone)] 
 pub struct EdwardsPoint {
     pub X: FieldElement,
     pub Y: FieldElement,
@@ -196,10 +196,10 @@ impl Debug for EdwardsPoint {
         }};", self.X, self.Y, self.Z, self.T)
     }
 }
-/*
+
 impl ConstantTimeEq for EdwardsPoint {
     fn ct_eq(&self, other: &EdwardsPoint) -> Choice {
-        self.compress().ct_eq(&other.compress())
+        AffinePoint::from(self).ct_eq(&AffinePoint::from(other))
     }
 }
 
@@ -210,7 +210,7 @@ impl PartialEq for EdwardsPoint {
 }
 
 impl Eq for EdwardsPoint {}
-*/
+
 impl Default for EdwardsPoint {
     /// Returns the default EdwardsPoint Extended Coordinates: (0, 1, 1, 0). 
     fn default() -> EdwardsPoint {
@@ -1007,19 +1007,8 @@ pub mod tests {
 
     #[test]
     fn extended_point_neg() {
-        let inv_a: EdwardsPoint = EdwardsPoint{
-           X: FieldElement::minus_one(),
-           Y: FieldElement::zero(),
-           Z: FieldElement::zero(),
-           T: FieldElement::minus_one(),
-        };
-
-        let a: EdwardsPoint = EdwardsPoint{
-           X: FieldElement::one(),
-           Y: FieldElement::zero(),
-           Z: FieldElement::zero(),
-           T: FieldElement::one(),
-        };
+        let a = EdwardsPoint::default();
+        let inv_a = -a;
 
         let res = -a;
         assert!(res == inv_a);
