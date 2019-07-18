@@ -761,6 +761,23 @@ impl Debug for AffinePoint {
     }
 }
 
+impl Default for AffinePoint {
+    /// Returns the default Twisted Edwards AffinePoint Coordinates: (0, 1). 
+    fn default() -> AffinePoint {
+        AffinePoint::identity()
+    }
+}
+
+impl Identity for AffinePoint {
+    /// Returns the Edwards Point identity value = `(0, 1)`.
+    fn identity() -> AffinePoint {
+        AffinePoint {
+            X: FieldElement::zero(),
+            Y: FieldElement::one()
+        }
+    }
+}
+
 
 
 #[allow(dead_code)]
