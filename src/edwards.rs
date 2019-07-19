@@ -77,7 +77,7 @@ pub fn mul_by_pow_2<'a, 'b, T>(point: &'a T, _k: &'b u64) -> T
 
 /// The first 255 bits of a `CompressedEdwardsY` represent the
 /// (y)-coordinate.  The high bit of the 32nd byte gives the sign of (x).
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone)]
 pub struct CompressedEdwardsY(pub [u8; 32]);
 
 impl ConstantTimeEq for CompressedEdwardsY {
@@ -85,6 +85,14 @@ impl ConstantTimeEq for CompressedEdwardsY {
         self.to_bytes().ct_eq(&other.to_bytes())
     }
 }
+
+impl PartialEq for CompressedEdwardsY {
+    fn eq(&self, other: &CompressedEdwardsY) -> bool {
+        self.ct_eq(&other).unwrap_u8() == 1u8
+    }
+}
+
+impl Eq for CompressedEdwardsY {}
 
 impl Index<usize> for CompressedEdwardsY {
     type Output = u8;
