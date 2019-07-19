@@ -380,7 +380,9 @@ def verify():
 
 originaldir = os.open('.',os.O_RDONLY)
 for i in range(1,len(sys.argv)):
+/// implement for different operating systems
 os.fchdir(originaldir)
+/// as well as 
 os.chdir(sys.argv[i])
 verify()
 
