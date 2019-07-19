@@ -45,7 +45,7 @@ pub fn double_and_add<'b, 'a, T>(point: &'a T, scalar: &'b Scalar) -> T
     let mut Q = T::identity();
 
     while n != Scalar::zero() {
-        if n.is_even() {
+        if !n.is_even() {
             Q = &Q + &N;
         };
 
@@ -177,7 +177,7 @@ impl CompressedEdwardsY {
 /// x=X/Z
 /// y=Y/Z
 /// x*y=T/Z
-#[derive(Copy, Clone, Eq, PartialEq)] 
+#[derive(Copy, Clone)] 
 pub struct EdwardsPoint {
     pub X: FieldElement,
     pub Y: FieldElement,
@@ -196,10 +196,10 @@ impl Debug for EdwardsPoint {
         }};", self.X, self.Y, self.Z, self.T)
     }
 }
-/*
+
 impl ConstantTimeEq for EdwardsPoint {
     fn ct_eq(&self, other: &EdwardsPoint) -> Choice {
-        self.compress().ct_eq(&other.compress())
+        AffinePoint::from(self).ct_eq(&AffinePoint::from(other))
     }
 }
 
@@ -210,7 +210,7 @@ impl PartialEq for EdwardsPoint {
 }
 
 impl Eq for EdwardsPoint {}
-*/
+
 impl Default for EdwardsPoint {
     /// Returns the default EdwardsPoint Extended Coordinates: (0, 1, 1, 0). 
     fn default() -> EdwardsPoint {
@@ -243,6 +243,27 @@ impl<'a> From<&'a ProjectivePoint> for EdwardsPoint {
             Y: &point.Y * &point.Z,
             Z: point.Z.square(),
             T: &point.X * &point.Y
+        }
+    }
+}
+
+impl<'a> From<&'a AffinePoint> for EdwardsPoint {
+    /// In affine form, each elliptic curve point has 2 coordinates, 
+    /// like (x,y). In the new projective form, 
+    /// each point will have 3 coordinates, like (X,Y,Z), 
+    /// with the restriction that Z is never zero.
+    ///  
+    /// The forward mapping is given by (x,y)→(xz,yz,z), 
+    /// for any non-zero z (usually chosen to be 1 for convenience).
+    /// 
+    /// After this is done, we move from Projective to Extended by
+    /// setting the new coordinate `T = X * Y`.
+    fn from(point: &'a AffinePoint) -> EdwardsPoint {
+        EdwardsPoint {
+            X: point.X,
+            Y: point.Y,
+            Z: FieldElement::one(),
+            T: point.X * point.Y
         }
     }
 }
@@ -344,7 +365,7 @@ impl<'a, 'b> Mul<&'b Scalar> for &'a EdwardsPoint {
     }
 }
 
-impl Mul<EdwardsPoint> for Scalar {
+impl Mul<Scalar> for EdwardsPoint {
     type Output = EdwardsPoint;
     /// Scalar multiplication: compute `Scalar * self`.
     /// This implementation uses the algorithm:
@@ -355,14 +376,13 @@ impl Mul<EdwardsPoint> for Scalar {
     /// Hankerson, Darrel; Vanstone, Scott; Menezes, Alfred (2004). 
     /// Guide to Elliptic Curve Cryptography. 
     /// Springer Professional Computing. New York: Springer-Verlag.
-    fn mul(self, point: EdwardsPoint) -> EdwardsPoint {
-        double_and_add(&point, &self)
+    fn mul(self, scalar: Scalar) -> EdwardsPoint {
+        double_and_add(&self, &scalar)
     }
 }
 
 impl<'a> Double for &'a EdwardsPoint {
     type Output = EdwardsPoint;
-    
     /// Performs the point doubling operation
     /// ie. `2*P` over the Twisted Edwards Extended
     /// Coordinates.
@@ -372,21 +392,8 @@ impl<'a> Double for &'a EdwardsPoint {
     /// http://eprint.iacr.org/2008/522, Section 3.1.
     /// Cost: 4M+ 4S+ 1D
     fn double(self) -> EdwardsPoint {
-        // This algorithm will be using point addition as base
-        // until we find out what problem are we experiencing
-        // with the doubling formulae on Extended Coords.
-        //
-        // TODO: Fix this as prio to reduce ops number.
-
         let two: FieldElement = FieldElement::from(&2u8);
-        /*
-        EdwardsPoint {
-            X: (two*(self.X*self.Y))*((two*self.Z.square()) - self.Y.square() + self.X.square()),
-            Y: (self.Y.square() -self.X)
-            Z: F * G,
-            T: E * H
-        }*/
-
+        
         let A = self.X.square();
         let B = self.Y.square();
         let C = two * self.Z.square();
@@ -402,21 +409,10 @@ impl<'a> Double for &'a EdwardsPoint {
             Z: F * G,
             T: E * H
         }
-        //self + self
     }
 }
 
 impl EdwardsPoint {
-    /// Return the `EdwardsPoint` with Extended Coordinates
-    /// eq to: {0, 0, 0, 0}.
-    pub fn zero() -> EdwardsPoint {
-        EdwardsPoint {
-            X: FieldElement::zero(),
-            Y: FieldElement::zero(),
-            Z: FieldElement::zero(),
-            T: FieldElement::zero(),
-        }
-    }
 
     /// Convert this `EdwardsPoint` on the Edwards model to the
     /// corresponding `MontgomeryPoint` on the Montgomery model.
@@ -477,7 +473,7 @@ impl EdwardsPoint {
 /// 
 /// Expressing an elliptic curve in twisted Edwards form saves time in arithmetic, 
 /// even when the same curve can be expressed in the Edwards form. 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone)]
 pub struct ProjectivePoint {
     pub X: FieldElement,
     pub Y: FieldElement,
@@ -494,6 +490,20 @@ impl Debug for ProjectivePoint {
         }};", self.X, self.Y, self.Z)
     }
 }
+
+impl ConstantTimeEq for ProjectivePoint {
+    fn ct_eq(&self, other: &ProjectivePoint) -> Choice {
+        AffinePoint::from(self).ct_eq(&AffinePoint::from(other))
+    }
+}
+
+impl PartialEq for ProjectivePoint {
+    fn eq(&self, other: &ProjectivePoint) -> bool {
+        self.ct_eq(other).unwrap_u8() == 1u8
+    }
+}
+
+impl Eq for ProjectivePoint {}
 
 impl Default for ProjectivePoint {
     /// Returns the default ProjectivePoint Extended Coordinates: (0, 1, 1). 
@@ -525,6 +535,27 @@ impl<'a> From<&'a EdwardsPoint> for ProjectivePoint {
             X: point.X,
             Y: point.Y,
             Z: point.Z
+        }
+    }
+}
+
+impl<'a> From<&'a AffinePoint> for ProjectivePoint {
+    /// The key idea of projective coordinates is that instead of 
+    /// performing every division immediately, we defer the 
+    /// divisions by multiplying them into a denominator.
+    /// 
+    /// In affine form, each elliptic curve point has 2 coordinates, 
+    /// like (x,y). In the new projective form, 
+    /// each point will have 3 coordinates, like (X,Y,Z), 
+    /// with the restriction that Z is never zero.
+    ///  
+    /// The forward mapping is given by (x,y)→(xz,yz,z), 
+    /// for any non-zero z (usually chosen to be 1 for convenience).
+    fn from(point: &'a AffinePoint) -> ProjectivePoint {
+        ProjectivePoint {
+            X: point.X,
+            Y: point.Y,
+            Z: FieldElement::one()
         }
     }
 }
@@ -563,7 +594,7 @@ impl<'a, 'b> Add<&'b ProjectivePoint> for &'a ProjectivePoint {
     /// See: https://eprint.iacr.org/2008/013.pdf - Section 6.
     #[inline]
     fn add(self, other: &'b ProjectivePoint) -> ProjectivePoint {
-        let A = self.Z + other.Z;
+        let A = self.Z * other.Z;
         let B = A.square();
         let C = self.X * other.X;
         let D = self.Y * other.Y;
@@ -745,7 +776,12 @@ impl ProjectivePoint {
 
 /// A `AffinePoint` represents a point on the Doppio Curve expressed
 /// over the Twisted Edwards Affine Coordinates also known as 
-/// cartesian coordinates: (X, Y).  
+/// cartesian coordinates: (X, Y). 
+/// 
+/// This Twisted Edwards coordinates are ONLY implemented for
+/// equalty testing, since all of the Point operations
+/// defined over them are much slower than the same ones 
+/// defined over Extended or Projective coordinates. 
 pub struct AffinePoint {
     pub X: FieldElement,
     pub Y: FieldElement
@@ -761,6 +797,100 @@ impl Debug for AffinePoint {
     }
 }
 
+impl Default for AffinePoint {
+    /// Returns the default Twisted Edwards AffinePoint Coordinates: (0, 1). 
+    fn default() -> AffinePoint {
+        AffinePoint::identity()
+    }
+}
+
+impl Identity for AffinePoint {
+    /// Returns the Edwards Point identity value = `(0, 1)`.
+    fn identity() -> AffinePoint {
+        AffinePoint {
+            X: FieldElement::zero(),
+            Y: FieldElement::one()
+        }
+    }
+}
+
+impl ConstantTimeEq for AffinePoint {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        self.X.ct_eq(&other.X) & self.Y.ct_eq(&other.Y)
+    }
+}
+
+impl PartialEq for AffinePoint {
+    fn eq(&self, other: &Self) -> bool {
+        bool::from(self.ct_eq(&other))
+    }
+}
+
+impl Eq for AffinePoint {}
+
+impl<'a> From<&'a EdwardsPoint> for AffinePoint {
+    /// Given (X:Y:Z:T) in εε, passing to affine can be 
+    /// performed in 3M+ 1I by computing:
+    /// 
+    /// First, move to Projective Coordinates by removing `T`.
+    ///  
+    /// Then, reduce the point from Projective to Affine
+    /// coordinates computing: (X*Zinv, Y*Zinv, Z*Zinv).
+    /// 
+    /// And once Z coord = `1` we can simply remove it. 
+    /// 
+    /// Twisted Edwards Curves Revisited - 
+    /// Huseyin Hisil, Kenneth Koon-Ho Wong, Gary Carter, 
+    /// and Ed Dawson.
+    fn from(point: &'a EdwardsPoint) -> AffinePoint {
+        let A = point.Z.inverse();
+        AffinePoint {
+            X: point.X * A,
+            Y: point.Y * A
+        }
+    }
+}
+
+impl<'a> From<&'a ProjectivePoint> for AffinePoint {
+    /// Reduce the point from Projective to Affine
+    /// coordinates computing: (X*Zinv, Y*Zinv, Z*Zinv).
+    /// 
+    /// And once Z coord = `1` we can simply remove it. 
+    /// 
+    /// Twisted Edwards Curves Revisited - 
+    /// Huseyin Hisil, Kenneth Koon-Ho Wong, Gary Carter, 
+    /// and Ed Dawson.
+    fn from(point: &'a ProjectivePoint) -> AffinePoint {
+        AffinePoint {
+            X: point.X * point.Z.inverse(),
+            Y: point.Y * point.Z.inverse()
+        }
+    }
+}
+
+impl<'a> Neg for &'a AffinePoint {
+    type Output = AffinePoint;
+    /// Negates an `AffinePoint` giving it as a result.
+    /// Since the negative of a point is (-X:Y), it
+    /// gives as a result: `(-X, Y)`.
+    fn neg(self) -> AffinePoint {
+       AffinePoint{
+           X: -&self.X,
+           Y:   self.Y
+       }
+    }
+}
+
+impl Neg for AffinePoint {
+    type Output = AffinePoint;
+    /// Negates an `AffinePoint` giving it as a result.
+    /// Since the negative of a point is (-X:Y), it
+    /// gives as a result: `(-X, Y)`.
+    fn neg(self) -> AffinePoint {
+        -&self
+    }
+}
+
 
 
 #[allow(dead_code)]
@@ -769,6 +899,16 @@ impl Debug for AffinePoint {
 /// Also used to check the correctness of the transformation functions.
 pub mod tests {
     use super::*;
+
+    pub(self) static P1_AFFINE: AffinePoint = AffinePoint {
+        X: FieldElement([23, 0, 0, 0, 0]),
+        Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998])
+    };
+
+    pub(self) static P2_AFFINE: AffinePoint = AffinePoint {
+        X: FieldElement([68, 0, 0, 0, 0]),
+        Y: FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]),
+    };
 
     pub(self) static P1_EXTENDED: EdwardsPoint = EdwardsPoint {
         X: FieldElement([23, 0, 0, 0, 0]),
@@ -854,18 +994,12 @@ pub mod tests {
 
     #[test]
     fn extended_point_neg() {
-        let inv_a: EdwardsPoint = EdwardsPoint{
-           X: FieldElement::minus_one(),
-           Y: FieldElement::zero(),
-           Z: FieldElement::zero(),
-           T: FieldElement::minus_one(),
-        };
-
-        let a: EdwardsPoint = EdwardsPoint{
-           X: FieldElement::one(),
-           Y: FieldElement::zero(),
-           Z: FieldElement::zero(),
-           T: FieldElement::one(),
+        let a = EdwardsPoint::default();
+        let inv_a = EdwardsPoint {
+            X: FieldElement::zero(),
+            Y: FieldElement::one(),
+            Z: FieldElement::one(),
+            T: FieldElement::zero()
         };
 
         let res = -a;
@@ -893,22 +1027,21 @@ pub mod tests {
         assert!(res == P3_EXTENDED);
     }
 
-    // Not passing
     #[test]
-    #[ignore]
     fn extended_point_doubling() {
         let res = P1_EXTENDED.double();
         
         assert!(res == P3_EXTENDED);
     }
 
-    // Not passing
     #[test]
-    #[ignore]
     fn extended_double_and_add() {
-        let res = &P1_EXTENDED * &Scalar::from(&2u8);
-        
-        assert!(res == P3_EXTENDED);
+        // Since we compute ( 8* P ) we don't need
+        // to test `mul_by_cofactor` if this passes.
+        let expect = P1_EXTENDED.double().double().double();
+        let res = P1_EXTENDED * Scalar::from(&8u8);
+
+        assert!(expect == res);
     }
 
     #[test]
@@ -931,16 +1064,11 @@ pub mod tests {
 
     #[test]
     fn projective_point_neg() {
-        let inv_a: ProjectivePoint = ProjectivePoint{
-           X: FieldElement::minus_one(),
-           Y: FieldElement::zero(),
-           Z: FieldElement::zero()
-        };
-
-        let a: ProjectivePoint = ProjectivePoint{
-           X: FieldElement::one(),
-           Y: FieldElement::zero(),
-           Z: FieldElement::zero()
+        let a = ProjectivePoint::default();
+        let inv_a = ProjectivePoint {
+            X: FieldElement::zero(),
+            Y: FieldElement::one(),
+            Z: FieldElement::one()
         };
 
         let res = -a;
@@ -954,31 +1082,28 @@ pub mod tests {
         assert!(res == ProjectivePoint::identity())
     }
 
-    // Not Passing
     #[test]
-    #[ignore]
     fn projective_point_addition() {
         let res = P1_PROJECTIVE + P2_PROJECTIVE;
         
         assert!(res == P4_PROJECTIVE);
     }
 
-    // Not Passing
     #[test]
-    #[ignore]
     fn projective_point_doubling() {
         let res = P1_PROJECTIVE.double();
 
         assert!(res == P3_PROJECTIVE);
     }
 
-    // Not Passing
     #[test]
-    #[ignore]
-    fn projective_doube_and_add() {
+    fn projective_double_and_add() {
+        // Since we compute ( 8* P ) we don't need
+        // to test `mul_by_cofactor` if this passes.
+        let expect = P1_PROJECTIVE.double().double().double();
         let res = P1_PROJECTIVE * Scalar::from(&8u8);
 
-        // Compute ( 8 P1 )
+        assert!(expect == res);
     }
 
     #[test]
@@ -997,5 +1122,28 @@ pub mod tests {
         let y_failure = FieldElement::from(&15u8);
         let p_fail = ProjectivePoint::new_from_y_coord(&y_failure, Choice::from(0u8));
         assert!(p_fail.is_none())
-    }   
+    } 
+
+    #[test]
+    fn affine_point_ct_eq() {
+        // Test true case for equalty.
+        assert!(P1_AFFINE.ct_eq(&P2_AFFINE).unwrap_u8() == 0u8);
+
+        // Test false case for equalty.
+        assert!(P1_AFFINE.ct_eq(&P1_AFFINE).unwrap_u8() == 1u8);
+
+        // After Point doubling case. Z's are different but points are equivalent.
+        assert!(AffinePoint::from(&P3_PROJECTIVE)
+            .ct_eq(&AffinePoint::from(&P1_PROJECTIVE.double())).
+            unwrap_u8() 
+        == 1u8);
+    }  
+
+    #[test]
+    fn affine_point_eq() {
+        assert!(P1_AFFINE == P1_AFFINE);
+        assert!(P1_AFFINE != P2_AFFINE);
+
+        assert!(AffinePoint::from(&P3_PROJECTIVE) == AffinePoint::from(&P1_PROJECTIVE.double()));
+    }
 }
