@@ -1178,12 +1178,18 @@ pub mod tests {
 
     #[test]
     fn point_compression() {
-        println!("{:?}", P1_EXTENDED.Y.to_bytes());
         println!("{:?}", P1_EXTENDED.compress());
         let compr = CompressedEdwardsY::from_slice(&[216, 221, 167, 21, 54, 234, 101, 84, 
                                                47, 55, 89, 137, 7, 175, 226, 87, 240, 
                                                1, 227, 18, 81, 168, 46, 95, 65, 36, 110, 
                                                118, 217, 246, 20, 140]);
         assert!(compr == P1_EXTENDED.compress());
+
+        let compr2 = CompressedEdwardsY::from_slice(&[251, 144, 188, 47, 13, 101, 118, 
+                                                    114, 201, 185, 169, 115, 255, 111, 
+                                                    40, 25, 69, 105, 170, 255, 113, 65, 
+                                                    12, 126, 170, 192, 48, 109, 112, 20, 
+                                                    221, 14]);
+        assert!(compr2 == P2_EXTENDED.compress());       
     }
 }
