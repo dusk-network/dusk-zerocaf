@@ -71,6 +71,19 @@ pub fn mul_by_pow_2<'a, 'b, T>(point: &'a T, _k: &'b u64) -> T
     point * &Scalar::two_pow_k(_k)
 }
 
+/// Gets the value of a `y-coordinate` and finds the
+/// correspponding `x^2` by solving the next equation: 
+/// `xx = (y^2 -1) / (d*y^2 -a)`. 
+/// 
+/// Note that this is an auxiliary function and shouldn't
+/// be used for anything else than the purposes mentioned
+/// avobe.
+pub(self) fn find_xx(y: &FieldElement) -> FieldElement {
+    let a = y.square() - FieldElement::one();
+    let b = (constants::EDWARDS_D * y.square()) - constants::EDWARDS_A;
+    a / b
+}
+
 
 
 // ---------------- Point Structs ---------------- //
@@ -143,7 +156,7 @@ impl Neg for CompressedEdwardsY {
 impl Identity for CompressedEdwardsY {
     /// Returns the `CompressedEdwardsY` identity point value 
     /// that corresponds to `1 (mod l)`
-    /// with the sign bit setted to `0`.
+    /// with the x-sign bit setted to `0`.
     fn identity() -> CompressedEdwardsY {
         CompressedEdwardsY([1, 0, 0, 0, 0, 0, 0, 0,
                             0, 0, 0, 0, 0, 0, 0, 0,
@@ -782,7 +795,7 @@ impl ProjectivePoint {
     }
 }
 
-/// A `AffinePoint` represents a point on the Doppio Curve expressed
+/// An `AffinePoint` represents a point on the Doppio Curve expressed
 /// over the Twisted Edwards Affine Coordinates also known as 
 /// cartesian coordinates: (X, Y). 
 /// 
