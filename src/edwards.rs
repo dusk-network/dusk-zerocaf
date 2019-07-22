@@ -447,7 +447,7 @@ impl EdwardsPoint {
         let res = find_xx(&self.Y).mod_sqrt(sign).unwrap();
 
         if res != self.X {sign = Choice::from(1u8);};
-        let mut compr = res.to_bytes();
+        let mut compr = self.Y.to_bytes();
 
         // Set the highest bit of the last byte as the symbol. 
         compr[31] |= sign.unwrap_u8() << 7;
@@ -1174,5 +1174,16 @@ pub mod tests {
         assert!(P1_AFFINE != P2_AFFINE);
 
         assert!(AffinePoint::from(&P3_PROJECTIVE) == AffinePoint::from(&P1_PROJECTIVE.double()));
+    }
+
+    #[test]
+    fn point_compression() {
+        println!("{:?}", P1_EXTENDED.Y.to_bytes());
+        println!("{:?}", P1_EXTENDED.compress());
+        let compr = CompressedEdwardsY::from_slice(&[216, 221, 167, 21, 54, 234, 101, 84, 
+                                               47, 55, 89, 137, 7, 175, 226, 87, 240, 
+                                               1, 227, 18, 81, 168, 46, 95, 65, 36, 110, 
+                                               118, 217, 246, 20, 140]);
+        assert!(compr == P1_EXTENDED.compress());
     }
 }
