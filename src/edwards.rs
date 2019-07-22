@@ -167,7 +167,7 @@ impl Identity for CompressedEdwardsY {
 
 impl CompressedEdwardsY {
     /// Construct a `CompressedEdwardsY` from a slice of bytes.
-    pub fn from_slice(bytes: &[u8]) -> CompressedEdwardsY {
+    pub(self) fn from_slice(bytes: &[u8]) -> CompressedEdwardsY {
         let mut tmp = [0u8; 32];
 
         tmp.copy_from_slice(bytes);
@@ -443,7 +443,15 @@ impl EdwardsPoint {
 
     /// Compress this point to `CompressedEdwardsY` format.
     pub fn compress(&self) -> CompressedEdwardsY {
-        unimplemented!()
+        let mut sign = Choice::from(0u8);
+        let res = find_xx(&self.Y).mod_sqrt(sign).unwrap();
+
+        if res != self.X {sign = Choice::from(1u8);};
+        let mut compr = res.to_bytes();
+
+        // Set the highest bit of the last byte as the symbol. 
+        compr[31] |= sign.unwrap_u8() << 7;
+        CompressedEdwardsY::from_slice(&compr)
     }  
 
     /// This function tries to build a Point over the Doppio Curve from
