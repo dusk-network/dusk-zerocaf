@@ -167,7 +167,16 @@ impl Identity for CompressedEdwardsY {
 
 impl CompressedEdwardsY {
     /// Construct a `CompressedEdwardsY` from a slice of bytes.
-    pub(self) fn from_slice(bytes: &[u8]) -> CompressedEdwardsY {
+    /// 
+    /// # Note:
+    /// This function should only be used to get a 
+    /// `CompressedEdwardsY` compressed point from 
+    /// a [u8; 31] that we know that is already a 
+    /// compressed point. 
+    /// 
+    /// If this function is used with y-coordinates
+    /// randomly might give errors.
+    pub fn from_slice(bytes: &[u8]) -> CompressedEdwardsY {
         let mut tmp = [0u8; 32];
 
         tmp.copy_from_slice(bytes);
@@ -182,10 +191,21 @@ impl CompressedEdwardsY {
 
     /// Attempt to decompress to an `EdwardsPoint`.
     ///
-    /// Returns `Err` if the input is not the Y-coordinate of a
+    /// Returns `None` if the input is not the Y-coordinate of a
     /// curve point.
     pub fn decompress(&self) -> Option<EdwardsPoint> {
-        unimplemented!()
+        // Get the sign of the x-coordinate.
+        let sign = Choice::from(self[31] >> 7 as u8);
+
+        // Get the y-coordinate without the high bit modified. 
+        // The max value that the 31st byte can hold is 16(1111),
+        // so we truncate it since we already have the sign.
+        let mut y = self.clone();
+        y[31] &= 0b0000_1111;
+    
+        // Try to get the x coordinate (if exists). 
+        // Otherways, return `None`. 
+        EdwardsPoint::new_from_y_coord(&FieldElement::from_bytes(&y.to_bytes()), sign)
     }
 }
 
@@ -995,7 +1015,20 @@ pub mod tests {
         Z: FieldElement([2942534902618579, 3556685217095302, 1974617438797742, 1657071371119364, 16635295697052])
     };
 
+    /// `P1_EXTENDED on `CompressedEdwardsY` format.
+    pub(self) static P1_COMPRESSED: CompressedEdwardsY = CompressedEdwardsY([216, 221, 167, 21, 54, 234, 101, 84, 47, 
+                                                                            55, 89, 137, 7, 175, 226, 87, 240, 1, 227, 
+                                                                            18, 81, 168, 46, 95, 65, 36, 110, 118, 217, 
+                                                                            246, 20, 140]);
 
+    /// `P1_EXTENDED on `CompressedEdwardsY` format.
+    pub(self) static P2_COMPRESSED: CompressedEdwardsY = CompressedEdwardsY([251, 144, 188, 47, 13, 101, 118, 
+                                                                            114, 201, 185, 169, 115, 255, 111, 
+                                                                            40, 25, 69, 105, 170, 255, 113, 65, 
+                                                                            12, 126, 170, 192, 48, 109, 112, 20, 
+                                                                            221, 14]);
+
+                                                                            
     //------------------ Tests ------------------//
 
     #[test]
@@ -1191,5 +1224,21 @@ pub mod tests {
                                                     12, 126, 170, 192, 48, 109, 112, 20, 
                                                     221, 14]);
         assert!(compr2 == P2_EXTENDED.compress());       
+    }
+
+    #[test]
+    fn point_decompression() {
+        assert!(P1_COMPRESSED.decompress().unwrap() == P1_EXTENDED);
+        assert!(P2_COMPRESSED.decompress().unwrap() == P2_EXTENDED); 
+
+        // Define a compressed point which y coordinate does not
+        // rely on the curve.
+        let fail_compr = CompressedEdwardsY::from_slice(&[251, 144, 188, 47, 13, 101, 118, 
+                                                        114, 201, 185, 169, 115, 255, 111, 
+                                                        40, 25, 69, 105, 170, 255, 113, 65, 
+                                                        12, 126, 170, 192, 48, 109, 112, 20, 
+                                                        221, 149]);
+                                             
+        assert!(fail_compr.decompress().is_none());
     }
 }
