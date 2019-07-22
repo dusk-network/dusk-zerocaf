@@ -871,7 +871,7 @@ impl ConstantTimeEq for AffinePoint {
 
 impl PartialEq for AffinePoint {
     fn eq(&self, other: &Self) -> bool {
-        bool::from(self.ct_eq(&other))
+        self.ct_eq(&other).unwrap_u8() == 1u8
     }
 }
 
