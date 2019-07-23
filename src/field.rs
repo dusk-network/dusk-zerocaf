@@ -61,8 +61,7 @@
 
 use core::cmp::PartialEq;
 
-use subtle::Choice;
-use subtle::ConstantTimeEq;
+use subtle::{Choice, ConstantTimeEq, ConditionallySelectable}; 
 
 use crate::backend;
 
@@ -90,6 +89,18 @@ impl ConstantTimeEq for FieldElement {
     /// are normalized to wire format before comparison.
     fn ct_eq(&self, other: &FieldElement) -> Choice {
         self.to_bytes().ct_eq(&other.to_bytes())
+    }
+}
+
+impl ConditionallySelectable for FieldElement {
+    fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
+        FieldElement([
+            u64::conditional_select(&a.0[0], &b.0[0], choice),
+            u64::conditional_select(&a.0[1], &b.0[1], choice),
+            u64::conditional_select(&a.0[2], &b.0[2], choice),
+            u64::conditional_select(&a.0[3], &b.0[3], choice),
+            u64::conditional_select(&a.0[4], &b.0[4], choice)
+        ])
     }
 }
 

@@ -15,6 +15,8 @@ pub trait Identity {
 }
 
 pub mod ops {
+    use subtle::Choice;
+
     /// Trait that represents the `^2` operation for any
     /// kind of element on the library. 
     /// 
@@ -58,5 +60,36 @@ pub mod ops {
         #[must_use]
         /// Returns the half of the input: `x/2`.
         fn half(self) -> Self::Output;
+    }
+
+    /// Trait that represents the modular exponentiation 
+    /// operation, ie.`a ^ b (mod l)`, for any
+    /// kind of element on the library (except points).
+    ///
+    /// This trait is implemented following the rules that
+    /// mandate over the Type that is being implemented.
+    pub trait Pow<T> {
+        type Output;
+
+        #[must_use]
+        /// Returns  `a^b (mod l)`. 
+        fn pow(self, exp: T) -> Self::Output;
+    }
+
+    pub trait ModSqrt {
+        type Output;
+
+        #[must_use]
+        /// Performs the modular Square Root operation over a finite
+        /// field ie. `sqrt(x) (mod l)`. 
+        /// 
+        /// With the given `Choice`, the impl is able to provide the 
+        /// result that corresponds to the positive or negative sign choosen.
+        /// 
+        /// # Returns 
+        /// 
+        /// `Some(symb_choosen_result)` if the input is a QR for the prime modulo.
+        /// Otherways it returns `None`
+        fn mod_sqrt(self, choice: Choice) -> Self::Output;
     }
 }

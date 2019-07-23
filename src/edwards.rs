@@ -11,8 +11,9 @@ use crate::traits::Identity;
 use crate::traits::ops::*;
 
 
-use subtle::Choice;
-use subtle::ConstantTimeEq;
+use subtle::{Choice, ConditionallySelectable, ConstantTimeEq};
+
+use rand::{Rng, thread_rng};
 
 use std::default::Default;
 use std::fmt::Debug;
@@ -70,6 +71,9 @@ pub fn mul_by_pow_2<'a, 'b, T>(point: &'a T, _k: &'b u64) -> T
     point * &Scalar::two_pow_k(_k)
 }
 
+
+
+// ---------------- Point Structs ---------------- //
 
 /// The first 255 bits of a `CompressedEdwardsY` represent the
 /// (y)-coordinate.  The high bit of the 32nd byte gives the sign of (x).
@@ -423,7 +427,41 @@ impl EdwardsPoint {
     /// Compress this point to `CompressedEdwardsY` format.
     pub fn compress(&self) -> CompressedEdwardsY {
         unimplemented!()
-    }    
+    }  
+
+    /// This function tries to build a Point over the Doppio Curve from
+    /// a `Y` coordinate and a Choice that determines the Sign o the `X`
+    /// coordinate that the user wants to use.
+    /// 
+    /// The function gets `X` by solving: 
+    /// `+-X = mod_sqrt((y^2 -1)/(dy^2 - a))`. 
+    /// 
+    /// The sign of `x` is choosen with a `Choice` parameter. 
+    /// 
+    /// For Choice(0) -> Negative result. 
+    /// For Choice(1) -> Positive result.
+    /// 
+    /// Then Z is always equal to `1`.
+    /// 
+    /// # Returns
+    /// `Some(EdwardsPoint)` if there exists a result for the `mod_sqrt`
+    /// and `None` if the resulting `x^2` isn't a QR modulo `FIELD_L`. 
+    pub fn new_from_y_coord(y: &FieldElement, sign: Choice) -> Option<EdwardsPoint> {
+        match ProjectivePoint::new_from_y_coord(&y, sign) {
+            None => return None,
+            Some(point) => return Some(EdwardsPoint::from(&point)),
+        }
+    } 
+
+    /// This function tries to build a Point over the Doppio Curve from
+    /// a random `Y` coordinate and a random Choice that determines the 
+    /// Sign o the `X` coordinate.
+    pub fn new_random_point() -> EdwardsPoint {
+        // Simply generate a random `ProjectivePoint`
+        // and once we get one that is valid, switch 
+        // it to Extended Coordinates.
+        EdwardsPoint::from(&ProjectivePoint::new_random_point())   
+    }
 }
 
 /// A `ProjectivePoint` represents a point on the Doppio Curve expressed
@@ -432,7 +470,9 @@ impl EdwardsPoint {
 /// For Z1≠0 the point (X1:Y1:Z1) represents the affine point (x1= X1/Z1, y1= Y1/Z1)
 /// on EE,a,d.
 /// Projective coordinates represent `x` `y` as `(X Y Z`) satisfying the following equations:
+/// 
 /// x=X/Z
+/// 
 /// y=Y/Z
 /// 
 /// Expressing an elliptic curve in twisted Edwards form saves time in arithmetic, 
@@ -649,6 +689,79 @@ impl<'a> Double for &'a ProjectivePoint {
     }
 }
 
+impl ProjectivePoint {
+
+    /// This function tries to build a Point over the Doppio Curve from
+    /// a `Y` coordinate and a Choice that determines the Sign o the `X`
+    /// coordinate that the user wants to use.
+    /// 
+    /// The function gets `X` by solving: 
+    /// `+-X = mod_sqrt((y^2 -1)/(dy^2 - a))`. 
+    /// 
+    /// The sign of `x` is choosen with a `Choice` parameter. 
+    /// 
+    /// For Choice(0) -> Negative result. 
+    /// For Choice(1) -> Positive result.
+    /// 
+    /// Then Z is always equal to `1`.
+    /// 
+    /// # Returns
+    /// `Some(ProjectivePoint)` if there exists a result for the `mod_sqrt`
+    /// and `None` if the resulting `x^2` isn't a QR modulo `FIELD_L`. 
+    pub fn new_from_y_coord(y: &FieldElement, sign: Choice) -> Option<ProjectivePoint> {
+        let x;
+        let xx = (y.square() - FieldElement::one()) / ((constants::EDWARDS_D * y.square()) - constants::EDWARDS_A);
+        // Match the sqrt(x) Option.
+        match xx.mod_sqrt(sign) {
+            // If we get `None`, we know that 
+            None => return None,
+            Some(_x) => x = _x,
+        };
+
+        Some(ProjectivePoint {
+            X: x,
+            Y: y.clone(),
+            Z: FieldElement::one()
+        })
+    }
+
+    /// This function tries to build a Point over the Doppio Curve from
+    /// a random `Y` coordinate and a random Choice that determines the 
+    /// Sign o the `X` coordinate.
+    pub fn new_random_point() -> ProjectivePoint {
+        // Gen a random `Y` coordinate value.
+        let y = FieldElement::generate_random();
+        // Gen a random sign choice. 
+        let sign = Choice::from(thread_rng().gen_range(0u8, 1u8));
+
+        // Until we don't get a valid `Y` value, call the
+        // function recursively.
+        match ProjectivePoint::new_from_y_coord(&y, sign) {
+            None => ProjectivePoint::new_random_point(),
+            Some(point) => return point,
+        }    
+    }
+}
+
+/// A `AffinePoint` represents a point on the Doppio Curve expressed
+/// over the Twisted Edwards Affine Coordinates also known as 
+/// cartesian coordinates: (X, Y).  
+pub struct AffinePoint {
+    pub X: FieldElement,
+    pub Y: FieldElement
+}
+
+impl Debug for AffinePoint {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "
+        AffinePoint {{
+            X: {:?},
+            Y: {:?}
+        }};", self.X, self.Y)
+    }
+}
+
+
 
 #[allow(dead_code)]
 #[cfg(test)]
@@ -799,6 +912,24 @@ pub mod tests {
     }
 
     #[test]
+    fn extended_point_generation() {
+        let y2 = FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]);
+        let p2 = EdwardsPoint::new_from_y_coord(&y2, Choice::from(0u8)).unwrap();
+
+        assert!(p2 == P2_EXTENDED); 
+
+        let y1 = FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]);
+        let p1 = EdwardsPoint::new_from_y_coord(&y1, Choice::from(1u8)).unwrap();
+
+        assert!(p1 == P1_EXTENDED);
+
+        // `A = 15` which is not a QR over the prime of the field.
+        let y_failure = FieldElement::from(&15u8);
+        let p_fail = EdwardsPoint::new_from_y_coord(&y_failure, Choice::from(0u8));
+        assert!(p_fail.is_none())
+    }
+
+    #[test]
     fn projective_point_neg() {
         let inv_a: ProjectivePoint = ProjectivePoint{
            X: FieldElement::minus_one(),
@@ -849,4 +980,22 @@ pub mod tests {
 
         // Compute ( 8 P1 )
     }
+
+    #[test]
+    fn projective_point_generation() {
+        let y2 = FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]);
+        let p2 = ProjectivePoint::new_from_y_coord(&y2, Choice::from(0u8)).unwrap();
+
+        assert!(p2 == P2_PROJECTIVE); 
+
+        let y1 = FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]);
+        let p1 = ProjectivePoint::new_from_y_coord(&y1, Choice::from(1u8)).unwrap();
+
+        assert!(p1 == P1_PROJECTIVE);
+
+        // `A = 15` which is not a QR over the prime of the field.
+        let y_failure = FieldElement::from(&15u8);
+        let p_fail = ProjectivePoint::new_from_y_coord(&y_failure, Choice::from(0u8));
+        assert!(p_fail.is_none())
+    }   
 }

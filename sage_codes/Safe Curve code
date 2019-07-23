@@ -1,8 +1,8 @@
-/// This section shows all of the proofs from their 
+/// This section shows all of the proofs from their
 /// written in line with the safecurves document.
 
-/// Here is the outline of the sage code for 
-/// the compuatation of values for proving 
+/// Here is the outline of the sage code for
+/// the compuatation of values for proving
 /// all safe curve criteria.
 /// Taken from https://safecurves.cr.yp.to/ (July, 2019)
 
@@ -22,12 +22,12 @@ def writefile(fn,s):
 
 def expand2(n):
   s = ""
-  
+ 
   while n != 0:
     j = 16
     while 2**j < abs(n): j += 1
     if 2**j - abs(n) > abs(n) - 2**(j-1): j -= 1
-  
+ 
     if abs(abs(n) - 2**j) > 2**(j - 10):
       if n > 0:
         if s != "": s += " + "
@@ -42,7 +42,7 @@ def expand2(n):
     else:
       s += " - 2^" + str(j)
       n += 2**j
-  
+ 
   return s
 
 def requirement(fn,istrue):
@@ -122,7 +122,7 @@ def verify():
 
   writefile('expand2-p','= %s\n' % expand2(p))
   writefile('expand2-l','<br>= %s\n' % expand2(l))
-  
+ 
   writefile('hex-p',hex(p) + '\n')
   writefile('hex-l',hex(l) + '\n')
   writefile('hex-x0',hex(x0) + '\n')
@@ -157,7 +157,7 @@ def verify():
     for v in V:
       while d % v == 0:
         d //= v
-	f *= factor(v)
+f *= factor(v)
     writefile('verify-cofactor','%s\n' % f)
   else:
     writefile('verify-trace','Unverified\n')
@@ -212,7 +212,7 @@ def verify():
     for v in V:
       while d % v == 0:
         d //= v
-	f *= factor(v)
+f *= factor(v)
     writefile('verify-twistcofactor','%s\n' % f)
     gcdtwistlpis1 = gcd(twistl,p) == 1
     safetwist &= requirement('verify-gcdtwistlp1',gcdtwistlpis1)
@@ -246,11 +246,11 @@ def verify():
         if d1 % v == 0: d1 //= v
         if d2 % v == 0: d2 //= v
         # best case for attack: cyclic; each power is usable
-	# also assume that kangaroo is as efficient as rho
+# also assume that kangaroo is as efficient as rho
         if v + sqrt(pi4*joint/v) < sqrt(pi4*joint):
-	  precomp += v
-	  joint /= v
-        
+ precomp += v
+ joint /= v
+       
     rho = log(precomp + sqrt(pi4 * joint))/log(2)
     writefile('verify-jointrho','%.1f\n' % rho)
     safetwist &= requirement('verify-jointrhoabove100',rho.numerical_approx() >= 100)
@@ -386,14 +386,14 @@ os.fchdir(originaldir)
 os.chdir(sys.argv[i])
 verify()
 
-## Curve Paramaters section. 
-/// The size of the prime field when Doppio is 
-/// a curve defined as E where #E(Fp), and p 
+## Curve Paramaters section.
+/// The size of the prime field when Doppio is
+/// a curve defined as E where #E(Fp), and p
 /// is the prime of the field, defined as:
 sage: p
 723700557733226221397318656304299424085711635937990760600195093828545425098
-/// also written as 
-sage: p 
+/// also written as
+sage: p
 2^252 - 27742317777372353535851937790883648493
 
 /// A montgomery form of the curve
@@ -434,6 +434,7 @@ sage: res
 /// Hexidecimal representation
 (11 : 23E4A96ED9E13AF0600EA21DB1007D9FB6E47BDD233BBBD82EB8E634305E0B1 : 1)
 
+<<<<<<< HEAD
 /// Prime order of curve, l
 sage: E
 Elliptic Curve defined by y^2 = x^3 + 346598*x^2 + x over Finite Field of size 7237005577332262213973186563042994240857116359379907606001950938285454250989
@@ -472,3 +473,6 @@ sage: t
 -148902627435123639659710695629108331700
 
 /// the principle
+=======
+/// Prime order of curve, l
+>>>>>>> a6b4da7fa363e916eeb9969ebd9693aff1adeb6a
