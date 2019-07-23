@@ -71,13 +71,26 @@ pub fn mul_by_pow_2<'a, 'b, T>(point: &'a T, _k: &'b u64) -> T
     point * &Scalar::two_pow_k(_k)
 }
 
+/// Gets the value of a `y-coordinate` and finds the
+/// correspponding `x^2` by solving the next equation: 
+/// `xx = (y^2 -1) / (d*y^2 -a)`. 
+/// 
+/// Note that this is an auxiliary function and shouldn't
+/// be used for anything else than the purposes mentioned
+/// avobe.
+pub(self) fn find_xx(y: &FieldElement) -> FieldElement {
+    let a = y.square() - FieldElement::one();
+    let b = (constants::EDWARDS_D * y.square()) - constants::EDWARDS_A;
+    a / b
+}
+
 
 
 // ---------------- Point Structs ---------------- //
 
 /// The first 255 bits of a `CompressedEdwardsY` represent the
 /// (y)-coordinate.  The high bit of the 32nd byte gives the sign of (x).
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone)]
 pub struct CompressedEdwardsY(pub [u8; 32]);
 
 impl ConstantTimeEq for CompressedEdwardsY {
@@ -85,6 +98,14 @@ impl ConstantTimeEq for CompressedEdwardsY {
         self.to_bytes().ct_eq(&other.to_bytes())
     }
 }
+
+impl PartialEq for CompressedEdwardsY {
+    fn eq(&self, other: &CompressedEdwardsY) -> bool {
+        self.ct_eq(&other).unwrap_u8() == 1u8
+    }
+}
+
+impl Eq for CompressedEdwardsY {}
 
 impl Index<usize> for CompressedEdwardsY {
     type Output = u8;
@@ -135,7 +156,7 @@ impl Neg for CompressedEdwardsY {
 impl Identity for CompressedEdwardsY {
     /// Returns the `CompressedEdwardsY` identity point value 
     /// that corresponds to `1 (mod l)`
-    /// with the sign bit setted to `0`.
+    /// with the x-sign bit setted to `0`.
     fn identity() -> CompressedEdwardsY {
         CompressedEdwardsY([1, 0, 0, 0, 0, 0, 0, 0,
                             0, 0, 0, 0, 0, 0, 0, 0,
@@ -146,6 +167,15 @@ impl Identity for CompressedEdwardsY {
 
 impl CompressedEdwardsY {
     /// Construct a `CompressedEdwardsY` from a slice of bytes.
+    /// 
+    /// # Note:
+    /// This function should only be used to get a 
+    /// `CompressedEdwardsY` compressed point from 
+    /// a [u8; 31] that we know that is already a 
+    /// compressed point. 
+    /// 
+    /// If this function is used with y-coordinates
+    /// randomly might give errors.
     pub fn from_slice(bytes: &[u8]) -> CompressedEdwardsY {
         let mut tmp = [0u8; 32];
 
@@ -161,10 +191,21 @@ impl CompressedEdwardsY {
 
     /// Attempt to decompress to an `EdwardsPoint`.
     ///
-    /// Returns `Err` if the input is not the Y-coordinate of a
+    /// Returns `None` if the input is not the Y-coordinate of a
     /// curve point.
     pub fn decompress(&self) -> Option<EdwardsPoint> {
-        unimplemented!()
+        // Get the sign of the x-coordinate.
+        let sign = Choice::from(self[31] >> 7 as u8);
+
+        // Get the y-coordinate without the high bit modified. 
+        // The max value that the 31st byte can hold is 16(1111),
+        // so we truncate it since we already have the sign.
+        let mut y = self.clone();
+        y[31] &= 0b0000_1111;
+    
+        // Try to get the x coordinate (if exists). 
+        // Otherways, return `None`. 
+        EdwardsPoint::new_from_y_coord(&FieldElement::from_bytes(&y.to_bytes()), sign)
     }
 }
 
@@ -422,7 +463,15 @@ impl EdwardsPoint {
 
     /// Compress this point to `CompressedEdwardsY` format.
     pub fn compress(&self) -> CompressedEdwardsY {
-        unimplemented!()
+        let mut sign = Choice::from(0u8);
+        let res = find_xx(&self.Y).mod_sqrt(sign).unwrap();
+
+        if res != self.X {sign = Choice::from(1u8);};
+        let mut compr = self.Y.to_bytes();
+
+        // Set the highest bit of the last byte as the symbol. 
+        compr[31] |= sign.unwrap_u8() << 7;
+        CompressedEdwardsY::from_slice(&compr)
     }  
 
     /// This function tries to build a Point over the Doppio Curve from
@@ -774,7 +823,7 @@ impl ProjectivePoint {
     }
 }
 
-/// A `AffinePoint` represents a point on the Doppio Curve expressed
+/// An `AffinePoint` represents a point on the Doppio Curve expressed
 /// over the Twisted Edwards Affine Coordinates also known as 
 /// cartesian coordinates: (X, Y). 
 /// 
@@ -822,7 +871,7 @@ impl ConstantTimeEq for AffinePoint {
 
 impl PartialEq for AffinePoint {
     fn eq(&self, other: &Self) -> bool {
-        bool::from(self.ct_eq(&other))
+        self.ct_eq(&other).unwrap_u8() == 1u8
     }
 }
 
@@ -966,7 +1015,20 @@ pub mod tests {
         Z: FieldElement([2942534902618579, 3556685217095302, 1974617438797742, 1657071371119364, 16635295697052])
     };
 
+    /// `P1_EXTENDED on `CompressedEdwardsY` format.
+    pub(self) static P1_COMPRESSED: CompressedEdwardsY = CompressedEdwardsY([216, 221, 167, 21, 54, 234, 101, 84, 47, 
+                                                                            55, 89, 137, 7, 175, 226, 87, 240, 1, 227, 
+                                                                            18, 81, 168, 46, 95, 65, 36, 110, 118, 217, 
+                                                                            246, 20, 140]);
 
+    /// `P1_EXTENDED on `CompressedEdwardsY` format.
+    pub(self) static P2_COMPRESSED: CompressedEdwardsY = CompressedEdwardsY([251, 144, 188, 47, 13, 101, 118, 
+                                                                            114, 201, 185, 169, 115, 255, 111, 
+                                                                            40, 25, 69, 105, 170, 255, 113, 65, 
+                                                                            12, 126, 170, 192, 48, 109, 112, 20, 
+                                                                            221, 14]);
+
+                                                                            
     //------------------ Tests ------------------//
 
     #[test]
@@ -1145,5 +1207,38 @@ pub mod tests {
         assert!(P1_AFFINE != P2_AFFINE);
 
         assert!(AffinePoint::from(&P3_PROJECTIVE) == AffinePoint::from(&P1_PROJECTIVE.double()));
+    }
+
+    #[test]
+    fn point_compression() {
+        println!("{:?}", P1_EXTENDED.compress());
+        let compr = CompressedEdwardsY::from_slice(&[216, 221, 167, 21, 54, 234, 101, 84, 
+                                               47, 55, 89, 137, 7, 175, 226, 87, 240, 
+                                               1, 227, 18, 81, 168, 46, 95, 65, 36, 110, 
+                                               118, 217, 246, 20, 140]);
+        assert!(compr == P1_EXTENDED.compress());
+
+        let compr2 = CompressedEdwardsY::from_slice(&[251, 144, 188, 47, 13, 101, 118, 
+                                                    114, 201, 185, 169, 115, 255, 111, 
+                                                    40, 25, 69, 105, 170, 255, 113, 65, 
+                                                    12, 126, 170, 192, 48, 109, 112, 20, 
+                                                    221, 14]);
+        assert!(compr2 == P2_EXTENDED.compress());       
+    }
+
+    #[test]
+    fn point_decompression() {
+        assert!(P1_COMPRESSED.decompress().unwrap() == P1_EXTENDED);
+        assert!(P2_COMPRESSED.decompress().unwrap() == P2_EXTENDED); 
+
+        // Define a compressed point which y coordinate does not
+        // rely on the curve.
+        let fail_compr = CompressedEdwardsY::from_slice(&[251, 144, 188, 47, 13, 101, 118, 
+                                                        114, 201, 185, 169, 115, 255, 111, 
+                                                        40, 25, 69, 105, 170, 255, 113, 65, 
+                                                        12, 126, 170, 192, 48, 109, 112, 20, 
+                                                        221, 149]);
+                                             
+        assert!(fail_compr.decompress().is_none());
     }
 }
