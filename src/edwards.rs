@@ -60,11 +60,11 @@
 //! // By compressing an `EdwardsPoint`: 
 //! let cp_point = rngp.compress();
 //! // Note that you can get your EdwardsPoint back just by doing:
-//! let decompr_point = &c._point.decompress().unwrap();
+//! let decompr_point = &cp_point.decompress().unwrap();
 //! 
 //! // You can also get a compressed point by copying it from a 
 //! // slice of bytes (as if it came from a socket or similar situations).
-//! let cpedw = CompressedEdwardsY::from_slice(cp_point.to_bytes()); 
+//! let cpedw = CompressedEdwardsY::from_slice(&cp_point.to_bytes()); 
 //! ```
 
 use crate::field::FieldElement;
@@ -75,7 +75,7 @@ use crate::traits::Identity;
 use crate::traits::ops::*;
 
 
-use subtle::{Choice, ConditionallySelectable, ConstantTimeEq};
+use subtle::{Choice, ConstantTimeEq};
 
 use rand::{Rng, thread_rng};
 
