@@ -488,7 +488,10 @@ impl FieldElement {
 
     /// Evaluate if a `FieldElement` is even or not.
     pub fn is_even(self) -> bool {
-        self.0[0].is_even()
+        // Compare the last bit of the first limb to check evenness.
+        // 0b0 -> true
+        // 0b1 -> false
+        self.0[0] & 0b01 == 0u64
     }
 
     pub fn generate_random() -> FieldElement {
@@ -1516,5 +1519,13 @@ pub mod tests {
         for i in 0..5 {
             assert!(res[i] == INV_MOD_C[i]);
         }
+    }
+
+    #[test]
+    fn evenness() {
+        // Even number should return true.
+        assert!(A.is_even());
+        // Odd number should return false.
+        assert!(!B.is_even());
     }
 }

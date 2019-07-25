@@ -123,7 +123,7 @@ mod scalar_benches {
 mod edwards_benches {
 
     use super::*;
-    use zerocaf::edwards::{EdwardsPoint, ProjectivePoint};
+    use zerocaf::edwards::{EdwardsPoint, ProjectivePoint, CompressedEdwardsY};
     use zerocaf::scalar::Scalar;
     use zerocaf::field::FieldElement;
     use subtle::Choice;
@@ -158,6 +158,12 @@ mod edwards_benches {
 
     /// `A = 182687704666362864775460604089535377456991567872`.
     pub static A: Scalar = Scalar([0, 0, 0, 2, 0]);
+
+    /// `P1_EXTENDED on `CompressedEdwardsY` format.
+    pub(self) static P1_COMPRESSED: CompressedEdwardsY = CompressedEdwardsY([216, 221, 167, 21, 54, 234, 101, 84, 47, 
+                                                                            55, 89, 137, 7, 175, 226, 87, 240, 1, 227, 
+                                                                            18, 81, 168, 46, 95, 65, 36, 110, 118, 217, 
+                                                                            246, 20, 140]);
 
     pub fn bench_extended_point_ops(c: &mut Criterion) {
         c.bench(
@@ -213,6 +219,20 @@ mod edwards_benches {
                 Choice::from(1u8))))
         );
     }
+
+    pub fn bench_point_compression_decompression(c: &mut Criterion) {
+        c.bench(
+            "Compress/Decompress",
+            Benchmark::new("Point compression.",
+            |b| b.iter(|| P1_EXTENDED.compress()))
+        );
+
+        c.bench(
+            "Compress/Decompress",
+            Benchmark::new("Point decompression.",
+            |b| b.iter(|| P1_COMPRESSED.decompress().unwrap()))
+        );
+    }
 }
 
 criterion_group!(benchmarks, 
@@ -220,6 +240,7 @@ criterion_group!(benchmarks,
                 field_benches::bench_modular_inverse,
                 scalar_benches::bench_scalar_element_ops,
                 edwards_benches::bench_extended_point_ops,
-                edwards_benches::bench_projective_point_ops);
+                edwards_benches::bench_projective_point_ops,
+                edwards_benches::bench_point_compression_decompression);
 //criterion_group!(benchmarks, field_benches::bench_modular_inverse);
 criterion_main!(benchmarks);

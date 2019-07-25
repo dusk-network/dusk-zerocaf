@@ -2,6 +2,70 @@
 //! Edwards Point operation implementations and definitions.
 //! Encoding/decoding processes implementations
 //! and support for all kind of interactions with them.
+//! 
+//! # Examples
+//! ```rust
+//! use zerocaf::edwards::*;
+//! use zerocaf::traits::ops::*;
+//! use zerocaf::traits::Identity;
+//! use zerocaf::field::FieldElement;
+//! use zerocaf::scalar::Scalar;
+//! 
+//! use subtle::Choice;
+//! use core::ops::{Add, Sub, Mul};
+//! 
+//! // You can work in different point coordinates like
+//! // Affine, Projective and Extended ones.
+//! // 
+//! // It's highly recommended to work over Extended ones
+//! // since are the fastest. And the ones you can compress
+//! // directly.
+//! 
+//! // In order to get a Point over the Doppio curve, 
+//! // you can do the following: 
+//! 
+//! // From a y-coordinate of a point: 
+//! let y = FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]);
+//! // The `Choice` specifies the symbol that we want to get as a result
+//! // for the `x-coordinate`.
+//! let ex_point = EdwardsPoint::new_from_y_coord(&y, Choice::from(0u8)).unwrap();
+//! 
+//! // Create a random point. 
+//! let rngp = EdwardsPoint::new_random_point();
+//! 
+//! // Get it from an AffinePoint or a ProjectivePoint: 
+//! let exampl = EdwardsPoint::from(&ProjectivePoint::identity());
+//! 
+//! // The same examples work for the ProjectivePoint struct. 
+//! 
+//! // You can perform the following operations with an EdwardsPoint
+//! // or a ProjectivePoint: 
+//! 
+//! // Point addition:
+//! let p1 = &ex_point + &rngp;
+//! // Point subtraction (which is a point negation and a sum): 
+//! let p2 = &ex_point - &rngp;
+//! // Point doubling: 
+//! let p3 = &ex_point.double();
+//! // Scalar mul:
+//! let p4 = double_and_add(&ex_point, &Scalar::from(&8u8));
+//! 
+//! // You can also multiply by the co-factor directly: 
+//! assert!(p4 == mul_by_cofactor(&ex_point));
+//! 
+//! // In order to send points saving space, you can use
+//! // compressed points, repressented as: `CompressedEwdardsY`. 
+//! 
+//! // The only ways of getting a `CompressedEdwardsY` are: 
+//! // By compressing an `EdwardsPoint`: 
+//! let cp_point = rngp.compress();
+//! // Note that you can get your EdwardsPoint back just by doing:
+//! let decompr_point = &cp_point.decompress().unwrap();
+//! 
+//! // You can also get a compressed point by copying it from a 
+//! // slice of bytes (as if it came from a socket or similar situations).
+//! let cpedw = CompressedEdwardsY::from_slice(&cp_point.to_bytes()); 
+//! ```
 
 use crate::field::FieldElement;
 use crate::scalar::Scalar;
@@ -11,7 +75,7 @@ use crate::traits::Identity;
 use crate::traits::ops::*;
 
 
-use subtle::{Choice, ConditionallySelectable, ConstantTimeEq};
+use subtle::{Choice, ConstantTimeEq};
 
 use rand::{Rng, thread_rng};
 
@@ -171,7 +235,7 @@ impl CompressedEdwardsY {
     /// # Note:
     /// This function should only be used to get a 
     /// `CompressedEdwardsY` compressed point from 
-    /// a [u8; 31] that we know that is already a 
+    /// a [u8; 32] that we know that is already a 
     /// compressed point. 
     /// 
     /// If this function is used with y-coordinates
