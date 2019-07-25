@@ -281,7 +281,6 @@ impl Mul<FieldElement> for FieldElement {
     }
 }
 
-
 impl<'a,'b> Div<&'a FieldElement> for &'b FieldElement {
     type Output = FieldElement;
     /// Performs the op: `x / y (mod l)`. 
@@ -308,7 +307,6 @@ impl Div<FieldElement> for FieldElement {
         &self * &_rhs.inverse()
     }
 }
-
 
 impl<'a> Square for &'a FieldElement {
     type Output = FieldElement;

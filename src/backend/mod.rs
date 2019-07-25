@@ -1,9 +1,8 @@
-
 //! This contains the different backend implementations: `u64` and further comming ones. .
 //! 
 //! On this module you can find the different implementations
 //! done for Finite Fields mathematical-backends.
-
+#[cfg(not(any(feature = "u64_backend")))]
 /// The u64 backend contains the implementation of all of the 
 /// mathematical base eg. Arithmetics over Finite Fields with 
 /// a design specially thought out 64-bit architectures.
