@@ -52,6 +52,19 @@
 //! 
 //! // You can also multiply by the co-factor directly: 
 //! assert!(p4 == mul_by_cofactor(&ex_point));
+//! 
+//! // In order to send points saving space, you can use
+//! // compressed points, repressented as: `CompressedEwdardsY`. 
+//! 
+//! // The only ways of getting a `CompressedEdwardsY` are: 
+//! // By compressing an `EdwardsPoint`: 
+//! let cp_point = rngp.compress();
+//! // Note that you can get your EdwardsPoint back just by doing:
+//! let decompr_point = &c._point.decompress().unwrap();
+//! 
+//! // You can also get a compressed point by copying it from a 
+//! // slice of bytes (as if it came from a socket or similar situations).
+//! let cpedw = CompressedEdwardsY::from_slice(cp_point.to_bytes()); 
 //! ```
 
 use crate::field::FieldElement;
@@ -222,7 +235,7 @@ impl CompressedEdwardsY {
     /// # Note:
     /// This function should only be used to get a 
     /// `CompressedEdwardsY` compressed point from 
-    /// a [u8; 31] that we know that is already a 
+    /// a [u8; 32] that we know that is already a 
     /// compressed point. 
     /// 
     /// If this function is used with y-coordinates
