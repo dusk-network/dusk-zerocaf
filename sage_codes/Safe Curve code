@@ -434,7 +434,6 @@ sage: res
 /// Hexidecimal representation
 (11 : 23E4A96ED9E13AF0600EA21DB1007D9FB6E47BDD233BBBD82EB8E634305E0B1 : 1)
 
-<<<<<<< HEAD
 /// Prime order of curve, l
 sage: E
 Elliptic Curve defined by y^2 = x^3 + 346598*x^2 + x over Finite Field of size 7237005577332262213973186563042994240857116359379907606001950938285454250989
@@ -473,6 +472,3 @@ sage: t
 -148902627435123639659710695629108331700
 
 /// the principle
-=======
-/// Prime order of curve, l
->>>>>>> a6b4da7fa363e916eeb9969ebd9693aff1adeb6a
