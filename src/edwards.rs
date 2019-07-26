@@ -1,7 +1,9 @@
 #![allow(non_snake_case)]
-//! Edwards Point operation implementations and definitions.
-//! Encoding/decoding processes implementations
-//! and support for all kind of interactions with them.
+//! Edwards Point operations and their implementations are 
+//! shown with the corresponding definitions.
+//! Encoding/decoding process implementations are shown, 
+//! as is support for all kind of interactions which apply
+//! each of the processes.
 //! 
 //! # Examples
 //! ```rust
@@ -14,17 +16,19 @@
 //! use subtle::Choice;
 //! use core::ops::{Add, Sub, Mul};
 //! 
-//! // You can work in different point coordinates like
-//! // Affine, Projective and Extended ones.
+//! // You can work in different point coordinates, such as:
+//! // Affine, Projective or Extended.
 //! // 
-//! // It's highly recommended to work over Extended ones
-//! // since are the fastest. And the ones you can compress
-//! // directly.
+//! // It's highly recommended to work using the Extended cooridnates,
+//! // for defined curves such as as the one in Zerocaf,
+//! // as they they allow for the fastest known arithmetic operations.
+//! // Additionally, they formats can be directly compressed from just
+//! // a singluar coordinate.  
 //! 
-//! // In order to get a Point over the Doppio curve, 
+//! // In order to produce a point over the Doppio curve, 
 //! // you can do the following: 
 //! 
-//! // From a y-coordinate of a point: 
+//! // From the y-coordinate of a point: 
 //! let y = FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]);
 //! // The `Choice` specifies the symbol that we want to get as a result
 //! // for the `x-coordinate`.
@@ -33,8 +37,7 @@
 //! // Create a random point. 
 //! let rngp = EdwardsPoint::new_random_point();
 //! 
-//! // Get it from an AffinePoint or a ProjectivePoint: 
-//! let exampl = EdwardsPoint::from(&ProjectivePoint::identity());
+//! let example = EdwardsPoint::from(&ProjectivePoint::identity());
 //! 
 //! // The same examples work for the ProjectivePoint struct. 
 //! 
@@ -50,13 +53,13 @@
 //! // Scalar mul:
 //! let p4 = double_and_add(&ex_point, &Scalar::from(&8u8));
 //! 
-//! // You can also multiply by the co-factor directly: 
+//! // You can also multiply by the cofactor directly: 
 //! assert!(p4 == mul_by_cofactor(&ex_point));
 //! 
-//! // In order to send points saving space, you can use
-//! // compressed points, repressented as: `CompressedEwdardsY`. 
+//! // In order to send points for saving space, you can use
+//! // compressed points, whih are repressented as: `CompressedEwdardsY`. 
 //! 
-//! // The only ways of getting a `CompressedEdwardsY` are: 
+//! // The only means of obtaining a `CompressedEdwardsY` is: 
 //! // By compressing an `EdwardsPoint`: 
 //! let cp_point = rngp.compress();
 //! // Note that you can get your EdwardsPoint back just by doing:
