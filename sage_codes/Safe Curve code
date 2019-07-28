@@ -504,4 +504,15 @@ sage: t
 /// 2^3. 
 
 /// As the curves has birational equiavalence from two different curve forms, 
-/// it must have twist security. 
+/// it must have twist security. The curve is required to remain secure for 
+/// any DH protocol, even when the embedding degree of the DLP is >12. 
+/// Even if:
+/// Bob chooses n only up to ℓ;
+/// Bob does not multiply n by the cofactor h for the original curve;
+/// Bob does not multiply n by the cofactor h' for the twist; and
+/// Bob does not bother to check whether incoming points are on the original curve.
+
+/// The cost of combined attacks that use small-subgroup attacks as described above,
+/// must together exceed level at least 2^100. If both cofactors are very small then 
+/// the security level here is close to the standard rho security level.
+
