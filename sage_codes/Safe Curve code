@@ -493,3 +493,15 @@ sage: t
 /// The short Weierstrass Models, like those used inside zerocaf, must permit affine 
 /// co-ordinates, as X(P) & Y(P). The greatest security advantage of an admitted montgomery 
 /// ladder are the performance of operations in constant time. 
+/// urves to support simple, fast, constant-time single-coordinate single-scalar multiplication, 
+/// avoiding conflicts between simplicity, efficiency, and security.
+
+/// Another aspect of safe curve criteria is the birational equivalevce 
+/// between a montgomery curve and twisted edwards. 
+
+/// For each montgomery curve there must be a cofactor h, group order n, 
+/// divides the sub group order p in that n/p = h. The doppio cuvre has cofactor
+/// 2^3. 
+
+/// As the curves has birational equiavalence from two different curve forms, 
+/// it must have twist security. 
