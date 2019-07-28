@@ -471,4 +471,25 @@ sage: t = q+1-P
 sage: t
 -148902627435123639659710695629108331700
 
-/// the principle
+/// If s^2 is the largest square dividing t^2-4p then (t^2-4p)/s^2 is a squarefree negative integer. 
+/// Define D as (t^2-4p)/s^2 if (t^2-4p)/s^2 mod 4 = 1, otherwise as 4(t^2-4p)/s^2. 
+/// SafeCurves requires the absolute value of this complex-multiplication field discriminant D to be larger than 2^100.
+/// To check for the CM field discriminant, we can calculate this 
+/// using the following formula: 
+
+
+/// For a curve to be Fully rigid: The curve-generation process is completely explained. 
+/// Consider, for example, a curve-generation process that takes primes larger than 
+/// 2^224 for (explained) security reasons, takes the smallest prime larger than 2^224 for (explained) efficiency reasons, 
+/// takes the curve shape y^2=x^3-3x+b for (explained) efficiency reasons, 
+/// and takes the smallest positive integer b meeting various (explained) security criteria. 
+/// This provides the maximum available protection against malicious curve generators: the only possible flexibility 
+/// for the curve generator is in the choice of security and efficiency criteria, 
+/// and one expects public research to produce convergence on those criteria.
+
+/// The most important aspect of a elliptic curve cryptography, is the admittance
+/// of a montgomery ladder. The montgomery form of curves admits multiplication using 
+/// only one co-ordinate, the x co-ordinate. 
+/// The short Weierstrass Models, like those used inside zerocaf, must permit affine 
+/// co-ordinates, as X(P) & Y(P). The greatest security advantage of an admitted montgomery 
+/// ladder are the performance of operations in constant time. 
