@@ -168,5 +168,6 @@ pub mod constants;
 pub mod edwards;
 pub mod field;
 pub mod montgomery;
+pub mod ristretto;
 pub mod scalar;
 pub mod traits;
