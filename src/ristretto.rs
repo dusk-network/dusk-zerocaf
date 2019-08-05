@@ -25,6 +25,18 @@ impl Index<usize> for CompressedRistretto {
     }
 }
 
+impl ConstantTimeEq for CompressedRistretto {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        self.as_bytes().ct_eq(&other.as_bytes())
+    }
+}
+
+impl CompressedRistretto {
+    fn as_bytes(&self) -> [u8; 32] {
+        self.0
+    }
+}
+
 
 pub struct RistrettoPoint (pub(crate) EdwardsPoint);
 
