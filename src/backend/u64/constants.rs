@@ -7,6 +7,9 @@ use crate::backend::u64::scalar::Scalar;
 /// `L` is the order of base point for Doppio, in this case it is equivalent to 2^249 - 15145038707218910765482344729778085401
 pub const L: Scalar = Scalar([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370495, 2199023255551]);
 
+/// `(L - 1) / 2` used to check positiveness of a `FieldElement` on the Decaf paper. 
+pub(crate) const POS_RANGE: FieldElement = FieldElement([2587757230352886, 4210131976237760, 683900, 0, 8796093022208]);
+
 /// Scalar-LFACTOR is the value that satisfies the equation: `L * LFACTOR = -1 (mod 2^52)`
 /// In this case, `LFACTOR` is the one used for the Montgomery Reduction algorithm,
 /// implemented on Scalar Arithmetics module.
