@@ -530,13 +530,13 @@ impl FieldElement {
     /// the Decaf paper criteria.
     /// 
     /// Returns: 
-    /// `Choice(0)` if pos.
-    /// `Choice(1)` if neg.
+    /// `Choice(1)` if pos.
+    /// `Choice(0)` if neg.
     pub fn is_positive(&self) -> Choice {
         if self > &FieldElement::zero() && self < &constants::POS_RANGE {
-            return Choice::from(0)
+            return Choice::from(1)
         }
-        Choice::from(1)
+        Choice::from(0)
     }
 
     /// Load a `FieldElement` from the low 253b bits of a 256-bit
