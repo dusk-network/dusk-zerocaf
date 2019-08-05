@@ -526,6 +526,19 @@ impl FieldElement {
         res.inner_half()
     }
 
+    /// Checks if a ´FieldElement` is considered negative following
+    /// the Decaf paper criteria.
+    /// 
+    /// Returns: 
+    /// `Choice(0)` if pos.
+    /// `Choice(1)` if neg.
+    pub fn is_positive(&self) -> Choice {
+        if self > &FieldElement::zero() && self < &constants::POS_RANGE {
+            return Choice::from(0)
+        }
+        Choice::from(1)
+    }
+
     /// Load a `FieldElement` from the low 253b bits of a 256-bit
     /// input. So Little Endian representation in bytes of a FieldElement.
     // @TODO: Macro for Inline load8 function as it has variadic arguments.
