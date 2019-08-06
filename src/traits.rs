@@ -92,4 +92,17 @@ pub mod ops {
         /// Otherways it returns `None`
         fn mod_sqrt(self, choice: Choice) -> Self::Output;
     }
+
+    pub trait InvSqrt {
+        type Output;
+
+        #[must_use]
+        /// Performs the Inverse Square root as it's defined on the
+        /// Ristretto paper.
+        /// 
+        /// This operation returns always the positive result of the
+        /// modular sqrt, understanding positive as the definition that
+        /// appears on the Decaf paper: 0 < result < (P - 1)/2.  
+        fn inv_sqrt(self) -> Self::Output;
+    }
 }
