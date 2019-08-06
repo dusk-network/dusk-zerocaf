@@ -16,7 +16,7 @@ use std::cmp::{PartialOrd, Ordering, Ord};
 use core::ops::{Index, IndexMut};
 use core::ops::{Add, Sub, Mul, Div, Neg};
 
-use subtle::{Choice, ConstantTimeEq, ConditionallySelectable};
+use subtle::{Choice, ConstantTimeEq, ConditionallySelectable, ConditionallyNegatable};
 
 use num::Integer;
 
@@ -460,6 +460,34 @@ impl<'a> ModSqrt for &'a FieldElement {
         };
 
         Some(FieldElement::conditional_select(&x, &(constants::FIELD_L - x), sign))
+    }
+}
+
+impl InvSqrt for FieldElement {
+    type Output = Option<FieldElement>;
+    /// Solves the inverse square root operation according the 
+    /// specs of the Ristretto paper.
+    /// 
+    /// # Returns:
+    /// 
+    /// - `Some(FieldElement)` if `self` is a QR. 
+    /// 
+    /// - `None` if `self` is not a QR.
+    fn inv_sqrt(self) -> Option<FieldElement> {
+        // Perform the sqrt(self) and get `x` as the result.
+        // We choose `x` and not `FIELD_L - x` by providing `Choice(0)`.
+        // 
+        // Then we evaluate if `x` is positive eg. pertains to the range: 
+        // `(0 , (P-1)/2 )` as it's specified on Decaf paper. And we 
+        // negate `x` if it's negative, otherways, we return it directly. 
+        let res = match self.mod_sqrt(Choice::from(0u8)) {
+            None => return None,
+            Some(mut x) => { 
+                x.conditional_negate(!x.is_positive());
+                x
+            },
+        };
+        Some(res)
     }
 }
 
