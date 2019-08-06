@@ -478,13 +478,13 @@ impl InvSqrt for FieldElement {
         // We choose `x` and not `FIELD_L - x` by providing `Choice(0)`.
         // 
         // Then we evaluate if `x` is positive eg. pertains to the range: 
-        // `(0 , (P-1)/2 )` as it's specified on Decaf paper. And we 
+        // `(0 , (P-1)/2)` as it's specified on Decaf paper. And we 
         // negate `x` if it's negative, otherways, we return it directly. 
         let res = match self.mod_sqrt(Choice::from(0u8)) {
             None => return None,
             Some(mut x) => { 
                 x.conditional_negate(!x.is_positive());
-                x
+                x.inverse()
             },
         };
         Some(res)
@@ -1164,6 +1164,9 @@ pub mod tests {
     /// `Sqrt(17) (mod l) pos result = 1210063247825323154119784235673958745762705331988512749662665422810815404662`. 
     pub static SQRT1_27_POS: FieldElement = FieldElement([4241781353880182, 446376444288682, 1611704926541382, 666649792406303, 2941500811873]);
 
+    /// `InvSqrt(27) (mod l)` = `2550039549958644956196165539947333180180329298918865729572087148196551363777`.
+    pub static INV_SQRT_27: FieldElement = FieldElement([2352169988867884, 2446401460527425, 986927416739735, 989222758354178, 11393383279360]);
+
 
     //------------------ Tests ------------------//
 
@@ -1318,6 +1321,14 @@ pub mod tests {
         assert!(sqrt_zero == FieldElement::zero());
         let sqrt_zero = FieldElement::zero().mod_sqrt(Choice::from(1u8)).unwrap();
         assert!(sqrt_zero == FieldElement::zero()); 
+    }
+
+    #[test]
+    fn inv_sqrt() {
+        let var = FieldElement::from(&27u8);
+        let res = var.inv_sqrt().unwrap();
+        println!("{:?}", res);
+        assert!(res == INV_SQRT_27);
     }
 
     #[test]
