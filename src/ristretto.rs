@@ -103,3 +103,37 @@ impl CompressedRistretto {
 
 pub struct RistrettoPoint (pub(crate) EdwardsPoint);
 
+impl RistrettoPoint {
+    /// Encode a Ristretto point represented by the point `(X:Y:Z:T)`
+    /// in extended coordinates. 
+    #[allow(non_snake_case)]
+    pub fn compress(&self) -> CompressedRistretto {
+        let u1 = (self.0.Z + self.0.Y) * (self.0.Z - self.0.Y);
+        let u2 = self.0.X * self.0.Y;
+        let I = (u1 * u2).mod_sqrt(Choice::from(1u8)).unwrap().inverse();
+        let D1 = u1 * I;
+        let D2 = u2 * I;
+        let Zinv = D1 * D2 * self.0.T;
+        let mut xy;
+        let mut D;
+        if (self.0.T * Zinv).is_positive().unwrap_u8() == 0u8 {
+            // Research about the +- sign choosing. 
+            xy = 
+                ((self.0.Y *(FieldElement::one() / FieldElement::minus_one().mod_sqrt(Choice::from(1u8)).unwrap())),
+                self.0.X * FieldElement::minus_one().mod_sqrt(Choice::from(1u8)).unwrap());
+            D = D1 / (constants::EDWARDS_A - constants::EDWARDS_D).mod_sqrt(Choice::from(1u8)).unwrap();
+        } else {
+            xy = (self.0.X, self.0.Y);
+            D = D2;
+        };
+
+        xy.1.conditional_negate(!(xy.0*Zinv).is_positive());
+        // We are on the Twisted case, so a = -1. 
+        // Then s = ABS((Z-Y) * D)
+        let mut s = (self.0.Z - xy.1) * D;
+        s.conditional_negate(!s.is_positive());
+
+        CompressedRistretto(s.to_bytes()) 
+    }
+}
+
