@@ -87,6 +87,8 @@ sage:         z += 1
 sage: prime_mod_sqrt(y,p)
 [5464794816676661649783249706827271879994893912039750480019443499440603127256,
 1772210760655600564189936856215722360862222447340157125982507438844851123733]
+/// The assumption from above is to take x, and not p-x as the postive value 
+/// when computing the modular square root. 
 
 /// Using formulae from (http://eprint.iacr.org/2008/522), Section 3.1., compute T.
 /// Set initial Z = 1
