@@ -111,6 +111,25 @@ impl CompressedRistretto {
 
 pub struct RistrettoPoint (pub(crate) EdwardsPoint);
 
+impl ConstantTimeEq for RistrettoPoint {
+    /// As specified on the Ristretto protocol docs: 
+    /// https://ristretto.group/formulas/equality.html
+    /// and we are on the twisted case, we compare 
+    /// X1*Y2 == Y1*X2. 
+    fn ct_eq(&self, other: &RistrettoPoint) -> Choice {
+        (self.0.X * other.0.Y).to_bytes().ct_eq(
+            &(self.0.Y * other.0.X).to_bytes())
+    }
+}
+
+impl PartialEq for RistrettoPoint {
+    fn eq(&self, other: &RistrettoPoint) -> bool {
+        self.ct_eq(other).unwrap_u8() == 1u8      
+    }
+}
+
+impl Eq for RistrettoPoint {}
+
 impl RistrettoPoint {
     /// Encode a Ristretto point represented by the point `(X:Y:Z:T)`
     /// in extended coordinates. 
