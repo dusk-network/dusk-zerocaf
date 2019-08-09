@@ -32,6 +32,14 @@ impl ConstantTimeEq for CompressedRistretto {
     }
 }
 
+impl PartialEq for CompressedRistretto {
+    fn eq(&self, other: &CompressedRistretto) -> bool {
+        self.ct_eq(other).unwrap_u8() == 1u8
+    }
+}
+
+impl Eq for CompressedRistretto {}
+
 impl CompressedRistretto {
     /// Get the bytes of the `CompressedRistretto` point.
     pub fn as_bytes(&self) -> [u8; 32] {
