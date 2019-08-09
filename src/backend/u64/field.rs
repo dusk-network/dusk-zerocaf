@@ -483,6 +483,7 @@ impl InvSqrt for FieldElement {
         let res = match self.mod_sqrt(Choice::from(0u8)) {
             None => return None,
             Some(mut x) => { 
+                println!("Thats the first x: {:?}", x);
                 x.conditional_negate(!x.is_positive());
                 x.inverse()
             },
@@ -557,9 +558,14 @@ impl FieldElement {
     /// Checks if a ´FieldElement` is considered negative following
     /// the Decaf paper criteria.
     /// 
-    /// Returns: 
-    /// `Choice(1)` if pos.
-    /// `Choice(0)` if neg.
+    /// The criteria says: Non-negative field elements.
+    /// Letp > 2 be prime. Define a residue x ∈ F =Z/pZ to be 
+    /// “non-negative” if the least absolute residue for x is in 
+    /// `[0,(p−1)/2]`, and “negative” otherwise.
+    /// 
+    /// # Returns: 
+    /// - `Choice(1)` if pos.
+    /// - `Choice(0)` if neg.
     pub fn is_positive(&self) -> Choice {
         if self > &FieldElement::zero() && self < &constants::POS_RANGE {
             return Choice::from(1)
@@ -1164,7 +1170,7 @@ pub mod tests {
     /// `Sqrt(17) (mod l) pos result = 1210063247825323154119784235673958745762705331988512749662665422810815404662`. 
     pub static SQRT1_27_POS: FieldElement = FieldElement([4241781353880182, 446376444288682, 1611704926541382, 666649792406303, 2941500811873]);
 
-    /// `InvSqrt(27) (mod l)` = `2550039549958644956196165539947333180180329298918865729572087148196551363777`.
+    /// `InvSqrt(27) (mod l)` = `4686966027373617257777021023095661060676787060461041876429863790088902887212`.
     pub static INV_SQRT_27: FieldElement = FieldElement([2352169988867884, 2446401460527425, 986927416739735, 989222758354178, 11393383279360]);
 
 
@@ -1327,7 +1333,6 @@ pub mod tests {
     fn inv_sqrt() {
         let var = FieldElement::from(&27u8);
         let res = var.inv_sqrt().unwrap();
-        println!("{:?}", res);
         assert!(res == INV_SQRT_27);
     }
 
