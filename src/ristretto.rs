@@ -137,18 +137,18 @@ impl RistrettoPoint {
     pub fn compress(&self) -> CompressedRistretto {
         let u1 = (self.0.Z + self.0.Y) * (self.0.Z - self.0.Y);
         let u2 = self.0.X * self.0.Y;
-        let I = (u1 * u2).mod_sqrt(Choice::from(1u8)).unwrap().inverse();
+        let I = (u1 * u2).inv_sqrt().expect("This is not a valid point representative");
         let D1 = u1 * I;
         let D2 = u2 * I;
         let Zinv = D1 * D2 * self.0.T;
         let mut xy;
-        let mut D;
+        let D;
         if (self.0.T * Zinv).is_positive().unwrap_u8() == 0u8 {
             // Research about the +- sign choosing. 
             xy = 
-                ((self.0.Y *(FieldElement::one() / FieldElement::minus_one().mod_sqrt(Choice::from(1u8)).unwrap())),
-                self.0.X * FieldElement::minus_one().mod_sqrt(Choice::from(1u8)).unwrap());
-            D = D1 / (constants::EDWARDS_A - constants::EDWARDS_D).mod_sqrt(Choice::from(1u8)).unwrap();
+                ((self.0.Y * constants::INV_SQRT_A),
+                self.0.X * constants::MINUS_SQRT_A);
+            D = D1 * constants::INV_SQRT_A_MINUS_D;
         } else {
             xy = (self.0.X, self.0.Y);
             D = D2;
