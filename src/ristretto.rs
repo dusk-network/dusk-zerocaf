@@ -47,6 +47,13 @@ impl CompressedRistretto {
     }
 
     #[allow(non_snake_case)]
+    /// Attempt to decompress a `CompressedRistretto` point. 
+    /// This proces is done following the guidelines and steps
+    /// mentioned in: https://ristretto.group/formulas/decoding.html
+    /// 
+    /// # Returns
+    /// - If the decompression/decoding succeeds -> `Some(RistrettoPoint)`. 
+    /// - If the decompression/decoding fails -> `None`.
     pub fn decompress(&self) -> Option<RistrettoPoint> {
         // Step 1: Check that the byte-string is a valid FieldElement. 
 
@@ -79,9 +86,9 @@ impl CompressedRistretto {
         // v = a*d*u1² - u2²
         let v = -(constants::EDWARDS_D * u1.square()) - u2_sq;
         // I = 1/sqrt(v*u2²), returns `None` if the sqrt does not exist. 
-        let I = match (v*u2_sq).mod_sqrt(Choice::from(1u8)) {
+        let I = match (v*u2_sq).inv_sqrt() {
             None => return None,
-            Some(x) => x.inverse()
+            Some(x) => x
         };
         // Compute the Extended Point Coordinates Y & T
         let Dx = I*u2;
@@ -144,7 +151,6 @@ impl RistrettoPoint {
         let mut xy;
         let D;
         if (self.0.T * Zinv).is_positive().unwrap_u8() == 0u8 {
-            // Research about the +- sign choosing. 
             xy = 
                 ((self.0.Y * constants::INV_SQRT_A),
                 self.0.X * constants::MINUS_SQRT_A);
