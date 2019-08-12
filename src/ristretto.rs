@@ -10,6 +10,8 @@ use crate::traits::Identity;
 
 use core::ops::{Add, Sub, Mul, Neg, Index};
 
+use std::fmt::Debug;
+
 use subtle::{Choice, ConditionallyNegatable, ConditionallySelectable, ConstantTimeEq};
 
 
@@ -117,6 +119,12 @@ impl CompressedRistretto {
 
 
 pub struct RistrettoPoint (pub(crate) EdwardsPoint);
+
+impl Debug for RistrettoPoint {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{:?}", &self.0)
+    }
+}
 
 impl ConstantTimeEq for RistrettoPoint {
     /// As specified on the Ristretto protocol docs: 
