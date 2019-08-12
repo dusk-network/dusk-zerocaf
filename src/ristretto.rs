@@ -145,6 +145,26 @@ impl PartialEq for RistrettoPoint {
 
 impl Eq for RistrettoPoint {}
 
+impl Identity for RistrettoPoint {
+    /// Gives back the Identity point for the Extended Edwards Coordinates
+    /// which is endoded as a `RistrettoPoint` with coordinates: 
+    /// `(X, Y, Z, T)` = `(0, 1, 1, 0)`.
+    fn identity() -> RistrettoPoint {
+        RistrettoPoint(EdwardsPoint::identity())
+    }
+}
+
+impl Default for RistrettoPoint {
+    /// Gives back the Identity point for the Extended Edwards Coordinates
+    /// which is endoded as a `RistrettoPoint` with coordinates: 
+    /// `(X, Y, Z, T)` = `(0, 1, 1, 0)`.
+    fn default() -> RistrettoPoint {
+        RistrettoPoint::identity()
+    }
+}
+
+
+
 impl RistrettoPoint {
     /// Encode a Ristretto point represented by the point `(X:Y:Z:T)`
     /// in extended coordinates. 
