@@ -172,6 +172,15 @@ impl<'a, 'b> Add<&'a RistrettoPoint> for &'b RistrettoPoint {
     }
 }
 
+impl Add<RistrettoPoint> for RistrettoPoint {
+    type Output = RistrettoPoint;
+    /// Performs the addition of two RistrettoPoints following the 
+    /// Twisted Edwards Extended Coordinates formulae.
+    fn add(self, other: RistrettoPoint) -> RistrettoPoint {
+        RistrettoPoint(&self.0 + &other.0)
+    }
+}
+
 
 
 impl RistrettoPoint {
