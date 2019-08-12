@@ -161,6 +161,7 @@ extern crate subtle;
 // Used for Ristretto255Scalar trait.
 extern crate curve25519_dalek;
 extern crate num;
+extern crate hex;
 
 
 pub mod backend;
