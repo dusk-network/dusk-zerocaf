@@ -10,7 +10,7 @@
 
 This repository contains an implementation of the Doppio curve over the `Ristretto Scalar field`: a pure Rust implementation designed by [Dusk](https://dusk.network) team.
 
-Special thanks to Isis Agora Lovecruft and Henry de Valence for them implementation of [Curve25519-dalek library](https://github.com/dalek-cryptography/curve25519-dalek),
+Special thanks to Isis Agora Lovecruft and Henry de Valence for their implementation of [Curve25519-dalek library](https://github.com/dalek-cryptography/curve25519-dalek),
 which has been so useful in order to get some of the basic arithmetic ops and the structure of our library.
 
 ### Ristretto curve 
