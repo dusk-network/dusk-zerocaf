@@ -184,6 +184,18 @@ impl Default for RistrettoPoint {
     }
 }
 
+impl<'a> Neg for &'a RistrettoPoint {
+    type Output = RistrettoPoint;
+    /// Negates a `RistrettoPoint` giving it's negated representation
+    /// as a result.
+    /// 
+    /// Since the negative of a point is (-X:Y:Z:-T), it
+    /// gives as a result: `(-X:Y:Z:-T)`.
+    fn neg(self) -> RistrettoPoint {
+        RistrettoPoint(-self.0)
+    }
+}
+
 impl<'a, 'b> Add<&'a RistrettoPoint> for &'b RistrettoPoint {
     type Output = RistrettoPoint;
     /// Performs the addition of two RistrettoPoints following the 
