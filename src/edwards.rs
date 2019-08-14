@@ -378,9 +378,11 @@ impl<'a> From<&'a AffinePoint> for EdwardsPoint {
 
 impl<'a> Neg for &'a EdwardsPoint {
     type Output = EdwardsPoint;
-    /// Negates an `EdwardsPoint` giving it as a result.
+    /// Negates an `EdwardsPoint` giving it's negated value
+    /// as a result.
+    /// 
     /// Since the negative of a point is (-X:Y:Z:-T), it
-    /// gives as a result: `(-X, Y, Z, -T)`.
+    /// gives as a result: `(-X:Y:Z:-T)`.
     fn neg(self) -> EdwardsPoint {
        EdwardsPoint{
            X: -&self.X,
@@ -577,11 +579,11 @@ impl EdwardsPoint {
 }
 
 /// A `ProjectivePoint` represents a point on the Doppio Curve expressed
-/// over the Twisted Edwards Projective Coordinates eg. (X, Y, Z).
+/// over the Twisted Edwards Projective Coordinates eg. (X:Y:Z).
 ///  
 /// For Z1≠0 the point (X1:Y1:Z1) represents the affine point (x1= X1/Z1, y1= Y1/Z1)
 /// on EE,a,d.
-/// Projective coordinates represent `x` `y` as `(X Y Z`) satisfying the following equations:
+/// Projective coordinates represent `x` `y` as `(X, Y, Z`) satisfying the following equations:
 /// 
 /// x=X/Z
 /// 
