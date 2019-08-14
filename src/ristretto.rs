@@ -5,6 +5,7 @@ use crate::constants;
 use crate::scalar::Ristretto255Scalar;
 use crate::edwards::EdwardsPoint;
 use crate::field::FieldElement;
+use crate::scalar::Scalar;
 use crate::traits::ops::*;
 use crate::traits::Identity;
 
@@ -196,6 +197,20 @@ impl Sub<RistrettoPoint> for RistrettoPoint {
     /// Twisted Edwards Extended Coordinates formulae.
     fn sub(self, other: RistrettoPoint) -> RistrettoPoint {
         RistrettoPoint(&self.0 - &other.0)
+    }
+}
+
+impl<'a, 'b> Mul<&'b Scalar> for &'a RistrettoPoint {
+    type Output = RistrettoPoint;
+    fn mul(self, scalar: &'b Scalar) -> RistrettoPoint {
+        RistrettoPoint(&self.0 * scalar)
+    }
+}
+
+impl Mul<Scalar> for RistrettoPoint {
+    type Output = RistrettoPoint;
+    fn mul(self, scalar: Scalar) -> RistrettoPoint {
+        RistrettoPoint(&self.0 * &scalar)
     }
 }
 
