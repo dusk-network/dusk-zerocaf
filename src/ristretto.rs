@@ -1,4 +1,24 @@
-//! Contains the implementation of the Ristretto protocol.
+//! Implementation of the Ristretto Protocol over the
+//! Doppio curve.
+//! 
+//! Notes extracted from: https://ristretto.group/ristretto.html. 
+//! Go there for the full lecture or check the paper here: 
+//! https://tools.ietf.org/pdf/draft-hdevalence-cfrg-ristretto-00.pdf
+//! 
+//! # What's Ristretto?
+//! Ristretto is a construction of a prime-order group using a non-prime-order Edwards curve.
+//! The Decaf paper suggests using a non-prime-order curve E\mathcal EE to implement a prime-order
+//! group by constructing a quotient group. Ristretto uses the same idea, but with different formulas,
+//! in order to allow the use of cofactor-888 curves such as Curve25519.
+//! 
+//! Internally, a Ristretto point is represented by an Edwards point. 
+//! Two Edwards points P,QP, QP,Q may represent the same Ristretto point, in the same way that 
+//! different projective (X,Y,Z) coordinates may represent the same Edwards point. 
+//! 
+//! Group operations on Ristretto points are carried out with no overhead by performing the 
+//! operations on the representative Edwards points.
+//! 
+
 
 
 use crate::constants;
@@ -295,7 +315,6 @@ mod tests {
             "445425117cb8c90edcbc7c1cc0e74f747f2c1efa5630a967c64f287792a48a4b",
             // This is s = -1, which causes y = 0.
             "ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
-            "1000000000000000000000000000000000000000000000000000000000000000"
         ];
 
         let mut bad_bytes = [0u8; 32];
