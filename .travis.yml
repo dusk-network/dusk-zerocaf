@@ -66,3 +66,7 @@ after_success:
         ./ghp-import/ghp_import.py -n -p -f -m "Documentation upload" -r https://"$GH_TOKEN"@github.com/"$TRAVIS_REPO_SLUG.git" target/doc &&
         echo "Uploaded documentation"
       fi
+
+# Send a notification to the Dusk build Status Telegram channel once the CI build completes
+after_script:
+  - bash ./telegram_notification.sh
