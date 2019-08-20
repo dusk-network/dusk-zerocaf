@@ -9,7 +9,7 @@ PARSE_MODE="Markdown"
 echo "$TELEGRAM_TOKEN"
 echo "$BOT_URL"
 echo "$TRAVIS_TEST_RESULT"
-echo "&TELEGRAM_CHAT_ID"
+echo "$TELEGRAM_CHAT_ID"
 
 
 
@@ -17,12 +17,25 @@ if [ $TRAVIS_TEST_RESULT -ne 0 ]; then
     build_status="❌ FAILED"
 else
     build_status="✅ SUCCEEDED"
+    echo "Status suceeded!"
 fi
 
 send_msg () {
     curl -s -X POST ${BOT_URL} -d chat_id=$TELEGRAM_CHAT_ID \
         -d text="$1" -d parse_mode=${PARSE_MODE}
 }
+
+echo "--------------------------------------
+Travis build *${build_status}!*
+\`Repository:  ${TRAVIS_REPO_SLUG}\`
+\`Branch:      ${TRAVIS_BRANCH}\`
+\`Commit:      ${TRAVIS_COMMIT}\`
+*Commit Msg:*
+${TRAVIS_COMMIT_MESSAGE}
+[Job Log here](${TRAVIS_JOB_WEB_URL})
+[Code Coverage Report](https://codecov.io/gh/${TRAVIS_REPO_SLUG}/list/${TRAVIS_COMMIT}/)
+--------------------------------------
+"
 
 send_msg "
 --------------------------------------
