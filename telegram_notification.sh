@@ -6,6 +6,13 @@ BOT_URL="https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage"
 
 PARSE_MODE="Markdown"
 
+echo "$TELEGRAM_TOKEN"
+echo "$BOT_URL"
+echo "$TRAVIS_TEST_RESULT"
+echo "&TELEGRAM_CHAT_ID"
+
+
+
 if [ $TRAVIS_TEST_RESULT -ne 0 ]; then
     build_status="❌ FAILED"
 else
