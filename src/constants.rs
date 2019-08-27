@@ -22,6 +22,12 @@ pub static INV_SQRT_A: FieldElement = FieldElement([3075585030474777, 2451921961
 /// `-SQRT(-1) (mod l)` equals: ``. 
 pub static MINUS_SQRT_A: FieldElement = FieldElement([3075585030474777, 2451921961843096, 1194333869305507, 2218299809671669, 7376823328646]);
 
+/// INV_SQRT_A_MINUS_D
+pub const INV_SQRT_A_MINUS_D: FieldElement = FieldElement([1, 0, 0, 0, 0]);
+
+/// SQRT_AD_MINUS_ONE
+pub const SQRT_AD_MINUS_ONE : FieldElement = FieldElement([1, 0 , 0, 0, 0]);
+
 /// The Ristretto basepoint, in `CompressedRistretto` format.
 pub const RISTRETTO_BASEPOINT_COMPRESSED: CompressedRistretto =
     CompressedRistretto([0xe2, 0xf2, 0xae, 0x0a, 0x6a, 0xbc, 0x4e, 0x71,
