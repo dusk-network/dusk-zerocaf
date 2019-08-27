@@ -291,7 +291,51 @@ impl RistrettoPoint {
         CompressedRistretto(s.to_bytes()) 
     }
 
-    
+    /// Computes the Ristretto Elligator map.
+    ///
+    /// # Note
+    ///
+    /// This method is not public because it's just used for hashing
+    /// to a point -- proper elligator support is deferred for now.
+    pub(crate) fn elligator_ristretto_flavor(r_0: &FieldElement) -> RistrettoPoint {
+        let (i, d) = (&constants::MINUS_SQRT_A, &constants::EDWARDS_D);
+        let one = FieldElement::one();
+        let one_minus_d_sq = &one - &d.square();
+        let d_minus_one_sq = (d - &one).square();
+
+        let r = i * &r_0.square();
+        let N_s = &(&r + &one) * &one_minus_d_sq;
+        let mut c = -&one;
+        let D = &(&c - &(d * &r)) * &(&r + d);
+
+        let (Ns_D_is_sq, mut s) = match (&N_s / &D).inv_sqrt() {
+            Some(x) => {
+                (Choice::from(1u8), x)
+            },
+            None => {
+                (Choice::from(0u8), FieldElement::zero())
+            },
+        };
+
+        let mut s_prime = &s * r_0;
+        let s_prime_is_pos = s_prime.is_positive();
+        s_prime.conditional_negate(s_prime_is_pos);
+
+        s.conditional_assign(&s_prime, !Ns_D_is_sq);
+        c.conditional_assign(&r, !Ns_D_is_sq);
+
+        let N_t = &(&(&c * &(&r - &one)) * &d_minus_one_sq) - &D;
+        let s_sq = s.square();
+
+
+        // The conversion from W_i is exactly the conversion from P1xP1.
+        RistrettoPoint(EdwardsPoint{
+            X: &(&s + &s) * &D,
+            Z: &N_t * &constants::SQRT_AD_MINUS_ONE,
+            Y: &FieldElement::one() - &s_sq,
+            T: &FieldElement::one() + &s_sq,
+        })
+    }
 }
 
 mod tests {
@@ -344,52 +388,21 @@ mod tests {
         let mut bad_bytes = [0u8; 32];
         for bad_encoding in &bad_encodings {
             bad_bytes.copy_from_slice(&hex::decode(bad_encoding).unwrap());
-            println!("Try: {:?}", CompressedRistretto(bad_bytes));
             assert!(CompressedRistretto(bad_bytes).decompress().is_none());
         }
     }
-    /*
+
     #[test]
-    fn basepoint_encodings() {
+    fn elligator() {
         
-        let encodings_of_small_multiples = [
-            // This is the identity point
-            "0000000000000000000000000000000000000000000000000000000000000000",
-            // This is the basepoint
-            "e2f2ae0a6abc4e71a884a961c500515f58e30b6aa582dd8db6a65945e08d2d76",
-            // These are small multiples of the basepoint
-            "6a493210f7499cd17fecb510ae0cea23a110e8d5b901f8acadd3095c73a3b919",
-            "94741f5d5d52755ece4f23f044ee27d5d1ea1e2bd196b462166b16152a9d0259",
-            "da80862773358b466ffadfe0b3293ab3d9fd53c5ea6c955358f568322daf6a57",
-            "e882b131016b52c1d3337080187cf768423efccbb517bb495ab812c4160ff44e",
-            "f64746d3c92b13050ed8d80236a7f0007c3b3f962f5ba793d19a601ebb1df403",
-            "44f53520926ec81fbd5a387845beb7df85a96a24ece18738bdcfa6a7822a176d",
-            "903293d8f2287ebe10e2374dc1a53e0bc887e592699f02d077d5263cdd55601c",
-            "02622ace8f7303a31cafc63f8fc48fdc16e1c8c8d234b2f0d6685282a9076031",
-            "20706fd788b2720a1ed2a5dad4952b01f413bcf0e7564de8cdc816689e2db95f",
-            "bce83f8ba5dd2fa572864c24ba1810f9522bc6004afe95877ac73241cafdab42",
-            "e4549ee16b9aa03099ca208c67adafcafa4c3f3e4e5303de6026e3ca8ff84460",
-            "aa52e000df2e16f55fb1032fc33bc42742dad6bd5a8fc0be0167436c5948501f",
-            "46376b80f409b29dc2b5f6f0c52591990896e5716f41477cd30085ab7f10301e",
-            "e0c418f7c8d9c4cdd7395b93ea124f3ad99021bb681dfc3302a9d99a2e53e64e",
-        ];
+        let a = FieldElement::from(&2356723572356u64);
+        let b = RistrettoPoint::elligator_ristretto_flavor(&a);
+        println!("{:?}", b);
 
-        let B = &constants::RISTRETTO_BASEPOINT.decompress().unwrap();
-        let mut P = RistrettoPoint::identity();
-        for i in 0..16 {
-            assert_eq!(
-                hex::encode(P.compress().as_bytes()),
-                encodings_of_small_multiples[i],
-            );
-            P = &P + B;
-        }
+        let c = FieldElement::from(&2356723572356u64);
+        let second_point = RistrettoPoint::elligator_ristretto_flavor(&c);
+        println!("{:?}", second_point);
+        println!("{:?}", b == second_point);
     }
-
-    #[test]
-    fn ristretto_basepoint() {
-        Ristretto255Scalar
-        println!("{:?}", RistrettoPoint::identity().compress());
-        println!("{:?}", constants::RISTRETTO_BASEPOINT.decompress().unwrap());
-    }*/
 }
 
