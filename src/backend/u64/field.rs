@@ -483,7 +483,6 @@ impl InvSqrt for FieldElement {
         let res = match self.mod_sqrt(Choice::from(0u8)) {
             None => return None,
             Some(mut x) => { 
-                println!("Thats the first x: {:?}", x);
                 x.conditional_negate(!x.is_positive());
                 x.inverse()
             },
@@ -646,7 +645,7 @@ impl FieldElement {
         res[31] =  (self.0[ 4] >> 40)                      as u8;
 
         // High bit should be zero.
-        debug_assert!((res[31] & 0b1000_0000u8) == 0u8);
+        //debug_assert!((res[31] & 0b1000_0000u8) == 0u8);
         res
     }
 
