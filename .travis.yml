@@ -4,10 +4,6 @@ cache: cargo
 os: 
   - linux
 #  - osx  CodeCov doesn't support it so it's non tested now.
-branches: 
-  only:
-  - master
-
 
 matrix:
   fast_finish: false
@@ -66,3 +62,7 @@ after_success:
         ./ghp-import/ghp_import.py -n -p -f -m "Documentation upload" -r https://"$GH_TOKEN"@github.com/"$TRAVIS_REPO_SLUG.git" target/doc &&
         echo "Uploaded documentation"
       fi
+
+# Send a notification to the Dusk build Status Telegram channel once the CI build completes
+after_script:
+  - bash <(curl -s https://raw.githubusercontent.com/dusk-network/tools/master/bash/telegram_ci_notifications.sh)
