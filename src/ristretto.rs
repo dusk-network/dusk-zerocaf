@@ -17,7 +17,6 @@
 //! 
 //! Group operations on Ristretto points are carried out with no overhead by performing the 
 //! operations on the representative Edwards points.
-//! 
 
 
 
@@ -364,7 +363,7 @@ mod tests {
             "f1c6165d33367351b0da8f6e4511010c68174a03b6581212c71c0e1d026c3c72",
             "87260f7a2f12495118360f02c26a470f450dadf34a413d21042b43b9d93e1309",
             // These are all bad because they give a nonsquare x^2.
-            "26948d35ca62e643e26a83177332e6b6afeb9d08e4268b650f1f5bbd8d81d371",
+            "26948d35ca62e643e26a83177332e6b6afeb00000000000000000000000000000000000000000000000000000000000000009d08e4268b650f1f5bbd8d81d371",
             "4eac077a713c57b4f4397629a4145982c661f48044dd3f96427d40b147d9742f",
             "de6a7b00deadc788eb6b6c8d20c0ae96c2f2019078fa604fee5b87d6e989ad7b",
             "bcab477be20861e01e4a0e295284146a510150d9817763caf1a6f4b422d67042",
@@ -392,6 +391,47 @@ mod tests {
         }
     }
 
+    #[ignore]
+    #[test]
+    fn ristretto_point_encoding() {
+        // The following are the byte encodings of small multiples 
+        //     [0]B, [1]B, ..., [15]B
+        // of the basepoint, represented as hex strings.
+
+        let encodings_of_small_multiples = [
+            // This is the identity point
+            "0000000000000000000000000000000000000000000000000000000000000000",
+            // This is the basepoint
+            "e2f2ae0a6abc4e71a884a961c500515f58e30b6aa582dd8db6a65945e08d2d76",
+            // These are small multiples of the basepoint
+            "6a493210f7499cd17fecb510ae0cea23a110e8d5b901f8acadd3095c73a3b919",
+            "94741f5d5d52755ece4f23f044ee27d5d1ea1e2bd196b462166b16152a9d0259",
+            "da80862773358b466ffadfe0b3293ab3d9fd53c5ea6c955358f568322daf6a57",
+            "e882b131016b52c1d3337080187cf768423efccbb517bb495ab812c4160ff44e",
+            "f64746d3c92b13050ed8d80236a7f0007c3b3f962f5ba793d19a601ebb1df403",
+            "44f53520926ec81fbd5a387845beb7df85a96a24ece18738bdcfa6a7822a176d",
+            "903293d8f2287ebe10e2374dc1a53e0bc887e592699f02d077d5263cdd55601c",
+            "02622ace8f7303a31cafc63f8fc48fdc16e1c8c8d234b2f0d6685282a9076031",
+            "20706fd788b2720a1ed2a5dad4952b01f413bcf0e7564de8cdc816689e2db95f",
+            "bce83f8ba5dd2fa572864c24ba1810f9522bc6004afe95877ac73241cafdab42",
+            "e4549ee16b9aa03099ca208c67adafcafa4c3f3e4e5303de6026e3ca8ff84460",
+            "aa52e000df2e16f55fb1032fc33bc42742dad6bd5a8fc0be0167436c5948501f",
+            "46376b80f409b29dc2b5f6f0c52591990896e5716f41477cd30085ab7f10301e",
+            "e0c418f7c8d9c4cdd7395b93ea124f3ad99021bb681dfc3302a9d99a2e53e64e",
+        ];
+
+        let B = &constants::RISTRETTO_BASEPOINT_COMPRESSED.decompress().expect("Basepoint could not be decompressed.");
+        let mut P = RistrettoPoint::identity();
+        for i in 0..16 {
+            assert_eq!(
+                hex::encode(P.compress().as_bytes()),
+                encodings_of_small_multiples[i],
+            );
+            P = &P + B;
+        }
+    }
+    
+
     #[test]
     fn elligator() {
         
@@ -403,6 +443,8 @@ mod tests {
         let second_point = RistrettoPoint::elligator_ristretto_flavor(&c);
         println!("{:?}", second_point);
         println!("{:?}", b == second_point);
+
+        println!("{:?}", RistrettoPoint::identity().compress())
     }
 }
 
