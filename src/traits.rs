@@ -120,6 +120,6 @@ pub mod ops {
         ///- (true, zero) if u is zero;
         ///- (false, zero) if v is zero and uuu is nonzero;
         ///- (false, +sqrt(i*u/v)) if u/v is nonsquare (so iu/v is square).
-        fn sqrt_ratio_i(self, v: T) -> Self::Output;
+        fn sqrt_ratio_i(&self, v: T) -> Self::Output;
     }
 }

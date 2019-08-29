@@ -491,7 +491,7 @@ impl InvSqrt for FieldElement {
     }
 }
 
-impl SqrtRatioI<&FieldElement> for &FieldElement {
+impl SqrtRatioI<&FieldElement> for FieldElement {
     type Output = (bool, FieldElement);
 
     /// The first part of the return value signals whether u/v was square, 
@@ -502,7 +502,7 @@ impl SqrtRatioI<&FieldElement> for &FieldElement {
     ///- (true, zero) if u is zero;
     ///- (false, zero) if v is zero and uuu is nonzero;
     ///- (false, +sqrt(i*u/v)) if u/v is nonsquare (so iu/v is square).
-    fn sqrt_ratio_i(self, v: &FieldElement) -> (bool, FieldElement) {
+    fn sqrt_ratio_i(&self, v: &FieldElement) -> (bool, FieldElement) {
         unimplemented!()
     }
 }
