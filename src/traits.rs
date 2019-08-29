@@ -97,12 +97,28 @@ pub mod ops {
         type Output;
 
         #[must_use]
-        /// Performs the Inverse Square root as it's defined on the
-        /// Ristretto paper.
+        /// Performs the Inverse Square root of a given value.
         /// 
         /// This operation returns always the positive result of the
         /// modular sqrt, understanding positive as the definition that
         /// appears on the Decaf paper: 0 < result < (P - 1)/2.  
         fn inv_sqrt(self) -> Self::Output;
+    }
+
+    pub trait SqrtRatioI {
+        type Output;
+
+        #[must_use]
+        /// Using the same trick as in ed25519 decoding, we merge the
+        /// inversion, the square root, and the square test.AsMut
+        /// 
+        /// The first part of the return value signals whether u/v was square, 
+        /// and the second part contains a square root. 
+        /// Specifically, it returns:
+        ///(true, +sqrt(u/v)) if v is nonzero and u/v is square;
+        ///(true, zero) if u is zero;
+        ///(false, zero) if v is zero and uuu is nonzero;
+        ///(false, +sqrt(i*u/v)) if u/v is nonsquare (so iu/v is square).
+        fn sqrt_ratio_i(self) -> Self::Output;
     }
 }
