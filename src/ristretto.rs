@@ -107,10 +107,8 @@ impl CompressedRistretto {
         // v = a*d*u1² - u2²
         let v = -(constants::EDWARDS_D * u1.square()) - u2_sq;
         // I = 1/sqrt(v*u2²), returns `None` if the sqrt does not exist. 
-        let I = match (v*u2_sq).inv_sqrt() {
-            None => return None,
-            Some(x) => x
-        };
+        let (ok, I) = (v*u2_sq).inv_sqrt();
+
         // Compute the Extended Point Coordinates Y & T
         let Dx = I*u2;
         let Dy = I*Dx*v;
@@ -123,7 +121,7 @@ impl CompressedRistretto {
         let y = u1 * Dy;
         let t = x * y;
 
-        if t.is_positive().unwrap_u8() == 0u8 || y == FieldElement::zero() {
+        if ok.unwrap_u8() == 0u8 ||t.is_positive().unwrap_u8() == 0u8 || y == FieldElement::zero() {
             return None
         };
 
@@ -264,9 +262,9 @@ impl RistrettoPoint {
     pub fn compress(&self) -> CompressedRistretto {
         let u1 = (self.0.Z + self.0.Y) * (self.0.Z - self.0.Y);
         let u2 = self.0.X * self.0.Y;
-        let I = (u1 * u2).inv_sqrt();
-        let D1 = u1 * I.1;
-        let D2 = u2 * I.1;
+        let (_, I) = (u1 * u2).inv_sqrt();
+        let D1 = u1 * I;
+        let D2 = u2 * I;
         let Zinv = D1 * D2 * self.0.T;
         let mut xy;
         let D;
@@ -295,6 +293,7 @@ impl RistrettoPoint {
     ///
     /// This method is not public because it's just used for hashing
     /// to a point -- proper elligator support is deferred for now.
+    #[allow(non_snake_case)]
     pub(crate) fn elligator_ristretto_flavor(r_0: &FieldElement) -> RistrettoPoint {
         let (i, d) = (&constants::MINUS_SQRT_A, &constants::EDWARDS_D);
         let one = FieldElement::one();
@@ -306,14 +305,7 @@ impl RistrettoPoint {
         let mut c = -&one;
         let D = &(&c - &(d * &r)) * &(&r + d);
 
-        let (Ns_D_is_sq, mut s) = match (&N_s / &D).inv_sqrt() {
-            Some(x) => {
-                (Choice::from(1u8), x)
-            },
-            None => {
-                (Choice::from(0u8), FieldElement::zero())
-            },
-        };
+        let (Ns_D_is_sq, mut s) = N_s.sqrt_ratio_i(&D);
 
         let mut s_prime = &s * r_0;
         let s_prime_is_pos = s_prime.is_positive();
@@ -428,22 +420,6 @@ mod tests {
             );
             P = &P + B;
         }
-    }
-    
-    #[ignore]
-    #[test]
-    fn elligator() {
-        
-        let a = FieldElement::from(&2356723572356u64);
-        let b = RistrettoPoint::elligator_ristretto_flavor(&a);
-        println!("{:?}", b);
-
-        let c = FieldElement::from(&2356723572356u64);
-        let second_point = RistrettoPoint::elligator_ristretto_flavor(&c);
-        println!("{:?}", second_point);
-        println!("{:?}", b == second_point);
-
-        println!("{:?}", RistrettoPoint::identity().compress())
     }
 }
 
