@@ -1363,8 +1363,8 @@ pub mod tests {
     #[test]
     fn inv_sqrt() {
         let var = FieldElement::from(&27u8);
-        let res = var.inv_sqrt().unwrap();
-        assert!(res == INV_SQRT_27);
+        let res = var.inv_sqrt().1;
+        assert!(-res == INV_SQRT_27);
     }
 
     #[test]
