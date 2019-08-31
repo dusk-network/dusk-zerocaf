@@ -462,36 +462,27 @@ impl<'a> ModSqrt for &'a FieldElement {
     }
 }
 
-impl InvSqrt for FieldElement {
-    type Output = Option<FieldElement>;
-    /// Solves the inverse square root operation according the 
-    /// specs of the Ristretto paper.
+impl InvSqrt for &FieldElement {
+    type Output = (Choice, FieldElement);
+    /// This is a convenience wrapper function over the `SqrtRatioI` trait
+    /// implementation when `self = 1`: 
+    /// Computes `sqrt(1/self)`. 
+    /// 
+    /// This function always returns the non-negative result of the sqrt. 
     /// 
     /// # Returns:
-    /// 
-    /// - `Some(FieldElement)` if `self` is a QR. 
-    /// 
-    /// - `None` if `self` is not a QR.
-    fn inv_sqrt(self) -> Option<FieldElement> {
-        // Perform the sqrt(self) and get `x` as the result.
-        // We choose `x` and not `FIELD_L - x` by providing `Choice(0)`.
-        // 
-        // Then we evaluate if `x` is positive eg. pertains to the range: 
-        // `(0 , (P-1)/2)` as it's specified on Decaf paper. And we 
-        // negate `x` if it's negative, otherways, we return it directly. 
-        let res = match self.mod_sqrt(Choice::from(0u8)) {
-            None => return None,
-            Some(mut x) => { 
-                x.conditional_negate(!x.is_positive());
-                x.inverse()
-            },
-        };
-        Some(res)
+    ///
+    /// - `(Choice(1), +sqrt(1/self))  ` if `self` is a nonzero square;
+    /// - `(Choice(0), zero)           ` if `self` is zero;
+    /// - `(Choice(0), +sqrt(i/self))  ` if `self` is a nonzero nonsquare; 
+
+    fn inv_sqrt(self) -> (Choice, FieldElement) {
+        FieldElement::one().sqrt_ratio_i(self)
     }
 }
 
 impl SqrtRatioI<&FieldElement> for FieldElement {
-    type Output = (bool, FieldElement);
+    type Output = (Choice, FieldElement);
 
     /// The first part of the return value signals whether u/v was square, 
     /// and the second part contains a square root. 
@@ -501,12 +492,12 @@ impl SqrtRatioI<&FieldElement> for FieldElement {
     ///- (true, zero) if u is zero;
     ///- (false, zero) if v is zero and u is nonzero;
     ///- (false, +sqrt(i*u/v)) if u/v is nonsquare (so iu/v is square).
-    fn sqrt_ratio_i(&self, v: &FieldElement) -> (bool, FieldElement) {
+    fn sqrt_ratio_i(&self, v: &FieldElement) -> (Choice, FieldElement) {
         let zero = &FieldElement::zero();
 
         match(self == zero, v == zero) {
-            (true, _) => return (true, FieldElement::zero()),
-            (false, true) => return (false, FieldElement::zero()),
+            (true, _) => return (Choice::from(1u8), FieldElement::zero()),
+            (false, true) => return (Choice::from(0u8), FieldElement::zero()),
             (false, false) => (),
             default => panic!("Attempting to divide 0/0. Undeterminated."),
         };
@@ -518,14 +509,14 @@ impl SqrtRatioI<&FieldElement> for FieldElement {
             false => { 
                 let mut res = (&(&crate::constants::SQRT_MINUS_ONE * self) / v).mod_sqrt(Choice::from(1u8)).unwrap();
                 res.conditional_negate(!res.is_positive());
-                (false, res)
+                (Choice::from(0u8), res)
             },
             // (u/v) is QR, so we don't need to do anything and
             // we return `(true, +sqrt(u/v))`.
             true => {
                 let mut res = (self / v).mod_sqrt(Choice::from(1u8)).unwrap();
                 res.conditional_negate(!res.is_positive());
-                (true, res)
+                (Choice::from(1u8), res)
             },
         }
     }
