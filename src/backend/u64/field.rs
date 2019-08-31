@@ -399,9 +399,8 @@ impl<'a> ModSqrt for &'a FieldElement {
     /// negative result of the `mod_sqrt` by analyzing the 
     /// `Choice` sent as input:
     /// 
-    /// For Choice(0) -> Negative result. 
-    /// For Choice(1) -> Positive result.
-    /// 
+    /// For `Choice(0)` -> Negative result. 
+    /// For `Choice(1)` -> Positive result.
     /// 
     /// Daniel Shanks. Five Number Theoretic Algorithms. 
     /// Proceedings of the Second Manitoba Conference on 
@@ -500,10 +499,35 @@ impl SqrtRatioI<&FieldElement> for FieldElement {
     /// 
     ///- (true, +sqrt(u/v)) if v is nonzero and u/v is square;
     ///- (true, zero) if u is zero;
-    ///- (false, zero) if v is zero and uuu is nonzero;
+    ///- (false, zero) if v is zero and u is nonzero;
     ///- (false, +sqrt(i*u/v)) if u/v is nonsquare (so iu/v is square).
     fn sqrt_ratio_i(&self, v: &FieldElement) -> (bool, FieldElement) {
-        unimplemented!()
+        let zero = &FieldElement::zero();
+
+        match(self == zero, v == zero) {
+            (true, _) => return (true, FieldElement::zero()),
+            (false, true) => return (false, FieldElement::zero()),
+            (false, false) => (),
+            default => panic!("Attempting to divide 0/0. Undeterminated."),
+        };
+
+        // (false, false) case. We check "QRness".
+        match (self / v).legendre_symbol().unwrap_u8() == 1u8 {
+            // (u/v) is not QR, so we multiply by `i` and 
+            // return `(false, +sqrt(i*u/v))`. 
+            false => { 
+                let mut res = (&(&crate::constants::SQRT_MINUS_ONE * self) / v).mod_sqrt(Choice::from(1u8)).unwrap();
+                res.conditional_negate(!res.is_positive());
+                (false, res)
+            },
+            // (u/v) is QR, so we don't need to do anything and
+            // we return `(true, +sqrt(u/v))`.
+            true => {
+                let mut res = (self / v).mod_sqrt(Choice::from(1u8)).unwrap();
+                res.conditional_negate(!res.is_positive());
+                (true, res)
+            },
+        }
     }
 }
 
@@ -708,11 +732,12 @@ impl FieldElement {
     /// See: [https://en.wikipedia.org/wiki/Legendre_symbol](https://en.wikipedia.org/wiki/Legendre_symbol).
     /// 
     /// Returns: 
-    /// `-1` -> Non-quadratic residue (mod l). == Choice(0).
     /// 
-    /// `1`  -> Quadratic residue (mod l). == Choice(1).
+    /// `-1` -> Non-quadratic residue (mod l) == Choice(0).
     /// 
-    /// `0`  -> `Input mod l == 0`. Not implemented since you can't pass
+    /// `1`  -> Quadratic residue (mod l) == Choice(1).
+    /// 
+    /// `0`  -> `Input (mod l) == 0`. Not implemented since you can't pass
     /// an input which is multiple of `FIELD_L`.
     #[inline]
     pub fn legendre_symbol(&self) -> Choice {
