@@ -597,7 +597,7 @@ impl FieldElement {
     /// - `Choice(1)` if pos.
     /// - `Choice(0)` if neg.
     pub fn is_positive(&self) -> Choice {
-        if self > &FieldElement::zero() && self < &constants::POS_RANGE {
+        if self >= &FieldElement::zero() && self < &constants::POS_RANGE {
             return Choice::from(1)
         }
         Choice::from(0)
