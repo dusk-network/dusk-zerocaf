@@ -42,9 +42,17 @@ fn main() {
     println!("{:?}", mont_x);
     */
 
-    // 1/ sqrt(a-d)
-    let x = to_scalar_base_52("4841288875079051978842204516290813483543198546409450625320691565726232581161");
-    println!("Y1 {:?}", x);
+    from_field_elem_base_51(&[426475514619346, 2063872706840040, 14628272888959, 107677749330612, 288339085807592]);
+    from_field_elem_base_51(&[1934594822876571, 2049809580636559, 1991994783322914, 1758681962032007, 380046701118659]);
+
+    from_field_elem_base_51(&[2052228846758770, 2169805333764948, 723728722637705, 2743246494724, 2152510018856043]);
+    from_field_elem_base_51(&[1801439850948180, 1351079888211148, 450359962737049, 900719925474099, 1801439850948198]);
+
+    from_field_elem_base_51(&[545897755207845, 751708427380831, 2193286722129408, 1821088816362799, 1098443470454879]);
+    from_field_elem_base_51(&[1268819963234689, 807960932194752, 1039220121449332, 1972471406612960, 731613009210608]);
+
+    from_field_elem_base_51(&[199570966926459, 81994479920299, 1528071091047542, 2249056567190523, 99289794829204]);
+    from_field_elem_base_51(&[450359962737049, 900719925474099, 1801439850948198, 1351079888211148, 450359962737049]);
 
     
 
@@ -109,8 +117,17 @@ pub fn from_scalar_base_52(limbs: &[u64; 5]) -> () {
     for i in 0..5 {
         res = res + (pow(two_pow_52.clone(), i) * limbs[i]);
     }
-    println!("{}", res);
-    ()
+    println!("{}", res)
+}
+
+/// Gets a FieldElement in base 51 and transforms it into a normal representation
+pub fn from_field_elem_base_51(limbs: &[u64; 5]) -> () {
+    let mut res: BigUint = BigUint::zero();
+    let two_pow_51 = BigUint::from_str("2251799813685248").unwrap();
+    for i in 0..5 {
+        res = res + (pow(two_pow_51.clone(), i) * limbs[i]);
+    }
+    println!("{}", res)
 }
 
 /// Montgomery struct
