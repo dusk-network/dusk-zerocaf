@@ -38,7 +38,7 @@
 //! res = a.square(); // Performs a^2 (mod l).
 //! res = -&a; // Performs Negation over the modulo l.
 //! 
-//! // Dividing by two even Scalars is recommended through the `Half`
+//! // Dividing even Scalars by two is recommended through the `Half`
 //! // trait implmementation since it's much faster.
 //! if a.is_even() {
 //!     let half_c = c.half(); // This will panic if a isn't even.

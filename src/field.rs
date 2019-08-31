@@ -12,6 +12,7 @@
 //! use zerocaf::field::FieldElement;
 //! use zerocaf::traits::ops::*;
 //! use zerocaf::constants::EDWARDS_D;
+//! use subtle::Choice;
 //! 
 //! // You can create a FieldElement from a byte-array as follows:
 //! let a = FieldElement::from_bytes(&[0u8;32]); 
@@ -19,6 +20,9 @@
 //! // You ca also create a FieldElement from an uint type as follows:
 //! let b = FieldElement::from(&86649u128);
 //! let c = FieldElement::from(&86650u64);
+//! 
+//! // You can create random FieldElements by calling: 
+//! let rand = FieldElement::generate_random();
 //! 
 //! // The last way of creating a FieldElement it by calling the
 //! // constructor. THIS IS NOT RECOMMENDED since NO checks about
@@ -34,6 +38,11 @@
 //! res = a * b; // Performs a * b (mod l).
 //! res = a.square(); // Performs a^2 (mod l).
 //! res = -&a; // Performs Negation over the modulo l.
+//! res = a.pow(&b); // Performs Modular exponentiation.
+//! res = a.mod_sqrt(Choice::from(1u8)).unwrap(); //Performs
+//! // modular sqrt.
+//! // Returs `None` if the input is not a QR on the field.
+//! // Returns Some(result) if everything is correct.
 //! 
 //! // Division has been also implemented. Remember that when we write
 //! // a/b (mod l), we are indeed performing a * inverse_mod(b, l) (mod l).

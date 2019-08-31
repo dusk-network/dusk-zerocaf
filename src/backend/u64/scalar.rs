@@ -1,6 +1,10 @@
 //! Arithmetic mod `2^249 - 15145038707218910765482344729778085401`
 //! with five 52-bit unsigned limbs
 //! represented in radix `2^52`.
+//! 
+//! //! The basic modular operations have been taken from the 
+//! [Curve25519-dalek repository](https://github.com/dalek-cryptography/curve25519-dalek) and refactored to work 
+//! for the Doppio sub-group field.
 
 
 use core::fmt::Debug;
