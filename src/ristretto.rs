@@ -295,7 +295,7 @@ impl RistrettoPoint {
     /// to a point -- proper elligator support is deferred for now.
     #[allow(non_snake_case)]
     pub(crate) fn elligator_ristretto_flavor(r_0: &FieldElement) -> RistrettoPoint {
-        let (i, d) = (&constants::MINUS_SQRT_A, &constants::EDWARDS_D);
+        let (i, d) = (&constants::MINUS_SQRT_A, &constants::RISTRETTO_D);
         let one = FieldElement::one();
         let one_minus_d_sq = &one - &d.square();
         let d_minus_one_sq = (d - &one).square();
@@ -376,7 +376,6 @@ mod tests {
 
         let mut bad_bytes = [0u8; 32];
         for bad_encoding in &bad_encodings {
-            println!("{:?}", bad_encoding);
             bad_bytes.copy_from_slice(&hex::decode(bad_encoding).unwrap());
             assert!(CompressedRistretto(bad_bytes).decompress().is_none());
         }
@@ -410,7 +409,7 @@ mod tests {
             "e0c418f7c8d9c4cdd7395b93ea124f3ad99021bb681dfc3302a9d99a2e53e64e",
         ];
 
-        //let B = &constants::RISTRETTO_BASEPOINT_COMPRESSED.decompress().expect("Basepoint could not be decompressed.");
+        let B = &constants::RISTRETTO_BASEPOINT_COMPRESSED.decompress().expect("Basepoint could not be decompressed.");
         let mut P = RistrettoPoint::identity();
         for i in 0..16 {
             assert_eq!(
