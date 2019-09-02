@@ -94,7 +94,7 @@ impl CompressedRistretto {
         if s_is_positive.unwrap_u8() == 0u8 || s_correct_enc.unwrap_u8() == 0u8 {
             return None
         };
-
+        println!("Check1");
         // Step 2: Attempt to decompress the CompressedRistretto. 
         let one = FieldElement::one();
 
@@ -105,7 +105,7 @@ impl CompressedRistretto {
         let u2_sq = u2.square();
 
         // v = a*d*u1² - u2²
-        let v = -(constants::EDWARDS_D * u1.square()) - u2_sq;
+        let v = -(constants::RISTRETTO_D * u1.square()) - u2_sq;
         // I = 1/sqrt(v*u2²), returns `None` if the sqrt does not exist. 
         let (ok, I) = (v*u2_sq).inv_sqrt();
 
@@ -332,7 +332,6 @@ mod tests {
     use hex;
     use super::*;
 
-    #[ignore]
     #[test]
     fn bad_encodings() {
         // The following are invalid encodings, which should all be rejected.
@@ -354,7 +353,7 @@ mod tests {
             "f1c6165d33367351b0da8f6e4511010c68174a03b6581212c71c0e1d026c3c72",
             "87260f7a2f12495118360f02c26a470f450dadf34a413d21042b43b9d93e1309",
             // These are all bad because they give a nonsquare x^2.
-            "26948d35ca62e643e26a83177332e6b6afeb00000000000000000000000000000000000000000000000000000000000000009d08e4268b650f1f5bbd8d81d371",
+            "26948d35ca62e643e26a83177332e6b6afeb9d08e4268b650f1f5bbd8d81d371",
             "4eac077a713c57b4f4397629a4145982c661f48044dd3f96427d40b147d9742f",
             "de6a7b00deadc788eb6b6c8d20c0ae96c2f2019078fa604fee5b87d6e989ad7b",
             "bcab477be20861e01e4a0e295284146a510150d9817763caf1a6f4b422d67042",
@@ -377,12 +376,12 @@ mod tests {
 
         let mut bad_bytes = [0u8; 32];
         for bad_encoding in &bad_encodings {
+            println!("{:?}", bad_encoding);
             bad_bytes.copy_from_slice(&hex::decode(bad_encoding).unwrap());
             assert!(CompressedRistretto(bad_bytes).decompress().is_none());
         }
     }
 
-    #[ignore]
     #[test]
     fn ristretto_point_encoding() {
         // The following are the byte encodings of small multiples 
@@ -411,15 +410,23 @@ mod tests {
             "e0c418f7c8d9c4cdd7395b93ea124f3ad99021bb681dfc3302a9d99a2e53e64e",
         ];
 
-        let B = &constants::RISTRETTO_BASEPOINT_COMPRESSED.decompress().expect("Basepoint could not be decompressed.");
+        //let B = &constants::RISTRETTO_BASEPOINT_COMPRESSED.decompress().expect("Basepoint could not be decompressed.");
         let mut P = RistrettoPoint::identity();
         for i in 0..16 {
             assert_eq!(
                 hex::encode(P.compress().as_bytes()),
                 encodings_of_small_multiples[i],
             );
-            P = &P + B;
+            //P = &P + B;
         }
+    }
+
+    #[test]
+    fn identity() {
+        let id_ristretto = RistrettoPoint::identity().compress();
+
+        println!("{:?}", id_ristretto.decompress().unwrap());
+        println!("{:?}", constants::RISTRETTO_BASEPOINT_COMPRESSED.decompress().unwrap());
     }
 }
 
