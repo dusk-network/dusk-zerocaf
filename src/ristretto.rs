@@ -91,10 +91,10 @@ impl CompressedRistretto {
         // If the byte-encoding was incorrect or the representation is
         // a negative `FieldElement` (according to the definition of 
         // positive found on Decaf paper), return `None`. 
+        println!("{:?} {:?}", s_is_positive.unwrap_u8(), s_correct_enc.unwrap_u8());
         if s_is_positive.unwrap_u8() == 0u8 || s_correct_enc.unwrap_u8() == 0u8 {
             return None
         };
-        println!("Check1");
         // Step 2: Attempt to decompress the CompressedRistretto. 
         let one = FieldElement::one();
 
@@ -121,7 +121,7 @@ impl CompressedRistretto {
         let y = u1 * Dy;
         let t = x * y;
 
-        if ok.unwrap_u8() == 0u8 ||t.is_positive().unwrap_u8() == 0u8 || y == FieldElement::zero() {
+        if ok.unwrap_u8() == 0u8 || t.is_positive().unwrap_u8() == 0u8 || y == FieldElement::zero() {
             return None
         };
 
@@ -381,6 +381,7 @@ mod tests {
         }
     }
 
+    #[ignore]
     #[test]
     fn ristretto_point_encoding() {
         // The following are the byte encodings of small multiples 
@@ -416,16 +417,26 @@ mod tests {
                 hex::encode(P.compress().as_bytes()),
                 encodings_of_small_multiples[i],
             );
-            //P = &P + B;
+            P = &P + B;
         }
     }
 
     #[test]
-    fn identity() {
-        let id_ristretto = RistrettoPoint::identity().compress();
+    fn point_comp_decomp_equivalence() {
+        // This should give the CompressedRistretto Basepoint. 
+        assert!(constants::RISTRETTO_BASEPOINT.compress().decompress().unwrap() == constants::RISTRETTO_BASEPOINT);
 
-        println!("{:?}", id_ristretto.decompress().unwrap());
-        println!("{:?}", constants::RISTRETTO_BASEPOINT_COMPRESSED.decompress().unwrap());
+    }
+
+    #[ignore]
+    #[test]
+    fn get_ristretto_basepoint_multiples() {
+        let mut P = EdwardsPoint::identity();
+
+
+        /*for i in 0..15 {
+            println!("{:?}", hex::encode(data: T))
+        }*/
     }
 }
 

@@ -1,7 +1,8 @@
 //! Contains the curve-constants needed by different algorithm implementations.
 
 use crate::field::FieldElement;
-use crate::ristretto::CompressedRistretto;
+use crate::edwards::{EdwardsPoint, CompressedEdwardsY};
+use crate::ristretto::{CompressedRistretto, RistrettoPoint};
 
 /// Edwards `a` variable value = `-1 (mod l)` equals:
 /// `7237005577332262213973186563042994240857116359379907606001950938285454250988`
@@ -15,6 +16,22 @@ pub static EDWARDS_D: FieldElement = FieldElement([939392471225133, 587442007554
 
 /// Ristretto `d = -86649 (mod l)`.
 pub const RISTRETTO_D: FieldElement = FieldElement([86649, 0, 0, 0, 0]);
+
+/// Holds the value of the Doppio basepoint, which has been choosen as the `y`
+/// coordinate `100171752`. 
+/// The positive sign is choosen for it, so we leave it on it's cannonical bytes
+/// encoding. 
+pub const DOPPIO_BASEPOINT_COMPRESSED: CompressedEdwardsY = 
+        CompressedEdwardsY([232, 127, 248, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]); 
+
+
+/// Comes from taking the `y` Twisted Edwards coordinate as: `100171752`.
+pub const DOPPIO_BASEPOINT: EdwardsPoint = EdwardsPoint {
+            X: FieldElement([3265320031919788, 2344618945868358, 1522956767231782, 3674566506878787, 1422874481139]),
+            Y: FieldElement([100171752, 0, 0, 0, 0]),
+            Z: FieldElement([1, 0, 0, 0, 0]),
+            T: FieldElement([247433686587364, 3650682313482504, 3458624897327137, 1443086282535945, 8688752063094])
+        };
 
 /// Holds the value of one of both `sqrt(-1 (mod p)) values. 
 /// `SQRT_MINUS_ONE = 3034649101460298094273452163494570791663566989388331537498831373842135895065`. 
@@ -34,7 +51,7 @@ pub const SQRT_AD_MINUS_ONE : FieldElement = FieldElement([948229333137752, 2675
 
 /// The Ristretto basepoint, in `CompressedRistretto` format.
 pub const RISTRETTO_BASEPOINT_COMPRESSED: CompressedRistretto =
-    CompressedRistretto([0xe2, 0xf2, 0xae, 0x0a, 0x6a, 0xbc, 0x4e, 0x71,
-                         0xa8, 0x84, 0xa9, 0x61, 0xc5, 0x00, 0x51, 0x5f,
-                         0x58, 0xe3, 0x0b, 0x6a, 0xa5, 0x82, 0xdd, 0x8d,
-                         0xb6, 0xa6, 0x59, 0x45, 0xe0, 0x8d, 0x2d, 0x76]);
+    CompressedRistretto([45, 101, 136, 106, 139, 202, 154, 178, 57, 176, 95, 56, 189, 31, 96, 8, 216, 220, 5, 29, 234, 82, 195, 238, 188, 74, 48, 243, 219, 91, 136, 5]);
+
+/// The Ristretto Basepoint is the same as the Curve Basepoint. 
+pub const RISTRETTO_BASEPOINT: RistrettoPoint = RistrettoPoint(DOPPIO_BASEPOINT);
