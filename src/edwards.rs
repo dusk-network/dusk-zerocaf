@@ -1310,4 +1310,11 @@ pub mod tests {
                                              
         assert!(fail_compr.decompress().is_none());
     }
+
+    #[test]
+    fn point_compr_decompr_equivalence() {
+        assert!(P1_EXTENDED.compress().decompress().unwrap() == P1_EXTENDED);
+        assert!(P2_EXTENDED.compress().decompress().unwrap() == P2_EXTENDED);
+        assert!(constants::DOPPIO_BASEPOINT.compress().decompress().unwrap() == constants::DOPPIO_BASEPOINT);
+    }
 }
