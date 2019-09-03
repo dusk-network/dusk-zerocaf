@@ -499,7 +499,6 @@ impl SqrtRatioI<&FieldElement> for FieldElement {
             (true, _) => return (Choice::from(1u8), FieldElement::zero()),
             (false, true) => return (Choice::from(0u8), FieldElement::zero()),
             (false, false) => (),
-            default => panic!("Attempting to divide 0/0. Undeterminated."),
         };
 
         // (false, false) case. We check "QRness".
