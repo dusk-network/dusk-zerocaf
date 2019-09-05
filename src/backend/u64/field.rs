@@ -22,7 +22,7 @@ use num::Integer;
 
 use rand::{thread_rng, Rng};
 
-use crate::backend::u64::constants;
+use crate::backend::u64::constants as constants;
 use crate::scalar::Ristretto255Scalar;
 use crate::traits::Identity;
 use crate::traits::ops::*;
@@ -493,6 +493,8 @@ impl SqrtRatioI<&FieldElement> for FieldElement {
     ///- (false, zero) if v is zero and u is nonzero;
     ///- (false, +sqrt(i*u/v)) if u/v is nonsquare (so iu/v is square).
     fn sqrt_ratio_i(&self, v: &FieldElement) -> (Choice, FieldElement) {
+
+        let SQRT_MINUS_ONE: FieldElement = FieldElement([3075585030474777, 2451921961843096, 1194333869305507, 2218299809671669, 7376823328646]); 
         let zero = &FieldElement::zero();
 
         match(self == zero, v == zero) {
@@ -506,7 +508,7 @@ impl SqrtRatioI<&FieldElement> for FieldElement {
             // (u/v) is not QR, so we multiply by `i` and 
             // return `(false, +sqrt(i*u/v))`. 
             false => { 
-                let mut res = (&(&crate::constants::SQRT_MINUS_ONE * self) / v).mod_sqrt(Choice::from(1u8)).unwrap();
+                let mut res = (&SQRT_MINUS_ONE * &(self / v)).mod_sqrt(Choice::from(1u8)).unwrap();
                 res.conditional_negate(!res.is_positive());
                 (Choice::from(0u8), res)
             },
@@ -588,7 +590,7 @@ impl FieldElement {
     /// the Decaf paper criteria.
     /// 
     /// The criteria says: Non-negative field elements.
-    /// Letp > 2 be prime. Define a residue x ∈ F =Z/pZ to be 
+    /// Let p > 2 be prime. Define a residue x ∈ F =Z/pZ to be 
     /// “non-negative” if the least absolute residue for x is in 
     /// `[0,(p−1)/2]`, and “negative” otherwise.
     /// 
@@ -596,7 +598,7 @@ impl FieldElement {
     /// - `Choice(1)` if pos.
     /// - `Choice(0)` if neg.
     pub fn is_positive(&self) -> Choice {
-        if self >= &FieldElement::zero() && self < &constants::POS_RANGE {
+        if self >= &FieldElement::zero() && self <= &constants::POS_RANGE {
             return Choice::from(1)
         }
         Choice::from(0)
@@ -1499,6 +1501,10 @@ pub mod tests {
         assert!(&FieldElement([2, 0, 0, 0, 0]) < &FieldElement([0, 2, 0, 0, 0]));
         assert!(&FieldElement([0, 0, 0, 0, 1]) > &FieldElement([0, 2498436546, 6587652167965486, 0, 0]));
         assert!(&FieldElement([0, 1, 2, 3, 4]) == &FieldElement([0, 1, 2, 3, 4]));
+
+        let a = FieldElement([2661703213614107, 4265233234751588, 1645589673413357, 4427380897321203, 16037874393947]);
+        assert!(a >= FieldElement::zero());
+        assert!(a <= constants::POS_RANGE);
     }
 
     #[test]
