@@ -1501,10 +1501,6 @@ pub mod tests {
         assert!(&FieldElement([2, 0, 0, 0, 0]) < &FieldElement([0, 2, 0, 0, 0]));
         assert!(&FieldElement([0, 0, 0, 0, 1]) > &FieldElement([0, 2498436546, 6587652167965486, 0, 0]));
         assert!(&FieldElement([0, 1, 2, 3, 4]) == &FieldElement([0, 1, 2, 3, 4]));
-
-        let a = FieldElement([2661703213614107, 4265233234751588, 1645589673413357, 4427380897321203, 16037874393947]);
-        assert!(a >= FieldElement::zero());
-        assert!(a <= constants::POS_RANGE);
     }
 
     #[test]
