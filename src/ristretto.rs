@@ -21,7 +21,7 @@
 
 
 use crate::constants;
-use crate::edwards::EdwardsPoint;
+use crate::edwards::{EdwardsPoint, double_and_add};
 use crate::field::FieldElement;
 use crate::scalar::Scalar;
 use crate::traits::ops::*;
@@ -136,7 +136,7 @@ impl CompressedRistretto {
     }
 }
 
-
+#[derive(Clone, Copy)]
 pub struct RistrettoPoint (pub(crate) EdwardsPoint);
 
 impl Debug for RistrettoPoint {
@@ -209,50 +209,80 @@ impl Neg for RistrettoPoint {
 impl<'a, 'b> Add<&'a RistrettoPoint> for &'b RistrettoPoint {
     type Output = RistrettoPoint;
     /// Performs the addition of two RistrettoPoints following the 
-    /// Twisted Edwards Extended Coordinates formulae.
+    /// Twisted Edwards Extended Coordinates formulae but using as
+    /// `d` parameter the `RISTRETTO_D` instead of the `EDWARDS_D`.
+    /// 
+    /// This implementation is specific for curves with `a = -1` as 
+    /// the isomorphic twist is for Doppio.
+    /// 
+    /// [Source: 2008 Hisil–Wong–Carter–Dawson], 
+    /// (http://eprint.iacr.org/2008/522), Section 3.1.
     fn add(self, other: &'a RistrettoPoint) -> RistrettoPoint {
-        RistrettoPoint(&self.0 + &other.0)
-    }
+        unimplemented!()
+    }    
 }
 
 impl Add<RistrettoPoint> for RistrettoPoint {
     type Output = RistrettoPoint;
     /// Performs the addition of two RistrettoPoints following the 
-    /// Twisted Edwards Extended Coordinates formulae.
+    /// Twisted Edwards Extended Coordinates formulae but using as
+    /// `d` parameter the `RISTRETTO_D` instead of the `EDWARDS_D`.
+    /// 
+    /// This implementation is specific for curves with `a = -1` as 
+    /// the isomorphic twist is for Doppio.
+    /// 
+    /// [Source: 2008 Hisil–Wong–Carter–Dawson], 
+    /// (http://eprint.iacr.org/2008/522), Section 3.1.
     fn add(self, other: RistrettoPoint) -> RistrettoPoint {
-        RistrettoPoint(&self.0 + &other.0)
+        &self + &other
     }
 }
 
-impl<'a, 'b> Sub<&'a RistrettoPoint> for &'b RistrettoPoint {
+impl<'a> Double for &'a RistrettoPoint {
     type Output = RistrettoPoint;
-    /// Performs the subtraction of two RistrettoPoints following the 
-    /// Twisted Edwards Extended Coordinates formulae.
-    fn sub(self, other: &'a RistrettoPoint) -> RistrettoPoint {
-        RistrettoPoint(&self.0 - &other.0)
-    }
-}
-
-impl Sub<RistrettoPoint> for RistrettoPoint {
-    type Output = RistrettoPoint;
-    /// Performs the subtraction of two RistrettoPoints following the 
-    /// Twisted Edwards Extended Coordinates formulae.
-    fn sub(self, other: RistrettoPoint) -> RistrettoPoint {
-        RistrettoPoint(&self.0 - &other.0)
+    /// Performs the point doubling operation
+    /// ie. `2*P` over the Twisted Edwards Extended
+    /// Coordinates.
+    /// 
+    /// This implementation is specific for curves with `a = -1` as 
+    /// the isomorphic twist is.
+    /// Source: 2008 Hisil–Wong–Carter–Dawson, 
+    /// http://eprint.iacr.org/2008/522, Section 3.1.
+    /// Cost: 4M+ 4S+ 1D
+    fn double(self) -> RistrettoPoint {
+        RistrettoPoint(self.0.double())
     }
 }
 
 impl<'a, 'b> Mul<&'b Scalar> for &'a RistrettoPoint {
     type Output = RistrettoPoint;
+    /// Scalar multiplication: compute `self * Scalar`.
+    /// This implementation uses the algorithm:
+    /// `add_and_doubling` which is the standard one for
+    /// this operations and also adds less constraints on
+    /// R1CS.
+    /// 
+    /// Hankerson, Darrel; Vanstone, Scott; Menezes, Alfred (2004). 
+    /// Guide to Elliptic Curve Cryptography. 
+    /// Springer Professional Computing. New York: Springer-Verlag.
     fn mul(self, scalar: &'b Scalar) -> RistrettoPoint {
-        RistrettoPoint(&self.0 * scalar)
+        double_and_add(self, scalar)
     }
 }
 
 impl Mul<Scalar> for RistrettoPoint {
     type Output = RistrettoPoint;
+    /// Scalar multiplication: compute `self * Scalar`.
+    /// This implementation uses the algorithm:
+    /// `add_and_doubling` which is the standard one for
+    /// this operations and also adds less constraints on
+    /// R1CS.
+    /// 
+    /// Hankerson, Darrel; Vanstone, Scott; Menezes, Alfred (2004). 
+    /// Guide to Elliptic Curve Cryptography. 
+    /// Springer Professional Computing. New York: Springer-Verlag.
     fn mul(self, scalar: Scalar) -> RistrettoPoint {
-        RistrettoPoint(&self.0 * &scalar)
+        &self * &scalar
     }
 }
 
@@ -333,6 +363,28 @@ impl RistrettoPoint {
 mod tests {
     use hex;
     use super::*;
+
+    pub(self) static P1_RISTRETTO: RistrettoPoint = RistrettoPoint(EdwardsPoint {
+        X: FieldElement([23, 0, 0, 0, 0]),
+        Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]),
+        Z: FieldElement([1, 0, 0, 0, 0]),
+        T: FieldElement([4351986304670635, 4020128726404030, 674192131526433, 1158854437106827, 6468984742885])
+    });
+
+    /// `P3_RISTRETTO = 2P1_RISTRETTO` over Twisted Edwards Extended Coordinates. 
+    pub(self) static P3_RISTRETTO: RistrettoPoint = RistrettoPoint(EdwardsPoint {
+        X: FieldElement([3851124475403222, 3539758816612178, 1146717153316815, 2152796892260637, 5956037993247]),
+        Y: FieldElement([980361497621373, 1671502808757874, 2143986549518967, 1109176323830729, 9039277193734]),
+        Z: FieldElement([2942534902618579, 3556685217095302, 1974617438797742, 1657071371119364, 16635295697052]),
+        T: FieldElement([2487305805734419, 681684275336734, 499518740758148, 156812857292600, 3978688323434])
+    });
+
+    #[test]
+    fn ristretto_point_doubling() {
+        let res = P1_RISTRETTO.double();
+        
+        assert!(res == P3_RISTRETTO);
+    }
 
     #[ignore]
     #[test]
