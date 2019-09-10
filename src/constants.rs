@@ -9,13 +9,10 @@ use crate::ristretto::{CompressedRistretto, RistrettoPoint};
 /// where `l = Prime of the field = 2^252 + 27742317777372353535851937790883648493`
 pub static EDWARDS_A: FieldElement = FieldElement([671914833335276, 3916664325105025, 1367801, 0, 17592186044416]);
 
-/// Edwards `d` variable value = `86649/86650 (mod l)` equals:
-/// `1201935917638644956968126114584555454358623906841733991436515590915937358637`
+/// Edwards `d` variable value = `-126296/126297 (mod l)` equals:
+/// `951605751702391019481481818669129158712512026257330939079110344917983315091`
 /// where `l = Prime of the field = 2^252 + 27742317777372353535851937790883648493`
-pub static EDWARDS_D: FieldElement = FieldElement([939392471225133, 587442007554368, 4497154776428662, 4184267646867733, 2921744366591]);
-
-/// Ristretto `d = -86649 (mod l)`.
-pub const RISTRETTO_D: FieldElement = FieldElement([671914833248628, 3916664325105025, 1367801, 0, 17592186044416]);
+pub static EDWARDS_D: FieldElement = FieldElement([3304133203739795, 2446467598308289, 1534112949566882, 2032729967918914, 2313225441931]);
 
 /// Holds the value of the Doppio basepoint, which has been choosen as the `y`
 /// coordinate `100171752`. 
@@ -26,13 +23,38 @@ pub const DOPPIO_BASEPOINT_COMPRESSED: CompressedEdwardsY =
         CompressedEdwardsY([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]); 
 
 
-/// Comes from taking the `y` Twisted Edwards coordinate as: `100171752`.
+/// Comes from taking the `x` Twisted Edwards coordinate as: `4`.
 pub const DOPPIO_BASEPOINT: EdwardsPoint = EdwardsPoint {
-            X: FieldElement([3265320031919788, 2344618945868358, 1522956767231782, 3674566506878787, 1422874481139]),
-            Y: FieldElement([100171752, 0, 0, 0, 0]),
+            X: FieldElement([3461346045645288, 972387018214097, 4435206378704739, 3440261531857766, 17448879694677]),
+            Y: FieldElement([4083500257631147, 3305309464452868, 1629709588575767, 4306635512831061, 7662705179761]),
             Z: FieldElement([1, 0, 0, 0, 0]),
-            T: FieldElement([247433686587364, 3650682313482504, 3458624897327137, 1443086282535945, 8688752063094])
+            T: FieldElement([212017923156762, 2250920437320259, 2648273971913259, 353963282208220, 3122143411880])
         };
+
+/// 4Coset of a RistrettoPoint. 
+pub(crate) const FOUR_COSET_GROUP: [EdwardsPoint; 3] = 
+    [
+        EdwardsPoint {
+            X: FieldElement([2099929430230996, 1464742363261928, 3309265759432790, 2285299817698826, 10215362715769]),
+            Y: FieldElement([0, 0, 0, 0, 0]),
+            Z: FieldElement([1, 0, 0, 0, 0]),
+            T: FieldElement([0, 0, 0, 0, 0])
+        }, 
+
+        EdwardsPoint {
+            X: FieldElement([0, 0, 0, 0, 0]),
+            Y: FieldElement([671914833335276, 3916664325105025, 1367801, 0, 17592186044416]),
+            Z: FieldElement([1, 0, 0, 0, 0]),
+            T: FieldElement([0, 0, 0, 0, 0])
+        },
+        
+        EdwardsPoint {
+            X: FieldElement([3075585030474777, 2451921961843096, 1194333869305507, 2218299809671669, 7376823328646]),
+            Y: FieldElement([0, 0, 0, 0, 0]),
+            Z: FieldElement([1, 0, 0, 0, 0]),
+            T: FieldElement([0, 0, 0, 0, 0])
+        },
+    ];
 
 /// Holds the value of one of both `sqrt(-1 (mod p)) values. 
 /// `SQRT_MINUS_ONE = 3034649101460298094273452163494570791663566989388331537498831373842135895065`. 
@@ -44,11 +66,11 @@ pub static INV_SQRT_A: FieldElement = FieldElement([2099929430230996, 1464742363
 /// `(-)SQRT(a) (mod l)` equals: `4202356475871964119699734399548423449193549369991576068503119564443318355924`. 
 pub static MINUS_SQRT_A: FieldElement = FieldElement([2099929430230996, 1464742363261928, 3309265759432790, 2285299817698826, 10215362715769]);
 
-/// `INV_SQRT_A_MINUS_D = 6597598851246620382811217884446123466325309731460906167807735083660259066907`.
-pub const INV_SQRT_A_MINUS_D: FieldElement = FieldElement([2513811247091666, 4155030717723932, 2858009955324939, 76218730049292, 1554311650468]);
+/// `INV_SQRT_A_MINUS_D = 482283834104289360917429750399313974390948281833312135312952165682596457149`.
+pub const INV_SQRT_A_MINUS_D: FieldElement = FieldElement([550050132044477, 3953042081665262, 2971403105229349, 212915494370164, 1172367057772]);
 
-/// `SQRT_AD_MINUS_ONE = 639406726085641831161968678596870774531806627919001438194215854625195184082`.
-pub const SQRT_AD_MINUS_ONE : FieldElement = FieldElement([2661703213614107, 4265233234751588, 1645589673413357, 4427380897321203, 16037874393947]);
+/// `SQRT_AD_MINUS_ONE = `.
+pub const SQRT_AD_MINUS_ONE : FieldElement = FieldElement([3601277882726560, 1817821323014817, 1726005090908779, 2111284621343800, 648674458156]);
 
 /// The Ristretto basepoint, in `CompressedRistretto` format.
 pub const RISTRETTO_BASEPOINT_COMPRESSED: CompressedRistretto =

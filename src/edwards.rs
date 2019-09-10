@@ -530,6 +530,17 @@ impl EdwardsPoint {
        unimplemented!()
     }
 
+    /// Prints the 4Coset where the input `EdwardsPoint` 
+    /// lives in.
+    pub fn coset4(&self) -> [EdwardsPoint; 4] {
+        [
+            self.clone(),
+            self + &constants::FOUR_COSET_GROUP[0],
+            self + &constants::FOUR_COSET_GROUP[1],
+            self + &constants::FOUR_COSET_GROUP[2],
+        ]
+    }
+
     /// Compress this point to `CompressedEdwardsY` format.
     pub fn compress(&self) -> CompressedEdwardsY {
         let mut sign = Choice::from(0u8);

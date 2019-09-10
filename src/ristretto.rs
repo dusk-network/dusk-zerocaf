@@ -105,7 +105,7 @@ impl CompressedRistretto {
         let u2_sq = u2.square();
 
         // v = a*d*u1² - u2²
-        let v = -(constants::RISTRETTO_D * u1.square()) - u2_sq;
+        let v = -(constants::EDWARDS_D * u1.square()) - u2_sq;
         // I = 1/sqrt(v*u2²), returns `None` if the sqrt does not exist. 
         let (ok, I) = (v*u2_sq).inv_sqrt();
         if ok.unwrap_u8() == 0 {return None};
@@ -151,8 +151,12 @@ impl ConstantTimeEq for RistrettoPoint {
     /// and we are on the twisted case, we compare 
     /// X1*Y2 == Y1*X2. 
     fn ct_eq(&self, other: &RistrettoPoint) -> Choice {
-        (self.0.X * other.0.Y).to_bytes().ct_eq(
-            &(self.0.Y * other.0.X).to_bytes())
+        let X1Y2 = &self.0.X * &other.0.Y;
+        let Y1X2 = &self.0.Y * &other.0.X;
+        let X1X2 = &self.0.X * &other.0.X;
+        let Y1Y2 = &self.0.Y * &other.0.Y;
+
+        X1Y2.ct_eq(&Y1X2) | X1X2.ct_eq(&Y1Y2)
     }
 }
 
@@ -294,6 +298,7 @@ impl RistrettoPoint {
     pub fn compress(&self) -> CompressedRistretto {
         let u1 = (self.0.Z + self.0.Y) * (self.0.Z - self.0.Y);
         let u2 = self.0.X * self.0.Y;
+        println!("{:?}", (u1 * u2.square()).inv_sqrt());
         let (_, I) = (u1 * u2.square()).inv_sqrt();
         let D1 = u1 * I;
         let D2 = u2 * I;
@@ -327,7 +332,7 @@ impl RistrettoPoint {
     /// to a point -- proper elligator support is deferred for now.
     #[allow(non_snake_case)]
     pub(crate) fn elligator_ristretto_flavor(r_0: &FieldElement) -> RistrettoPoint {
-        let (i, d) = (&constants::MINUS_SQRT_A, &constants::RISTRETTO_D);
+        let (i, d) = (&constants::MINUS_SQRT_A, &constants::EDWARDS_D);
         let one = FieldElement::one();
         let one_minus_d_sq = &one - &d.square();
         let d_minus_one_sq = (d - &one).square();
@@ -364,72 +369,10 @@ mod tests {
     use hex;
     use super::*;
 
-    pub(self) static P1_RISTRETTO: RistrettoPoint = RistrettoPoint(EdwardsPoint {
-        X: FieldElement([23, 0, 0, 0, 0]),
-        Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]),
-        Z: FieldElement([1, 0, 0, 0, 0]),
-        T: FieldElement([4351986304670635, 4020128726404030, 674192131526433, 1158854437106827, 6468984742885])
-    });
-
-    /// `P3_RISTRETTO = 2P1_RISTRETTO` over Twisted Edwards Extended Coordinates. 
-    pub(self) static P3_RISTRETTO: RistrettoPoint = RistrettoPoint(EdwardsPoint {
-        X: FieldElement([3851124475403222, 3539758816612178, 1146717153316815, 2152796892260637, 5956037993247]),
-        Y: FieldElement([980361497621373, 1671502808757874, 2143986549518967, 1109176323830729, 9039277193734]),
-        Z: FieldElement([2942534902618579, 3556685217095302, 1974617438797742, 1657071371119364, 16635295697052]),
-        T: FieldElement([2487305805734419, 681684275336734, 499518740758148, 156812857292600, 3978688323434])
-    });
-
-    #[test]
-    fn ristretto_point_doubling() {
-        let res = P1_RISTRETTO.double();
-        
-        assert!(res == P3_RISTRETTO);
-    }
-
-    #[ignore]
-    #[test]
-    fn ristretto_point_encoding() {
-        // The following are the byte encodings of small multiples 
-        //     [0]B, [1]B, ..., [15]B
-        // of the basepoint, represented as hex strings.
-
-        let encodings_of_small_multiples = [
-            // This is the identity point
-            "0000000000000000000000000000000000000000000000000000000000000000",
-            // This is the basepoint
-            "e2f2ae0a6abc4e71a884a961c500515f58e30b6aa582dd8db6a65945e08d2d76",
-            // These are small multiples of the basepoint
-            "6a493210f7499cd17fecb510ae0cea23a110e8d5b901f8acadd3095c73a3b919",
-            "94741f5d5d52755ece4f23f044ee27d5d1ea1e2bd196b462166b16152a9d0259",
-            "da80862773358b466ffadfe0b3293ab3d9fd53c5ea6c955358f568322daf6a57",
-            "e882b131016b52c1d3337080187cf768423efccbb517bb495ab812c4160ff44e",
-            "f64746d3c92b13050ed8d80236a7f0007c3b3f962f5ba793d19a601ebb1df403",
-            "44f53520926ec81fbd5a387845beb7df85a96a24ece18738bdcfa6a7822a176d",
-            "903293d8f2287ebe10e2374dc1a53e0bc887e592699f02d077d5263cdd55601c",
-            "02622ace8f7303a31cafc63f8fc48fdc16e1c8c8d234b2f0d6685282a9076031",
-            "20706fd788b2720a1ed2a5dad4952b01f413bcf0e7564de8cdc816689e2db95f",
-            "bce83f8ba5dd2fa572864c24ba1810f9522bc6004afe95877ac73241cafdab42",
-            "e4549ee16b9aa03099ca208c67adafcafa4c3f3e4e5303de6026e3ca8ff84460",
-            "aa52e000df2e16f55fb1032fc33bc42742dad6bd5a8fc0be0167436c5948501f",
-            "46376b80f409b29dc2b5f6f0c52591990896e5716f41477cd30085ab7f10301e",
-            "e0c418f7c8d9c4cdd7395b93ea124f3ad99021bb681dfc3302a9d99a2e53e64e",
-        ];
-
-        let B = &constants::RISTRETTO_BASEPOINT_COMPRESSED.decompress().expect("Basepoint could not be decompressed.");
-        let mut P = RistrettoPoint::identity();
-        for i in 0..16 {
-            assert_eq!(
-                hex::encode(P.compress().as_bytes()),
-                encodings_of_small_multiples[i],
-            );
-            P = &P + B;
-        }
-    }
-
     #[test]
     fn point_comp_decomp_equivalence() {
         // This should give the RISTRETTO_BASEPOINT. 
-        let bc = constants::RISTRETTO_BASEPOINT.compress();
+        let bc = &constants::RISTRETTO_BASEPOINT.compress();
         println!("{:?}", bc);
         let bcd = bc.decompress().unwrap();
         println!("{:?}", bcd);
@@ -438,7 +381,43 @@ mod tests {
         let bcdcd = bcdc.decompress().unwrap();
         println!("{:?}", bcdcd);
 
+        for point in &bcdcd.0.coset4() {
+            println!("{:?}", point);
+        };
+
         assert!(bcdcd == constants::RISTRETTO_BASEPOINT);
+    }
+
+    #[test]
+    fn gqerhqerhreq() {
+        let a = EdwardsPoint::new_random_point();
+        println!("{:?}", a);
+        for point in &constants::FOUR_COSET_GROUP {
+            let p = &a + point;
+            println!("{:?}", p);
+            println!("Y pos? {:?}", p.Y.is_positive());
+            println!("X*Y pos? {:?}", (p.Y * p.X).is_positive());
+        };
+    }
+
+
+    #[test]
+    fn rhqwehrwth() {
+        let (ok, res) = (constants::EDWARDS_A - constants::EDWARDS_D).inv_sqrt();
+
+        assert!(res == constants::INV_SQRT_A_MINUS_D);
+    }
+
+    #[test]
+    fn ehrthrt() {
+        let basepoint = EdwardsPoint {
+            X: FieldElement([3461346045645288, 972387018214097, 4435206378704739, 3440261531857766, 17448879694677]),
+            Y: FieldElement([4083500257631147, 3305309464452868, 1629709588575767, 4306635512831061, 7662705179761]),
+            Z: FieldElement([1, 0, 0, 0, 0]),
+            T: FieldElement([212017923156762, 2250920437320259, 2648273971913259, 353963282208220, 3122143411880])
+        };
+
+        println!("{:?}", basepoint * Scalar::from(&8u8));
     }
 }
 
