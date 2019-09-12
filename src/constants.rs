@@ -23,17 +23,16 @@ pub const DOPPIO_BASEPOINT_COMPRESSED: CompressedEdwardsY =
         CompressedEdwardsY([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]); 
 
 
-/// Comes from taking the `x` Twisted Edwards coordinate as: `4`.
-pub const DOPPIO_BASEPOINT: EdwardsPoint = EdwardsPoint {
-            X: FieldElement([3461346045645288, 972387018214097, 4435206378704739, 3440261531857766, 17448879694677]),
-            Y: FieldElement([4083500257631147, 3305309464452868, 1629709588575767, 4306635512831061, 7662705179761]),
-            Z: FieldElement([1, 0, 0, 0, 0]),
-            T: FieldElement([212017923156762, 2250920437320259, 2648273971913259, 353963282208220, 3122143411880])
-        };
-
 /// 4Coset of a RistrettoPoint. 
-pub(crate) const FOUR_COSET_GROUP: [EdwardsPoint; 3] = 
+pub(crate) const FOUR_COSET_GROUP: [EdwardsPoint; 4] = 
     [
+        EdwardsPoint {
+            X: FieldElement([1, 0, 0, 0, 0]),
+            Y: FieldElement([0, 0, 0, 0, 0]),
+            Z: FieldElement([1, 0, 0, 0, 0]),
+            T: FieldElement([0, 0, 0, 0, 0])
+        }, 
+
         EdwardsPoint {
             X: FieldElement([2099929430230996, 1464742363261928, 3309265759432790, 2285299817698826, 10215362715769]),
             Y: FieldElement([0, 0, 0, 0, 0]),
@@ -71,10 +70,3 @@ pub const INV_SQRT_A_MINUS_D: FieldElement = FieldElement([550050132044477, 3953
 
 /// `SQRT_AD_MINUS_ONE = `.
 pub const SQRT_AD_MINUS_ONE : FieldElement = FieldElement([3601277882726560, 1817821323014817, 1726005090908779, 2111284621343800, 648674458156]);
-
-/// The Ristretto basepoint, in `CompressedRistretto` format.
-pub const RISTRETTO_BASEPOINT_COMPRESSED: CompressedRistretto =
-    CompressedRistretto([45, 101, 136, 106, 139, 202, 154, 178, 57, 176, 95, 56, 189, 31, 96, 8, 216, 220, 5, 29, 234, 82, 195, 238, 188, 74, 48, 243, 219, 91, 136, 5]);
-
-/// The Ristretto Basepoint is the same as the Curve Basepoint. 
-pub const RISTRETTO_BASEPOINT: RistrettoPoint = RistrettoPoint(DOPPIO_BASEPOINT);
