@@ -74,8 +74,7 @@ use crate::field::FieldElement;
 use crate::scalar::Scalar;
 use crate::montgomery::MontgomeryPoint;
 use crate::constants;
-use crate::traits::Identity;
-use crate::traits::ops::*;
+use crate::traits::{Identity, ValidityCheck, ops::*};
 
 
 use subtle::{Choice, ConstantTimeEq};
@@ -150,8 +149,6 @@ pub(self) fn find_xx(y: &FieldElement) -> FieldElement {
     let b = (constants::EDWARDS_D * y.square()) - constants::EDWARDS_A;
     a / b
 }
-
-
 
 // ---------------- Point Structs ---------------- //
 
@@ -336,6 +333,14 @@ impl Identity for EdwardsPoint {
             T: FieldElement::zero()
         }
     }
+}
+
+impl ValidityCheck for EdwardsPoint {
+
+   fn is_valid(self) -> Choice {
+       // Use (aX^{2}+Y^{2})Z^{2}=Z^{4}+dX^{2}Y^{2} in https://en.wikipedia.org/wiki/Twisted_Edwards_curve
+       unimplemented!()
+   }
 }
 
 impl<'a> From<&'a ProjectivePoint> for EdwardsPoint {
@@ -569,8 +574,8 @@ impl EdwardsPoint {
     /// Then Z is always equal to `1`.
     /// 
     /// # Returns
-    /// `Some(EdwardsPoint)` if there exists a result for the `mod_sqrt`
-    /// and `None` if the resulting `x^2` isn't a QR modulo `FIELD_L`. 
+    /// - `Some(EdwardsPoint)` if there exists a result for the `mod_sqrt`.
+    /// - `None` if the resulting `x^2` isn't a QR modulo `FIELD_L`. 
     pub fn new_from_y_coord(y: &FieldElement, sign: Choice) -> Option<EdwardsPoint> {
         match ProjectivePoint::new_from_y_coord(&y, sign) {
             None => return None,
@@ -957,6 +962,19 @@ impl PartialEq for AffinePoint {
 
 impl Eq for AffinePoint {}
 
+impl ValidityCheck for AffinePoint {
+    /// Verifies if the curve equation holds given the
+    /// (X, Y) coordinates of a point in Affine Coordinates. 
+    fn is_valid(self) -> Choice {
+        let x_sq = self.X.square();
+        let y_sq = self.Y.square();
+        let left = (FieldElement::minus_one() * x_sq) + y_sq;
+        let right = FieldElement::one() + (constants::EDWARDS_D * x_sq * y_sq);
+
+        left.ct_eq(&right)
+    }
+}
+
 impl<'a> From<&'a EdwardsPoint> for AffinePoint {
     /// Given (X:Y:Z:T) in εε, passing to affine can be 
     /// performed in 3M+ 1I by computing:
@@ -1320,12 +1338,5 @@ pub mod tests {
                                                         221, 149]);
                                              
         assert!(fail_compr.decompress().is_none());
-    }
-
-    #[test]
-    fn point_compr_decompr_equivalence() {
-        assert!(P1_EXTENDED.compress().decompress().unwrap() == P1_EXTENDED);
-        assert!(P2_EXTENDED.compress().decompress().unwrap() == P2_EXTENDED);
-        assert!(constants::DOPPIO_BASEPOINT.compress().decompress().unwrap() == constants::DOPPIO_BASEPOINT);
     }
 }
