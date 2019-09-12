@@ -1319,10 +1319,12 @@ pub mod tests {
         let a: FieldElement = FieldElement([86649, 0, 0, 0, 0]);
         let b: FieldElement = FieldElement([86650, 0, 0, 0, 0]);
 
+        let expected = FieldElement([939392471225133, 587442007554368, 4497154776428662, 4184267646867733, 2921744366591]);
+
         let res = -&a/b;
 
         for _i in 0..5 {
-            assert!(res == EDWARDS_D);
+            assert!(res == expected);
         }
     }
 
