@@ -1,5 +1,6 @@
 //! Module for Public Trait implementations.
 
+use subtle::Choice;
 
 /// Gives the Identity element for the
 /// type which it has been implemented on.
@@ -14,8 +15,26 @@ pub trait Identity {
     fn identity() -> Self;
 }
 
+/// This trait pretends to be a verification in ct_time
+/// about a point correctness. 
+/// 
+/// This is done through checking that the (X, Y) coordinates
+/// of the point are valid and satisfy the curve equation.
+pub trait ValidityCheck {
+
+    #[must_use]
+    /// Checks the point coordinates agains the curve equation
+    /// to validate that the point relies on the curve and its
+    /// valid.
+    /// 
+    /// # Returns
+    /// - `Choice(0)` if the point isn't a valid point. 
+    /// - `Choice(1)` if the point is valid.
+    fn is_valid(self) -> Choice;
+}
+
 pub mod ops {
-    use subtle::Choice;
+    use super::*;
 
     /// Trait that represents the `^2` operation for any
     /// kind of element on the library. 
