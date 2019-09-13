@@ -10,6 +10,9 @@ pub const L: Scalar = Scalar([1129677152307299, 1363544697812651, 714439, 0, 219
 /// `(L - 1) / 2` used to check positiveness of a `FieldElement` on the Decaf paper. 
 pub(crate) const POS_RANGE: FieldElement = FieldElement([2587757230352886, 4210131976237760, 683900, 0, 8796093022208]);
 
+/// `(L - 1) / 2` used to check positiveness of a `FieldElement` on the Decaf paper. 
+pub(crate) const POS_RANGE: FieldElement = FieldElement([2587757230352886, 4210131976237760, 683900, 0, 8796093022208]);
+
 /// Scalar-LFACTOR is the value that satisfies the equation: `L * LFACTOR = -1 (mod 2^52)`
 /// In this case, `LFACTOR` is the one used for the Montgomery Reduction algorithm,
 /// implemented on Scalar Arithmetics module.
