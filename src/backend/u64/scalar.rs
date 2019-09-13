@@ -318,13 +318,6 @@ fn m(x: u64, y: u64) -> u128 {
     (x as u128) * (y as u128)
 }
 
-/// u64 * u64 = u128 macro multiply helper
-macro_rules! m {
-    ($x:expr, $y:expr) => {
-        $x as u128 * $y as u128 
-    }
-}
-
 
 impl Scalar {
 
@@ -340,7 +333,7 @@ impl Scalar {
 
     /// Return a Scalar with value = `-1 (mod l)`.
     pub fn minus_one() -> Scalar {
-        Scalar([2766226127823334, 4237835465749098, 4503599626623787, 4503599627370495, 2199023255551])
+        Scalar([1129677152307298, 1363544697812651, 714439, 0, 2199023255552])
     }
 
     /// Evaluate if a `Scalar` is even or not.
@@ -475,28 +468,6 @@ impl Scalar {
         res[6] =                               m(a[2],b[4]) + m(a[3],b[3]) + m(a[4],b[2]);
         res[7] =                                              m(a[3],b[4]) + m(a[4],b[3]);
         res[8] =                                                             m(a[4],b[4]);
-
-        res
-    }
-
-    #[allow(dead_code)]
-    #[inline]
-    /// Compute `a * b`.
-    /// Note that this is just the normal way of performing a product. 
-    /// This operation returns back a double precision result stored
-    /// on a `[u128; 9] in order to avoid overflowings.
-    pub(self) fn mul_internal_macros(a: &Scalar, b: &Scalar) -> [u128; 9] {
-        let mut res = [0u128; 9];
-        
-        res[0] = m!(a[0],b[0]);
-        res[1] = m!(a[0],b[1]) + m!(a[1],b[0]);
-        res[2] = m!(a[0],b[2]) + m!(a[1],b[1]) + m!(a[2],b[0]);
-        res[3] = m!(a[0],b[3]) + m!(a[1],b[2]) + m!(a[2],b[1]) + m!(a[3],b[0]);
-        res[4] = m!(a[0],b[4]) + m!(a[1],b[3]) + m!(a[2],b[2]) + m!(a[3],b[1]) + m!(a[4],b[0]);
-        res[5] =                                 m!(a[1],b[4]) + m!(a[2],b[3]) + m!(a[3],b[2]) + m!(a[4],b[1]);
-        res[6] =                                                 m!(a[2],b[4]) + m!(a[3],b[3]) + m!(a[4],b[2]);
-        res[7] =                                                                 m!(a[3],b[4]) + m!(a[4],b[3]);
-        res[8] =                                                                                 m!(a[4],b[4]);
 
         res
     }
