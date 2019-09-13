@@ -4,6 +4,9 @@ use crate::field::FieldElement;
 use crate::edwards::{EdwardsPoint, CompressedEdwardsY};
 use crate::ristretto::{CompressedRistretto, RistrettoPoint};
 
+#[cfg(feature = "u64_backend")]
+pub use crate::backend::u64::constants::*;
+
 /// Edwards `a` variable value = `-1 (mod l)` equals:
 /// `7237005577332262213973186563042994240857116359379907606001950938285454250988`
 /// where `l = Prime of the field = 2^252 + 27742317777372353535851937790883648493`
@@ -13,15 +16,6 @@ pub static EDWARDS_A: FieldElement = FieldElement([671914833335276, 391666432510
 /// `951605751702391019481481818669129158712512026257330939079110344917983315091`
 /// where `l = Prime of the field = 2^252 + 27742317777372353535851937790883648493`
 pub static EDWARDS_D: FieldElement = FieldElement([3304133203739795, 2446467598308289, 1534112949566882, 2032729967918914, 2313225441931]);
-
-/// Holds the value of the Doppio basepoint, which has been choosen as the `y`
-/// coordinate `100171752`. 
-/// The positive sign is choosen for it, so we leave it on it's cannonical bytes
-/// encoding. 
-/// UNINPLEMENTED
-pub const DOPPIO_BASEPOINT_COMPRESSED: CompressedEdwardsY = 
-        CompressedEdwardsY([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]); 
-
 
 /// 4Coset of a RistrettoPoint. 
 pub(crate) const FOUR_COSET_GROUP: [EdwardsPoint; 4] = 
