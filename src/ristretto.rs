@@ -91,7 +91,6 @@ impl CompressedRistretto {
         // If the byte-encoding was incorrect or the representation is
         // a negative `FieldElement` (according to the definition of 
         // positive found on Decaf paper), return `None`. 
-        println!("Is positive? {:?} Is correct encoded?{:?}", s_is_positive.unwrap_u8(), s_correct_enc.unwrap_u8());
         if s_is_positive.unwrap_u8() == 0u8 || s_correct_enc.unwrap_u8() == 0u8 {
             return None
         };
@@ -122,7 +121,6 @@ impl CompressedRistretto {
         let y = u1 * Dy;
         let t = x * y;
 
-        println!("Is QR? {:?}  Is positive? {:?} Y is zero?  {:?}",ok.unwrap_u8(), t.is_positive().unwrap_u8(), y);
         if t.is_positive().unwrap_u8() == 0u8 || y == FieldElement::zero() {
             return None
         };
@@ -340,6 +338,16 @@ mod tests {
 
         let decompress = compress.decompress().unwrap();
         assert!(decompress == RistrettoPoint(constants::BASEPOINT));
+    }
+
+    #[test]
+    fn valid_encoding_comp() {
+        let mut P = EdwardsPoint::identity();
+        
+        for i in 0..16 {
+            println!("{:?}", hex::encode(RistrettoPoint(P).compress().as_bytes()));
+            P = &P + &constants::BASEPOINT;
+        }
     }
 }
 
