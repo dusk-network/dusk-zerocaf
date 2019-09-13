@@ -1357,4 +1357,13 @@ pub mod tests {
         assert!(P2_PROJECTIVE.is_valid().unwrap_u8() == 1u8);
         assert!(P4_EXTENDED.is_valid().unwrap_u8() == 1u8);
     }
+
+    #[test]
+    fn unique_basepoint_test() {
+        let y = FieldElement::from(&3u8) / FieldElement::from(&5u8);
+        let basep = EdwardsPoint::new_from_y_coord(&y, Choice::from(0u8)).unwrap();
+        
+        assert!(basep.is_valid().unwrap_u8() == 1u8);
+        assert!(basep * constants::L == EdwardsPoint::identity());
+    }
 }
