@@ -216,7 +216,7 @@ impl<'a, 'b> Add<&'a RistrettoPoint> for &'b RistrettoPoint {
     /// [Source: 2008 Hisil–Wong–Carter–Dawson], 
     /// (http://eprint.iacr.org/2008/522), Section 3.1.
     fn add(self, other: &'a RistrettoPoint) -> RistrettoPoint {
-        unimplemented!()
+        RistrettoPoint(&self.0 + &other.0)
     }    
 }
 
@@ -232,7 +232,7 @@ impl Add<RistrettoPoint> for RistrettoPoint {
     /// [Source: 2008 Hisil–Wong–Carter–Dawson], 
     /// (http://eprint.iacr.org/2008/522), Section 3.1.
     fn add(self, other: RistrettoPoint) -> RistrettoPoint {
-        unimplemented!()
+        &self + &other
     }
 }
 
@@ -248,7 +248,7 @@ impl<'a> Double for &'a RistrettoPoint {
     /// http://eprint.iacr.org/2008/522, Section 3.1.
     /// Cost: 4M+ 4S+ 1D
     fn double(self) -> RistrettoPoint {
-        unimplemented!()
+        RistrettoPoint(self.0.double())
     }
 }
 
@@ -347,6 +347,46 @@ mod tests {
         for i in 0..16 {
             println!("{:?}", hex::encode(RistrettoPoint(P).compress().as_bytes()));
             P = &P + &constants::BASEPOINT;
+        }
+    }
+
+    #[test]
+    fn valid_encoding_test_vectors() {
+        // The following are the byte encodings of small multiples 
+        //     [0]B, [1]B, ..., [15]B
+        // of the basepoint, represented as hex strings.
+        let encodings_of_small_multiples = [
+            // This is the identity point
+            "0000000000000000000000000000000000000000000000000000000000000000",
+            // This is the basepoint
+            "0200000000000000000000000000000000000000000000000000000000000000",
+            // These are small multiples of the basepoint
+            "abe4ea98eaaeda5a9c63879cb3c4d9b4a01ed31ac383acefd7ed49861e1a8002",
+            "1064fe35b16525f90f1d2f7d3dc448ba31a118f136c53eed88c2e951f1832907",
+            "a826cf66461dea21e51187dddd8753299b726a7d4217cb75758aefbf5a2d4f01",
+            "4d2e0705a9b47d122f98bd74808d386cf1691bc5407af703dd0c4808038b7f07",
+            "f3a3592fde5fa05a881b80b4e732b37c32c7f684a5be33cdb8b7bdaf53db6f04",
+            "51626c7960da63010efc5e064e62962f158f59928914fc108257ec2653745e01",
+            "d5f8144c1b04954291785be578633a79131752e82afb990bd4a25b41cbd49001",
+            "1372ed81add54633970746cd4b38ceb8a3e538b916288ac3d7c0dfbd54a42b06",
+            "a83d7a262a80926724a0beb75a5f26e9a622205e6a64730e14ce64c4b2acf704",
+            "a6b2712a6e586ab552f7bcf438168304b8b8a3f3b2852a06ae183e6303406503",
+            "7876266b939b889c1da827a76da5c220eb1ff934472d35de60c9e4c3528fcc06",
+            "11a0f75ab351572b572c38bf073b076aa964cdff70d53ad7588174dae2729306",
+            "64f2fb80b45fbf73793e9e8e509f98848ecdb452c98c83c55c5c31fb233d9907",
+            "1de5afbe9fd279f1651306d8ac0f68f0cb2689609ccfe8db1636f9481a33e205",
+        ];
+
+        // Test the encodings of small multiples
+
+        let B = constants::RISTRETTO_BASEPOINT;
+        let mut P = RistrettoPoint::identity();
+        for i in 0..16 {
+            assert_eq!(
+                hex::encode(P.compress().as_bytes()),
+                encodings_of_small_multiples[i],
+            );
+            P = P + B;
         }
     }
 }
