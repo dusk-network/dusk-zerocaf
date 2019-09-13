@@ -416,22 +416,21 @@ impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
     /// (http://eprint.iacr.org/2008/522), Section 3.1.
     #[inline]
     fn add(self, other: &'b EdwardsPoint) -> EdwardsPoint {
-        let A = &self.X * &other.X;
-        let B = &self.Y * &other.Y;
-        let C = &constants::EDWARDS_D * &(&self.T * &other.T);
-        let D = &self.Z * &other.Z;
-        let E = &(&(&(&self.X + &self.Y) * &(&other.X + &other.Y)) - &A) - &B;
-        let F = &D - &C;
-        let G = &D + &C;
-        let H = &B + &A;
+        let A = self.X * other.X;
+        let B = self.Y * other.Y;
+        let C = constants::EDWARDS_D * self.T * other.T;
+        let D = self.Z * other.Z;
+        let E = (self.X + self.Y) * (other.X + other.Y) - A - B;
+        let F = D - C;
+        let G = D + C;
+        let H = B + A;
 
         EdwardsPoint {
-            X: &E * &F,
-            Y: &G * &H,
-            Z: &F * &G,
-            T: &E * &H
+            X: E * F,
+            Y: G * H,
+            Z: F * G,
+            T: E * H,
         }
-        
     }
 }
 
@@ -668,8 +667,9 @@ impl ValidityCheck for ProjectivePoint {
         let y_sq = self.Y.square();
         let z_sq = self.Z.square();
 
-        let left = (constants::EDWARDS_A * (x_sq + y_sq)) * z_sq;
+        let left = ((constants::EDWARDS_A * x_sq) + y_sq) * z_sq;
         let right = z_sq.square() + (constants::EDWARDS_D * x_sq * y_sq);
+
         left.ct_eq(&right)
    }
 }
@@ -1007,10 +1007,10 @@ impl<'a> From<&'a EdwardsPoint> for AffinePoint {
     /// Huseyin Hisil, Kenneth Koon-Ho Wong, Gary Carter, 
     /// and Ed Dawson.
     fn from(point: &'a EdwardsPoint) -> AffinePoint {
-        let A = point.Z.inverse();
+        let Zinv = point.Z.inverse();
         AffinePoint {
-            X: point.X * A,
-            Y: point.Y * A
+            X: point.X * Zinv,
+            Y: point.Y * Zinv
         }
     }
 }
@@ -1025,9 +1025,10 @@ impl<'a> From<&'a ProjectivePoint> for AffinePoint {
     /// Huseyin Hisil, Kenneth Koon-Ho Wong, Gary Carter, 
     /// and Ed Dawson.
     fn from(point: &'a ProjectivePoint) -> AffinePoint {
+        let Zinv =  point.Z.inverse();
         AffinePoint {
-            X: point.X * point.Z.inverse(),
-            Y: point.Y * point.Z.inverse()
+            X: point.X * Zinv,
+            Y: point.Y * Zinv
         }
     }
 }
@@ -1064,110 +1065,96 @@ impl Neg for AffinePoint {
 pub mod tests {
     use super::*;
 
-    pub(self) static P1_AFFINE: AffinePoint = AffinePoint {
-        X: FieldElement([23, 0, 0, 0, 0]),
-        Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998])
+    pub(self) const P1_AFFINE: AffinePoint = AffinePoint {
+        X: FieldElement([13, 0, 0, 0, 0]),
+        Y: FieldElement([606320128494542, 1597163540666577, 1835599237877421, 1667478411389512, 3232679738299])
     };
 
-    pub(self) static P2_AFFINE: AffinePoint = AffinePoint {
-        X: FieldElement([68, 0, 0, 0, 0]),
-        Y: FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]),
+    pub(self) const P2_AFFINE: AffinePoint = AffinePoint {
+        X: FieldElement([67, 0, 0, 0, 0]),
+        Y: FieldElement([2369245568431362, 2665603790611352, 3317390952748653, 1908583331312524, 8011773354506]),
     };
 
-    pub(self) static P1_EXTENDED: EdwardsPoint = EdwardsPoint {
-        X: FieldElement([23, 0, 0, 0, 0]),
-        Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]),
+    pub(self) const P1_EXTENDED: EdwardsPoint = EdwardsPoint {
+        X: FieldElement([13, 0, 0, 0, 0]),
+        Y: FieldElement([606320128494542, 1597163540666577, 1835599237877421, 1667478411389512, 3232679738299]),
         Z: FieldElement([1, 0, 0, 0, 0]),
-        T: FieldElement([4351986304670635, 4020128726404030, 674192131526433, 1158854437106827, 6468984742885])
+        T: FieldElement([2034732376387996, 3922598123714460, 1344791952818393, 3662820838581677, 6840464509059])
     };
 
-    pub(self) static P2_EXTENDED: EdwardsPoint = EdwardsPoint {
-        X: FieldElement([68, 0, 0, 0, 0]),
-        Y: FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]),
+    pub(self) const P2_EXTENDED: EdwardsPoint = EdwardsPoint {
+        X: FieldElement([67, 0, 0, 0, 0]),
+        Y: FieldElement([2369245568431362, 2665603790611352, 3317390952748653, 1908583331312524, 8011773354506]),
         Z: FieldElement([1, 0, 0, 0, 0]),
-        T: FieldElement([3505259403500377, 292342788271022, 2608000066641474, 796697979921534, 2995435405555])
+        T: FieldElement([3474019263728064, 2548729061993416, 1588812051971430, 1774293631565269, 9023233419450])
     };
 
     /// `P4_EXTENDED = P1_EXTENDED + P2_EXTENDED` over Twisted Edwards Extended Coordinates. 
-    pub(self) static P4_EXTENDED: EdwardsPoint = EdwardsPoint {
-        X: FieldElement([1933054591726350, 4403792816774408, 3029093546253310, 1134491999944368, 8146384875494]),
-        Y: FieldElement([3369514960042642, 4355698098047571, 1547650124195635, 1314697306673062, 12051634278308]),
-        Z: FieldElement([576719056868307, 1763329757922533, 3184642959683715, 2550235128581121, 11094626825862]),
-        T: FieldElement([4345938036071968, 1280347559053553, 3286762790776823, 3577757860131876, 6505793015434])
+    pub(self) const P4_EXTENDED: EdwardsPoint = EdwardsPoint {
+        X: FieldElement([28731243678497, 3605893500953713, 4417389530006141, 299092414682919, 4656166963268]),
+        Y: FieldElement([1108585916087857, 594338741746768, 1302451816332899, 2952667069736952, 9685400790709]),
+        Z: FieldElement([3678126740275983, 2102367182843193, 1215780564383894, 577880234309233, 3967832577760]),
+        T: FieldElement([1187490310723625, 475595246262913, 1092363334429875, 285623496107549, 15708045001361])
     };
 
     /// `P3_EXTENDED = 2P1_EXTENDED` over Twisted Edwards Extended Coordinates. 
-    pub(self) static P3_EXTENDED: EdwardsPoint = EdwardsPoint {
-        X: FieldElement([3851124475403222, 3539758816612178, 1146717153316815, 2152796892260637, 5956037993247]),
-        Y: FieldElement([980361497621373, 1671502808757874, 2143986549518967, 1109176323830729, 9039277193734]),
-        Z: FieldElement([2942534902618579, 3556685217095302, 1974617438797742, 1657071371119364, 16635295697052]),
-        T: FieldElement([2487305805734419, 681684275336734, 499518740758148, 156812857292600, 3978688323434])
+    pub(self) const P3_EXTENDED: EdwardsPoint = EdwardsPoint {
+        X: FieldElement([1476979596852032, 1246004597497903, 209071396735379, 2301211094775178, 8305779568088]),
+        Y: FieldElement([2443441861872082, 2091934391169607, 4475713698486302, 2663476425643860, 11068724258563]),
+        Z: FieldElement([3359568035147073, 1010422717320416, 4098443973666364, 1207164847672527, 9657319892454]),
+        T: FieldElement([4430735055822517, 4109982164990701, 4066725032805467, 1974812232939042, 2107656041478])
     };
 
-    pub(self) static P1_PROJECTIVE: ProjectivePoint = ProjectivePoint {
-        X: FieldElement([23, 0, 0, 0, 0]),
-        Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]),
+    pub(self) const P1_PROJECTIVE: ProjectivePoint = ProjectivePoint {
+        X: FieldElement([13, 0, 0, 0, 0]),
+        Y: FieldElement([606320128494542, 1597163540666577, 1835599237877421, 1667478411389512, 3232679738299]),
         Z: FieldElement([1, 0, 0, 0, 0])
     };
 
-    pub(self) static P2_PROJECTIVE: ProjectivePoint = ProjectivePoint {
-        X: FieldElement([68, 0, 0, 0, 0]),
-        Y: FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]),
+    pub(self) const P2_PROJECTIVE: ProjectivePoint = ProjectivePoint {
+        X: FieldElement([67, 0, 0, 0, 0]),
+        Y: FieldElement([2369245568431362, 2665603790611352, 3317390952748653, 1908583331312524, 8011773354506]),
         Z: FieldElement([1, 0, 0, 0, 0])
     };
 
     /// `P4_PROJECTIVE = P1_PROJECTIVE + P2_PROJECTIVE` over Twisted Edwards Projective Coordinates. 
-    pub(self) static P4_PROJECTIVE: ProjectivePoint = ProjectivePoint {
-        X: FieldElement([1933054591726350, 4403792816774408, 3029093546253310, 1134491999944368, 8146384875494]),
-        Y: FieldElement([3369514960042642, 4355698098047571, 1547650124195635, 1314697306673062, 12051634278308]),
-        Z: FieldElement([576719056868307, 1763329757922533, 3184642959683715, 2550235128581121, 11094626825862])
+    pub(self) const P4_PROJECTIVE: ProjectivePoint = ProjectivePoint {
+        X: FieldElement([28731243678497, 3605893500953713, 4417389530006141, 299092414682919, 4656166963268]),
+        Y: FieldElement([1108585916087857, 594338741746768, 1302451816332899, 2952667069736952, 9685400790709]),
+        Z: FieldElement([3678126740275983, 2102367182843193, 1215780564383894, 577880234309233, 3967832577760])
     };
 
     /// `P3_PROJECTIVE = 2P1_PROJECTIVE` over Twisted Edwards Projective Coordinates. 
-    pub(self) static P3_PROJECTIVE: ProjectivePoint = ProjectivePoint {
-        X: FieldElement([3851124475403222, 3539758816612178, 1146717153316815, 2152796892260637, 5956037993247]),
-        Y: FieldElement([980361497621373, 1671502808757874, 2143986549518967, 1109176323830729, 9039277193734]),
-        Z: FieldElement([2942534902618579, 3556685217095302, 1974617438797742, 1657071371119364, 16635295697052])
+    pub(self) const P3_PROJECTIVE: ProjectivePoint = ProjectivePoint {
+        X: FieldElement([1476979596852032, 1246004597497903, 209071396735379, 2301211094775178, 8305779568088]),
+        Y: FieldElement([2443441861872082, 2091934391169607, 4475713698486302, 2663476425643860, 11068724258563]),
+        Z: FieldElement([3359568035147073, 1010422717320416, 4098443973666364, 1207164847672527, 9657319892454])
     };
 
     /// `P1_EXTENDED on `CompressedEdwardsY` format.
-    pub(self) static P1_COMPRESSED: CompressedEdwardsY = CompressedEdwardsY([216, 221, 167, 21, 54, 234, 101, 84, 47, 
-                                                                            55, 89, 137, 7, 175, 226, 87, 240, 1, 227, 
-                                                                            18, 81, 168, 46, 95, 65, 36, 110, 118, 217, 
-                                                                            246, 20, 140]);
+    pub(self) const P1_COMPRESSED: CompressedEdwardsY = CompressedEdwardsY([206, 11, 225, 231, 113, 39, 18, 141, 
+                                                                            213, 215, 201, 201, 90, 173, 14, 134, 
+                                                                            192, 119, 133, 134, 164, 26, 38, 1, 
+                                                                            201, 94, 187, 59, 186, 170, 240, 2]);
 
     /// `P1_EXTENDED on `CompressedEdwardsY` format.
-    pub(self) static P2_COMPRESSED: CompressedEdwardsY = CompressedEdwardsY([251, 144, 188, 47, 13, 101, 118, 
-                                                                            114, 201, 185, 169, 115, 255, 111, 
-                                                                            40, 25, 69, 105, 170, 255, 113, 65, 
-                                                                            12, 126, 170, 192, 48, 109, 112, 20, 
-                                                                            221, 14]);
+    pub(self) const P2_COMPRESSED: CompressedEdwardsY = CompressedEdwardsY([2, 245, 125, 248, 208, 106, 136, 57, 
+                                                                            210, 240, 163, 133, 151, 109, 214, 81, 
+                                                                            69, 38, 201, 203, 56, 203, 247, 138, 
+                                                                            125, 108, 10, 162, 231, 98, 73, 7]);
 
                                                                             
     //------------------ Tests ------------------//
 
     #[test]
     fn from_projective_to_extended() {
-        let p3_extended_proj = ProjectivePoint {
-            X: FieldElement([23, 0, 0, 0, 0]),
-            Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]),
-            Z: FieldElement([1, 0, 0, 0, 0])
-        };
-
-        assert!(EdwardsPoint::from(&p3_extended_proj) == P1_EXTENDED);
+        assert!(EdwardsPoint::from(&P1_PROJECTIVE) == P1_EXTENDED);
     }
 
     #[test]
     fn from_extended_to_projective() {
-        let p3_extended_proj = ProjectivePoint {
-            X: FieldElement([23, 0, 0, 0, 0]),
-            Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]),
-            Z: FieldElement([1, 0, 0, 0, 0])
-        };
-
-        assert!(p3_extended_proj == ProjectivePoint::from(&P1_EXTENDED));
+        assert!(P1_PROJECTIVE == ProjectivePoint::from(&P1_EXTENDED));
     }
-
 
     #[test]
     fn extended_point_neg() {
@@ -1193,7 +1180,8 @@ pub mod tests {
     #[test]
     fn extended_point_addition() {
         let res = &P1_EXTENDED + &P2_EXTENDED;
-
+        println!("{:?}", AffinePoint::from(&(&P2_EXTENDED + &P1_EXTENDED)));   
+        println!("{:?}", AffinePoint::from(&(&P2_PROJECTIVE + &P1_PROJECTIVE)));
         assert!(res == P4_EXTENDED);
     }
 
@@ -1207,7 +1195,7 @@ pub mod tests {
     #[test]
     fn extended_point_doubling() {
         let res = P1_EXTENDED.double();
-        
+
         assert!(res == P3_EXTENDED);
     }
 
@@ -1223,13 +1211,13 @@ pub mod tests {
 
     #[test]
     fn extended_point_generation() {
-        let y2 = FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]);
+        let y2 = FieldElement([2369245568431362, 2665603790611352, 3317390952748653, 1908583331312524, 8011773354506]);
         let p2 = EdwardsPoint::new_from_y_coord(&y2, Choice::from(0u8)).unwrap();
 
         assert!(p2 == P2_EXTENDED); 
 
-        let y1 = FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]);
-        let p1 = EdwardsPoint::new_from_y_coord(&y1, Choice::from(1u8)).unwrap();
+        let y1 = FieldElement([606320128494542, 1597163540666577, 1835599237877421, 1667478411389512, 3232679738299]);
+        let p1 = EdwardsPoint::new_from_y_coord(&y1, Choice::from(0u8)).unwrap();
 
         assert!(p1 == P1_EXTENDED);
 
@@ -1285,13 +1273,13 @@ pub mod tests {
 
     #[test]
     fn projective_point_generation() {
-        let y2 = FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]);
+        let y2 = FieldElement([2369245568431362, 2665603790611352, 3317390952748653, 1908583331312524, 8011773354506]);
         let p2 = ProjectivePoint::new_from_y_coord(&y2, Choice::from(0u8)).unwrap();
 
         assert!(p2 == P2_PROJECTIVE); 
 
-        let y1 = FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]);
-        let p1 = ProjectivePoint::new_from_y_coord(&y1, Choice::from(1u8)).unwrap();
+        let y1 = FieldElement([606320128494542, 1597163540666577, 1835599237877421, 1667478411389512, 3232679738299]);
+        let p1 = ProjectivePoint::new_from_y_coord(&y1, Choice::from(0u8)).unwrap();
 
         assert!(p1 == P1_PROJECTIVE);
 
@@ -1326,18 +1314,17 @@ pub mod tests {
 
     #[test]
     fn point_compression() {
-        println!("{:?}", P1_EXTENDED.compress());
-        let compr = CompressedEdwardsY::from_slice(&[216, 221, 167, 21, 54, 234, 101, 84, 
-                                               47, 55, 89, 137, 7, 175, 226, 87, 240, 
-                                               1, 227, 18, 81, 168, 46, 95, 65, 36, 110, 
-                                               118, 217, 246, 20, 140]);
+        println!("{:?}", P2_EXTENDED.compress());
+        let compr = CompressedEdwardsY::from_slice(&[206, 11, 225, 231, 113, 39, 18, 141, 
+                                                     213, 215, 201, 201, 90, 173, 14, 134, 
+                                                     192, 119, 133, 134, 164, 26, 38, 1, 
+                                                     201, 94, 187, 59, 186, 170, 240, 2]);
         assert!(compr == P1_EXTENDED.compress());
 
-        let compr2 = CompressedEdwardsY::from_slice(&[251, 144, 188, 47, 13, 101, 118, 
-                                                    114, 201, 185, 169, 115, 255, 111, 
-                                                    40, 25, 69, 105, 170, 255, 113, 65, 
-                                                    12, 126, 170, 192, 48, 109, 112, 20, 
-                                                    221, 14]);
+        let compr2 = CompressedEdwardsY::from_slice(&[2, 245, 125, 248, 208, 106, 136, 57, 
+                                                      210, 240, 163, 133, 151, 109, 214, 81, 
+                                                      69, 38, 201, 203, 56, 203, 247, 138, 
+                                                      125, 108, 10, 162, 231, 98, 73, 7]);
         assert!(compr2 == P2_EXTENDED.compress());       
     }
 
@@ -1348,10 +1335,10 @@ pub mod tests {
 
         // Define a compressed point which y coordinate does not
         // rely on the curve.
-        let fail_compr = CompressedEdwardsY::from_slice(&[251, 144, 188, 47, 13, 101, 118, 
+        let fail_compr = CompressedEdwardsY::from_slice(&[250, 144, 188, 47, 13, 101, 118, 
                                                         114, 201, 185, 169, 115, 255, 111, 
                                                         40, 25, 69, 105, 170, 255, 113, 65, 
-                                                        12, 126, 170, 192, 48, 109, 112, 20, 
+                                                        120, 126, 170, 192, 48, 109, 112, 20, 
                                                         221, 149]);
                                              
         assert!(fail_compr.decompress().is_none());
