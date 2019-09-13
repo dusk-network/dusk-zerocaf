@@ -1343,4 +1343,18 @@ pub mod tests {
                                              
         assert!(fail_compr.decompress().is_none());
     }
+
+    #[test]
+    fn validity_check() {
+        // Affine Coords. 
+        assert!(AffinePoint::identity().is_valid().unwrap_u8() == 1u8);
+        assert!(P1_AFFINE.is_valid().unwrap_u8() == 1u8);
+        assert!(P2_AFFINE.is_valid().unwrap_u8() == 1u8);
+    
+        // Projective / Extended Coords (use the same formula).
+        assert!(EdwardsPoint::identity().is_valid().unwrap_u8() == 1u8);
+        assert!(P1_EXTENDED.is_valid().unwrap_u8() == 1u8);
+        assert!(P2_PROJECTIVE.is_valid().unwrap_u8() == 1u8);
+        assert!(P4_EXTENDED.is_valid().unwrap_u8() == 1u8);
+    }
 }
