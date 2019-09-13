@@ -18,8 +18,8 @@
 //! let a = FieldElement::from_bytes(&[0u8;32]); 
 //! 
 //! // You ca also create a FieldElement from an uint type as follows:
-//! let b = FieldElement::from(&86649u128);
-//! let c = FieldElement::from(&86650u64);
+//! let b = FieldElement::from(&126296u128);
+//! let c = FieldElement::from(&126297u64);
 //! 
 //! // You can create random FieldElements by calling: 
 //! let rand = FieldElement::generate_random();
@@ -46,7 +46,7 @@
 //! 
 //! // Division has been also implemented. Remember that when we write
 //! // a/b (mod l), we are indeed performing a * inverse_mod(b, l) (mod l).
-//! assert!(-&(b / c) == EDWARDS_D);
+//! assert!((-b / c) == EDWARDS_D);
 //! 
 //! // Dividing by two even FieldElements is recommended through the `Half`
 //! // trait implmementation since it's much faster.
