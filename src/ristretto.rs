@@ -21,7 +21,7 @@
 
 
 use crate::constants;
-use crate::edwards::{EdwardsPoint, double_and_add};
+use crate::edwards::{EdwardsPoint, double_and_add, mul_by_pow_2};
 use crate::field::FieldElement;
 use crate::scalar::Scalar;
 use crate::traits::ops::*;
@@ -344,6 +344,7 @@ impl RistrettoPoint {
 mod tests {
     use hex;
     use super::*;
+    use crate::edwards::CompressedEdwardsY;
 
     #[test]
     fn basepoint_compr_decompr() {
@@ -395,8 +396,6 @@ mod tests {
 
     #[test]
     fn decompress_id() {
-        use crate::edwards::CompressedEdwardsY;
-
         let compressed_id = CompressedRistretto::identity();
         let id = compressed_id.decompress().unwrap();
         let mut identity_in_coset = false;
@@ -406,6 +405,18 @@ mod tests {
             }
         }
         assert!(identity_in_coset);
+    }
+
+     #[test]
+    fn four_torsion_diff() { 
+        let bp_compr_decompr = constants::RISTRETTO_BASEPOINT.compress().decompress().unwrap().0;
+
+        // Check that bp_compr_decompr differs from the
+        // original RistrettoBasepoint by a point of order 4.
+        let point_order_4 = &constants::RISTRETTO_BASEPOINT.0 - &bp_compr_decompr;
+
+        let verif = mul_by_pow_2(&point_order_4, &4);
+        assert_eq!(verif.compress(), CompressedEdwardsY::identity());
     }
 }
 
