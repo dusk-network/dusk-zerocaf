@@ -333,6 +333,12 @@ impl RistrettoPoint {
     pub(crate) fn elligator_ristretto_flavor(r_0: &FieldElement) -> RistrettoPoint {
         unimplemented!()
     }
+
+    /// Debugging function used to get the 4coset where a point
+    /// lives.
+    pub(self) fn coset4(&self) -> [EdwardsPoint; 4] {
+        self.0.coset4()
+    }
 }
 
 mod tests {
