@@ -157,8 +157,11 @@ impl ConstantTimeEq for RistrettoPoint {
     /// and we are on the twisted case, we compare 
     /// X1*Y2 == Y1*X2. 
     fn ct_eq(&self, other: &RistrettoPoint) -> Choice {
-        (self.0.X * other.0.Y).to_bytes().ct_eq(
-            &(self.0.Y * other.0.X).to_bytes())
+        let a = (self.0.X * other.0.Y).to_bytes().ct_eq(
+            &(self.0.Y * other.0.X).to_bytes());
+        let b = (self.0.X * other.0.X).to_bytes().ct_eq(
+            &(self.0.Y * other.0.Y).to_bytes());
+        a | b
     }
 }
 
