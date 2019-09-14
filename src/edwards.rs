@@ -548,11 +548,15 @@ impl EdwardsPoint {
 
     /// Compress this point to `CompressedEdwardsY` format.
     pub fn compress(&self) -> CompressedEdwardsY {
-        let mut sign = Choice::from(0u8);
-        let res = find_xx(&self.Y).mod_sqrt(sign).unwrap();
+        // Get the Affine point coordinates and compress
+        // the point using them.
+        let point = AffinePoint::from(self);
 
-        if res != self.X {sign = Choice::from(1u8);};
-        let mut compr = self.Y.to_bytes();
+        let mut sign = Choice::from(0u8);
+        let res = find_xx(&point.Y).mod_sqrt(sign).unwrap();
+
+        if res != point.X {sign = Choice::from(1u8);};
+        let mut compr = point.Y.to_bytes();
 
         // Set the highest bit of the last byte as the symbol. 
         compr[31] |= sign.unwrap_u8() << 7;
