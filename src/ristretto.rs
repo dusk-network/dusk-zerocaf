@@ -345,7 +345,6 @@ impl RistrettoPoint {
 }
 
 mod tests {
-    use hex;
     use super::*;
     use crate::edwards::CompressedEdwardsY;
 
@@ -357,6 +356,7 @@ mod tests {
         assert!(decompress == RistrettoPoint(constants::BASEPOINT));
     }
 
+    #[cfg(feature = "hex")]
     #[test]
     fn valid_encoding_test_vectors() {
         // The following are the byte encodings of small multiples 
