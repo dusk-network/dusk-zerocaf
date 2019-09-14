@@ -421,5 +421,17 @@ mod tests {
         let verif = mul_by_pow_2(&point_order_4, &4);
         assert_eq!(verif.compress(), CompressedEdwardsY::identity());
     }
+
+    #[test]
+    fn four_coset_eq() {
+        use crate::edwards::AffinePoint;
+
+        let basepoint = constants::RISTRETTO_BASEPOINT;
+        let basep_coset = basepoint.coset4();
+
+        for coset_point in &basep_coset {
+            assert!(RistrettoPoint(*coset_point) == basepoint);
+        }
+    }
 }
 
