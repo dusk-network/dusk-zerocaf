@@ -61,6 +61,14 @@ impl PartialEq for CompressedRistretto {
 
 impl Eq for CompressedRistretto {}
 
+impl Identity for CompressedRistretto {
+    /// Returns the Identity point on `CompressedRistretto`
+    /// format. 
+    fn identity() -> CompressedRistretto {
+        CompressedRistretto([0u8; 32])
+    }
+}
+
 impl CompressedRistretto {
     /// Get the bytes of the `CompressedRistretto` point.
     pub fn as_bytes(&self) -> [u8; 32] {
@@ -284,7 +292,6 @@ impl Mul<Scalar> for RistrettoPoint {
     }
 }
 
-
 impl RistrettoPoint {
     /// Encode a Ristretto point represented by the point `(X:Y:Z:T)`
     /// in extended coordinates. 
@@ -341,16 +348,6 @@ mod tests {
     }
 
     #[test]
-    fn valid_encoding_comp() {
-        let mut P = EdwardsPoint::identity();
-        
-        for i in 0..16 {
-            println!("{:?}", hex::encode(RistrettoPoint(P).compress().as_bytes()));
-            P = &P + &constants::BASEPOINT;
-        }
-    }
-
-    #[test]
     fn valid_encoding_test_vectors() {
         // The following are the byte encodings of small multiples 
         //     [0]B, [1]B, ..., [15]B
@@ -388,6 +385,21 @@ mod tests {
             );
             P = P + B;
         }
+    }
+
+    #[test]
+    fn decompress_id() {
+        use crate::edwards::CompressedEdwardsY;
+
+        let compressed_id = CompressedRistretto::identity();
+        let id = compressed_id.decompress().unwrap();
+        let mut identity_in_coset = false;
+        for P in &id.0.coset4() {
+            if P.compress() == CompressedEdwardsY::identity() {
+                identity_in_coset = true;
+            }
+        }
+        assert!(identity_in_coset);
     }
 }
 
