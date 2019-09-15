@@ -63,6 +63,8 @@ use crate::backend;
 use subtle::Choice;
 use subtle::ConstantTimeEq;
 
+use rand::{Rng, CryptoRng};
+
 
 #[cfg(feature = "u64_backend")]
 pub use backend::u64::scalar::*;
@@ -90,6 +92,20 @@ impl ConstantTimeEq for Scalar {
 }
 
 impl Eq for Scalar {}
+
+impl Scalar {
+    /// Generate a valid Scalar choosen uniformly using user-
+    /// provided rng.
+    /// 
+    /// By `rng` we mean any Rng that implements: `Rng` + `CryptoRng`.
+    pub fn random<T>(rand: &mut T) -> Scalar 
+        where T: Rng + CryptoRng {
+            let mut bytes = [0u8; 32];
+            rand.fill_bytes(&mut bytes);
+            Scalar::from_bytes(&bytes)
+    }
+}
+
 
 /// This is a type alias for the Scalar type in the `curve25519-dalek` lib.
 pub type Ristretto255Scalar = curve25519_dalek::scalar::Scalar;

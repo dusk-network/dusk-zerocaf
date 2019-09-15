@@ -72,6 +72,8 @@ use core::cmp::PartialEq;
 
 use subtle::{Choice, ConstantTimeEq, ConditionallySelectable}; 
 
+use rand::{Rng, CryptoRng};
+
 use crate::backend;
 
 
@@ -110,6 +112,19 @@ impl ConditionallySelectable for FieldElement {
             u64::conditional_select(&a.0[3], &b.0[3], choice),
             u64::conditional_select(&a.0[4], &b.0[4], choice)
         ])
+    }
+}
+
+impl FieldElement {
+    /// Generate a valid FieldElement choosen uniformly using user-
+    /// provided rng.
+    /// 
+    /// By `rng` we mean any Rng that implements: `Rng` + `CryptoRng`.
+    pub fn random<T>(rand: &mut T) -> FieldElement 
+        where T: Rng + CryptoRng {
+            let mut bytes = [0u8; 32];
+            rand.fill_bytes(&mut bytes);
+            FieldElement::from_bytes(&bytes)
     }
 }
 

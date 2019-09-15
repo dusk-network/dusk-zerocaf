@@ -16,8 +16,6 @@ use std::cmp::{PartialOrd, Ordering, Ord};
 
 use num::Integer;
 
-use rand::{Rng, CryptoRng};
-
 use crate::backend::u64::constants;
 use crate::traits::Identity;
 use crate::traits::ops::*;
@@ -589,13 +587,6 @@ impl Scalar {
             limbs[i] = self[i] as u128;
         }
         Scalar::montgomery_reduce(&limbs)
-    }
-
-    pub fn random<T>(rand: &mut T) -> Scalar 
-        where T: Rng + CryptoRng {
-            let mut bytes = [0u8; 32];
-            rand.fill_bytes(&mut bytes);
-            Scalar::from_bytes(&bytes)
     }
 }
 
