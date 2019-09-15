@@ -3,7 +3,7 @@
 //! represented in radix `2^52`.
 //! 
 //! //! The basic modular operations have been taken from the 
-//! [Curve25519-dalek repository](https://github.com/dalek-cryptography/curve25519-dalek) and refactored to work 
+//! [curve25519-dalek repository](https://github.com/dalek-cryptography/curve25519-dalek) and refactored to work 
 //! for the Doppio sub-group field.
 
 
@@ -16,12 +16,14 @@ use std::cmp::{PartialOrd, Ordering, Ord};
 
 use num::Integer;
 
+use rand::{Rng, CryptoRng};
+
 use crate::backend::u64::constants;
 use crate::traits::Identity;
 use crate::traits::ops::*;
 
 /// The `Scalar` struct represents an Scalar over the modulo
-/// `2^249 - 15145038707218910765482344729778085401` as 5 52-bit limbs
+/// `2^249 + 14490550575682688738086195780655237219` as 5 52-bit limbs
 /// represented in radix `2^52`.
 #[derive(Copy,Clone)]
 pub struct Scalar(pub [u64; 5]);
@@ -587,6 +589,13 @@ impl Scalar {
             limbs[i] = self[i] as u128;
         }
         Scalar::montgomery_reduce(&limbs)
+    }
+
+    pub fn random<T>(rand: &mut T) -> Scalar 
+        where T: Rng + CryptoRng {
+            let mut bytes = [0u8; 32];
+            rand.fill_bytes(&mut bytes);
+            Scalar::from_bytes(&bytes)
     }
 }
 
