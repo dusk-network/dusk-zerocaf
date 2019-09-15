@@ -5,6 +5,9 @@
 //! Go there for the full lecture or check the paper here: 
 //! https://tools.ietf.org/pdf/draft-hdevalence-cfrg-ristretto-00.pdf
 //! 
+//! The code wa originaly created by Isis Agora Lovecruft and 
+//! Henry de Valence [here](https://github.com/dalek-cryptography/curve25519-dalek/blob/master/src/ristretto.rs)
+//! 
 //! # What's Ristretto?
 //! Ristretto is a construction of a prime-order group using a non-prime-order Edwards curve.
 //! The Decaf paper suggests using a non-prime-order curve E\mathcal EE to implement a prime-order
@@ -154,7 +157,7 @@ impl ConstantTimeEq for RistrettoPoint {
     /// As specified on the Ristretto protocol docs: 
     /// https://ristretto.group/formulas/equality.html
     /// and we are on the twisted case, we compare 
-    /// X1*Y2 == Y1*X2. 
+    /// `X1*Y2 == Y1*X2 | X1*X2 == Y1*Y2`.
     fn ct_eq(&self, other: &RistrettoPoint) -> Choice {
         let a = (self.0.X * other.0.Y).to_bytes().ct_eq(
             &(self.0.Y * other.0.X).to_bytes());
@@ -327,6 +330,8 @@ impl RistrettoPoint {
     }
 
     /// Computes the Ristretto Elligator map.
+    /// This gets a `RistrettoPoint` from a given
+    /// `FieldElement´.
     pub(crate) fn elligator_ristretto_flavor(r_0: &FieldElement) -> RistrettoPoint {
         let (i, d) = (&constants::MINUS_SQRT_A, &constants::EDWARDS_D);
         let one = &FieldElement::one();
@@ -366,6 +371,36 @@ impl RistrettoPoint {
     /// lives.
     pub(self) fn coset4(&self) -> [EdwardsPoint; 4] {
         self.0.coset4()
+    }
+
+    /// Construct a `RistrettoPoint` from 64 bytes of data.
+    ///
+    /// If the input bytes are uniformly distributed, the resulting
+    /// point will be uniformly distributed over the group, and its
+    /// discrete log with respect to other points should be unknown.
+    ///
+    /// # Implementation
+    ///
+    /// This function splits the input array into two 32-byte halves,
+    /// takes the low 255 bits of each half mod p, applies the
+    /// Ristretto-flavored Elligator map to each, and adds the results.
+    /// 
+    /// This function is taken from the Ristretto255 implementation found
+    /// in [curve25519-dalek](https://github.com/dalek-cryptography/curve25519-dalek/blob/cf03d39f0fc3e1c625b9f1e9be0473758b324526/src/ristretto.rs#L713)
+    pub fn from_uniform_bytes(bytes: &[u8; 64]) -> RistrettoPoint {
+        let mut r_1_bytes = [0u8; 32];
+        r_1_bytes.copy_from_slice(&bytes[0..32]);
+        let r_1 = FieldElement::from_bytes(&r_1_bytes);
+        let R_1 = RistrettoPoint::elligator_ristretto_flavor(&r_1);
+
+        let mut r_2_bytes = [0u8; 32];
+        r_2_bytes.copy_from_slice(&bytes[32..64]);
+        let r_2 = FieldElement::from_bytes(&r_2_bytes);
+        let R_2 = RistrettoPoint::elligator_ristretto_flavor(&r_2);
+
+        // Applying Elligator twice and adding the results ensures a
+        // uniform distribution.
+        &R_1 + &R_2
     }
 }
 
@@ -437,6 +472,8 @@ mod tests {
 
      #[test]
     fn four_torsion_diff() { 
+        use crate::edwards::mul_by_pow_2;
+
         let bp_compr_decompr = constants::RISTRETTO_BASEPOINT.compress().decompress().unwrap().0;
 
         // Check that bp_compr_decompr differs from the
