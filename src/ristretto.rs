@@ -21,7 +21,7 @@
 
 
 use crate::constants;
-use crate::edwards::{EdwardsPoint, double_and_add, mul_by_pow_2};
+use crate::edwards::{EdwardsPoint, double_and_add};
 use crate::field::FieldElement;
 use crate::scalar::Scalar;
 use crate::traits::ops::*;
@@ -31,8 +31,7 @@ use core::ops::{Add, Mul, Neg, Index};
 
 use std::fmt::Debug;
 
-use subtle::{Choice, ConstantTimeEq, ConditionallyNegatable};
-
+use subtle::{Choice, ConstantTimeEq, ConditionallyNegatable, ConditionallySelectable};
 
 /// Ristretto Point expressed in wire format.
 /// Since the Ristretto bytes encoding is canonical,
@@ -328,13 +327,39 @@ impl RistrettoPoint {
     }
 
     /// Computes the Ristretto Elligator map.
-    ///
-    /// # Note
-    ///
-    /// This method is not public because it's just used for hashing
-    /// to a point -- proper elligator support is deferred for now.
     pub(crate) fn elligator_ristretto_flavor(r_0: &FieldElement) -> RistrettoPoint {
-        unimplemented!()
+        let (i, d) = (&constants::MINUS_SQRT_A, &constants::EDWARDS_D);
+        let one = &FieldElement::one();
+        let mut c = -one;
+
+        // 1 - d^2
+        let one_minus_d_sq = one - &d.square();
+        // r = i*r0^2
+        let r = i * &r_0.square();
+        // Ns = a(r+1)*(a+d)*(a-d)
+        let N_s = &(&r + one) * &one_minus_d_sq;
+        // D = (d*r -a)*(a*r -d)
+        let D = &(c - (d * &r)) * &(&r + d);
+        // s = sqrt(Ns/D)
+        let (Ns_D_is_sq, mut s) = N_s.sqrt_ratio_i(&D);
+
+        //s' = -ABS(s*r0)
+        let mut s_prim = &s*r_0;
+        s_prim.conditional_negate(s_prim.is_positive());
+
+        s.conditional_assign(&s_prim, !Ns_D_is_sq);
+        c.conditional_assign(&r, !Ns_D_is_sq);
+        // Nt = c(r-1)*(d-1)^2 - D
+        let N_t = &(&(c * (&r - &one)) * &(d - one).square()) - &D;
+        let s_square = s.square();
+
+
+        RistrettoPoint(EdwardsPoint{
+            X: &(&s + &s) * &D,
+            Z: &N_t * &constants::SQRT_AD_MINUS_ONE,
+            Y: &FieldElement::one() - &s_square,
+            T: &FieldElement::one() + &s_square,
+        })
     }
 
     /// Debugging function used to get the 4coset where a point
@@ -423,7 +448,7 @@ mod tests {
     }
 
     #[test]
-    fn four_coset_eq() {
+    fn four_coset_eq_basepoint() {
         use crate::edwards::AffinePoint;
 
         let basepoint = constants::RISTRETTO_BASEPOINT;
