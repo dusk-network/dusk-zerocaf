@@ -28,13 +28,14 @@ use crate::edwards::{EdwardsPoint, double_and_add};
 use crate::field::FieldElement;
 use crate::scalar::Scalar;
 use crate::traits::ops::*;
-use crate::traits::Identity;
+use crate::traits::{Identity, ValidityCheck};
 
 use core::ops::{Add, Mul, Neg, Index};
 
 use std::fmt::Debug;
 
 use subtle::{Choice, ConstantTimeEq, ConditionallyNegatable, ConditionallySelectable};
+use rand::{Rng, CryptoRng};
 
 /// Ristretto Point expressed in wire format.
 /// Since the Ristretto bytes encoding is canonical,
@@ -190,6 +191,26 @@ impl Default for RistrettoPoint {
     /// `(X, Y, Z, T)` = `(0, 1, 1, 0)`.
     fn default() -> RistrettoPoint {
         RistrettoPoint::identity()
+    }
+}
+
+impl ValidityCheck for RistrettoPoint {
+    /// A valid `RistrettoPoint` should have exactly 
+    /// order `L` (Scalar Field Order) and also
+    /// verify the curve equation. 
+    /// 
+    /// This trait is mostly implemented for debugging purposes.
+    /// 
+    /// # Returns
+    /// - `Choice(1) if the point has order L (not 2L, 4L or 8L) & 
+    /// satisfies the curve equation.
+    /// - `Choice(0) if the point does not satisfy one of the conditions
+    /// mentioned avobe.
+    fn is_valid(self) -> Choice {        
+        let identity = RistrettoPoint::identity();
+        // Verify that the point has order `L` (Sub group order). 
+        let has_order_l = (self * constants::L).ct_eq(&identity);
+        has_order_l & self.0.is_valid()
     }
 }
 
@@ -511,6 +532,32 @@ mod tests {
         for coset_point in &basep_coset {
             assert!(RistrettoPoint(*coset_point) == basepoint);
         }
+    }
+
+    #[test]
+    fn validity_check() {
+        // RISTRETTO_BASEPOINT should be valid. 
+        assert!(constants::RISTRETTO_BASEPOINT.is_valid().unwrap_u8() == 1u8);
+        // The identity and multiples of the basepoint should also be valid. 
+        let mut P = RistrettoPoint::identity();
+        let basep = constants::RISTRETTO_BASEPOINT;
+        for i in 0..16 {
+            assert!(P.is_valid().unwrap_u8() == 1u8);
+            P = P + basep;
+        };
+
+        // This point has order `8L` is a valid `EdwardsPoint` 
+        // but it's not a valid `RistrettoPoint`.
+        let y_coord_bytes_8L = FieldElement::from_bytes(&[177, 118, 250, 81, 30, 181, 58, 122, 
+                                                        224, 214, 112, 52, 50, 60, 95, 199,
+                                                        213, 167, 143, 108, 154, 218, 242, 27, 
+                                                        175, 111, 152, 152, 213, 211, 157, 15]);
+        let point_8L = EdwardsPoint::new_from_y_coord(&y_coord_bytes_8L, Choice::from(0u8)).unwrap();                                          
+        assert!(point_8L.is_valid().unwrap_u8() == 1u8);
+        println!("{:?}", RistrettoPoint(point_8L));
+        assert!(RistrettoPoint(point_8L).is_valid().unwrap_u8() == 0u8);
+
+
     }
 }
 
