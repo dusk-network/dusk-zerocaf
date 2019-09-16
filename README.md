@@ -36,7 +36,7 @@ defining the curve over the scalar field, using only a thin abstraction layer, w
 |--|--|--|
 | Equation | Edwards -x²+y²=1-$`\frac{126296}{126297}`$x²y² | -|
 | a | -1 | - |
-| d | $`\frac{126296}{126297}`$ | - |
+| d | $`-\frac{126296}{126297}`$ | - |
 | B | $`\frac{3}{5}`$ | Edwards Basepoint Y-coordinate With X > 0 | 
 
 <br/>
