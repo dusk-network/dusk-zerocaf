@@ -8,7 +8,7 @@
 
 ## Fast, efficient and bulletproof-friendly cryptographic operations.
 
-This repository contains an implementation of the Doppio curve over the `Ristretto Scalar field`: a pure Rust implementation designed by [Dusk](https://dusk.network) team.
+This repository contains an implementation of the Sonny curve over the `Ristretto Scalar field`: a pure Rust implementation designed by [Dusk](https://dusk.network) team.
 
 Special thanks to Isis Agora Lovecruft and Henry de Valence for their implementation of [Curve25519-dalek library](https://github.com/dalek-cryptography/curve25519-dalek),
 which has been so useful in order to get some of the basic arithmetic ops and the structure of our library.
@@ -22,14 +22,11 @@ Ristretto was designed by the [dalek-cryprography](https://github.com/dalek-cryp
 
 ### Ristretto Scalar Field And Bulletproofs.
 
-Originally designed to abstract _non-prime-order curves into prime-order scalar fields_, the `Ristretto` abstraction would have been far too inefficient to implement for Bulletproofs zero-knowledge proof. Therefore the `Ristretto scalar field` is used to **solve all negative impacts of using cofactors equalling 8 on the Ristretto curve.**. The strategy is to use a _Ristretto embedded curve_ (also called `Doppio Curve`), as the initial operations within `zerocaf` are performed therein. `zerocaf` opens up new opportunities for the use cases of **zero-knowledge proofs** inside the Dusk Network protocol as well as making a _Bulletproof-integrated ring signature substitute possible_, with orders of magnitude performance improvements compared to the fastest ringsig implementation.
+Originally designed to abstract _non-prime-order curves into prime-order scalar fields_, the `Ristretto` abstraction would have been far too inefficient to implement for Bulletproofs zero-knowledge proof. Therefore the `Ristretto scalar field` is used to **solve all negative impacts of using cofactors equalling 8 on the Ristretto curve.**. The strategy is to use a _Ristretto embedded curve_ (also called `Sonny Curve`), as the initial operations within `zerocaf` are performed therein. `zerocaf` opens up new opportunities for the use cases of **zero-knowledge proofs** inside the Dusk Network protocol as well as making a _Bulletproof-integrated ring signature substitute possible_, with orders of magnitude performance improvements compared to the fastest ringsig implementation.
 
 Within this library, the implementation of the Ristretto to construct the curve with desired properties is made possible by 
 defining the curve over the scalar field, using only a thin abstraction layer, which in turn allows for systems that use signatures to be safely extended with zero-knowledge protocols. These zero-knowledge protocols are utilised with no additional cryptographic assumptions and minimal changes in the code. The Ristretto scalar field is Bulletproof friendly, which makes it possible to use both cryptographic protocols in tandem with one another, as they are centric to contemporary applications of elliptic curve operations.
 
-Special thanks to [@ebfull](https://github.com/ebfull) who triggered this work with the following tweet:
-
-<blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">Here&#39;s an &quot;embedded&quot; curve over ristretto255&#39;s scalar field<br><br>-x^2 + y^2 = 1 - (86649/86650)x^2y^2<br><br>which is Ristretto-ready and birationally equivalent to<br><br>y^2 = x^3 + 346598x^2 + x (and it&#39;s twist secure)<br><br>Any other suggestions?</p>&mdash; Sean Bowe (@ebfull) <a href="https://twitter.com/ebfull/status/1087571257057406976?ref_src=twsrc%5Etfw">January 22, 2019</a></blockquote>
 
 ## Details
 
@@ -37,32 +34,30 @@ Special thanks to [@ebfull](https://github.com/ebfull) who triggered this work w
 
 | Variable | Value | Explanation |
 |--|--|--|
-| Equation | Edwards -x²+y²=1-$`\frac{86649}{86650}`$x²y² | -|
+| Equation | Edwards -x²+y²=1-$`\frac{126296}{126297}`$x²y² | -|
 | a | -1 | - |
-| d | $`\frac{86649}{86650}`$ | - |
-| B | $`\frac{8}{9}`$ | Edwards Basepoint Y-coordinate With X > 0 | 
+| d | $`\frac{126296}{126297}`$ | - |
+| B | $`\frac{3}{5}`$ | Edwards Basepoint Y-coordinate With X > 0 | 
 
 <br/>
 
 | Montgomery | y²=x³+346598*x²+x |
 |--|--|
-| u(P) | 17 | `u` coordinate of the Montgomery Basepoint, X-coordinate | \
-| A | 346598 | |
+| u(P) | 4 | `u` coordinate of the Montgomery Basepoint, X-coordinate | \
+| A | 505186 | |
 
 <br/>
 
 | Weierstrass | y²=x³+ax+b |
 |--|--|
-| a | 2412335192444087404657728854347664746952372119793302535333983646055108025796 | |
-| b | 1340186218024493002587627141304258192751317844329612519629993998710484804961 | |
-| x | 2412335192444087404657728854347664746952372119793302535333983646095151532546 | |
-| y | 6222320563903764848551041754877036140234555813488015858364752483591799173948 | |
+| a | 7237005577332262213973186563042994240857116359379907606001950828033483786813 | |
+| b | 445582015604702849664 | |
 
 | Variable | Value | Explanation |
 |--|--|--|
-| G | 2²⁵² - 121160309657751286123858757838224683208 | Curve order |
+| G | 2²⁵² + 115924404605461509904689566245241897752 | Curve order |
 | p | 2²⁵² + 27742317777372353535851937790883648493 | Prime of the field |
-| r | 2²⁴⁹ - 15145038707218910765482344729778085401 | Prime of the Sub-Group |\
+| r | 2²⁴⁹ + 15114490550575682688738086195780655237219 | Prime of the Sub-Group |\
 
 <br/>
 
@@ -133,26 +128,32 @@ Note: the refactoring relations are expressed as indentations
        - [x] Implement Point Subtraction.
        - [x] Implement Point Doubling.
        - [x] Implement Scalar Mul.
-       - [ ] Implement from_bytes conversions.
-       - [ ] Implement to byte conversions.
+       - [x] Implement from_bytes conversions.
+       - [x] Implement to byte conversions.
        - [ ] Implement compressed Edwards point Y-coordinate.
     - [ ] Implement Twisted Edwards Projective Coordiates.
        - [x] Implement Point Addition.
        - [x] Implement Point Subtraction.
        - [x] Implement Point Doubling.
        - [x] Implement Scalar Mul.
-       - [ ] Implement from_bytes conversions.
-       - [ ] Implement to byte conversions.
+       - [x] Implement from_bytes conversions.
+       - [x] Implement to byte conversions.
        - [ ] Implement compressed Edwards point Y-coordinate.
     - [ ] Represent Edwards points as Ristretto points using wrapping function (research).
     - [x] Cargo doc testing and improvement.
-    - [ ] Decide the best use cases of the various Edwards coordinate types (compressed, standard, extended, projective).
+    - [x] Decide the best use cases of the various Edwards coordinate types (compressed, standard, extended, projective).
     - [ ] Benchmark different implementations and algorithms.
     - [ ] Research About Niels and ProjectiveNiels coordinates usage.
-    - [ ] Implement Ristretto Mapping.
+    - [x] Implement Ristretto Mapping.
     - [ ] Build and test torsion points.
     - [ ] Test all point operations for Edwards Points.
+    - [x] Generate Ristretto points from basepoint 
+    - [ ] Generate random Ristretto points 
+    - [x] Implement encoding process for Ristretto points 
+    - [x] Implement decoding process for Ristretto points
+    - [ ] Implement equality testing for Ristretto points
  - [ ] Implement Montgomery and Edwards operations & functions.
+ - [x] Find torquing points and cannoically lift curve points
  
  
 > Operations with large numbers are recommended to be done in `SageMath`, from which they can be converted in a continuous format with rust and compiled easily after each computation. 
