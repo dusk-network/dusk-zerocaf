@@ -41,7 +41,7 @@ defining the curve over the scalar field, using only a thin abstraction layer, w
 
 <br/>
 
-| Montgomery | y²=x³+346598*x²+x |
+| Montgomery | y²=x³+505186*x²+x |
 |--|--|
 | u(P) | 4 | `u` coordinate of the Montgomery Basepoint, X-coordinate | \
 | A | 505186 | |
