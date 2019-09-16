@@ -79,7 +79,7 @@ use crate::traits::{Identity, ValidityCheck, ops::*};
 
 use subtle::{Choice, ConstantTimeEq};
 
-use rand::{Rng, thread_rng};
+use rand::{Rng, CryptoRng};
 
 use std::default::Default;
 use std::fmt::Debug;
@@ -914,18 +914,19 @@ impl ProjectivePoint {
     /// This function tries to build a Point over the Doppio Curve from
     /// a random `Y` coordinate and a random Choice that determines the 
     /// Sign o the `X` coordinate.
-    pub fn new_random_point() -> ProjectivePoint {
-        // Gen a random `Y` coordinate value.
-        let y = FieldElement::generate_random();
+    pub fn new_random_point<T: Rng + CryptoRng>(rand: &mut T) -> ProjectivePoint {
+        // Gen a random `Y` coordinate value from an user-provided
+        // randomness source.
+        let y = FieldElement::random(&mut rand);
         // Gen a random sign choice. 
-        let sign = Choice::from(thread_rng().gen_range(0u8, 1u8));
+        let sign = Choice::from(rand.gen_range(0u8, 1u8));
 
         // Until we don't get a valid `Y` value, call the
         // function recursively.
         match ProjectivePoint::new_from_y_coord(&y, sign) {
-            None => ProjectivePoint::new_random_point(),
+            None => ProjectivePoint::new_random_point(&mut rand),
             Some(point) => return point,
-        }    
+        }
     }
 }
 
