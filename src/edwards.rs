@@ -590,11 +590,11 @@ impl EdwardsPoint {
     /// This function tries to build a Point over the Doppio Curve from
     /// a random `Y` coordinate and a random Choice that determines the 
     /// Sign o the `X` coordinate.
-    pub fn new_random_point() -> EdwardsPoint {
+    pub fn new_random_point<T: Rng + CryptoRng>(rand: &mut T) -> EdwardsPoint {
         // Simply generate a random `ProjectivePoint`
         // and once we get one that is valid, switch 
         // it to Extended Coordinates.
-        EdwardsPoint::from(&ProjectivePoint::new_random_point())   
+        EdwardsPoint::from(&ProjectivePoint::new_random_point(rand))   
     }
 }
 
@@ -917,14 +917,14 @@ impl ProjectivePoint {
     pub fn new_random_point<T: Rng + CryptoRng>(rand: &mut T) -> ProjectivePoint {
         // Gen a random `Y` coordinate value from an user-provided
         // randomness source.
-        let y = FieldElement::random(&mut rand);
+        let y = FieldElement::random(rand);
         // Gen a random sign choice. 
         let sign = Choice::from(rand.gen_range(0u8, 1u8));
 
         // Until we don't get a valid `Y` value, call the
         // function recursively.
         match ProjectivePoint::new_from_y_coord(&y, sign) {
-            None => ProjectivePoint::new_random_point(&mut rand),
+            None => ProjectivePoint::new_random_point(rand),
             Some(point) => return point,
         }
     }
