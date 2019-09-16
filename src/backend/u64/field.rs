@@ -554,21 +554,6 @@ impl FieldElement {
         self.0[0] & 0b01 == 0u64
     }
 
-    pub fn generate_random() -> FieldElement {
-        let mut bytes = [0u8;32];
-
-        // Generate a 31-byte random array
-        thread_rng().try_fill(&mut bytes[0..31]).unwrap();
-
-        // On the last byte we can only add 16 bits since
-        // `FIELD_L` has 252-bits as much. So all of the inputs
-        // should be lower. 
-        //
-        // Create a `FieldElement` taking the random byte 
-        // array as source.
-        FieldElement::from_bytes(&bytes)
-    }
-
     /// Performs the operation `((a + constants::FIELD_L) >> 2) % l)`.
     /// This function SHOULD only be used on the Kalinski's modular 
     /// inverse algorithm, since it's the only way we have to add `l`
