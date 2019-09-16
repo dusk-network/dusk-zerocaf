@@ -79,8 +79,6 @@ use crate::traits::{Identity, ValidityCheck, ops::*};
 
 use subtle::{Choice, ConstantTimeEq};
 
-use rand::{Rng, CryptoRng};
-
 use std::default::Default;
 use std::fmt::Debug;
 
@@ -590,6 +588,7 @@ impl EdwardsPoint {
     /// This function tries to build a Point over the Doppio Curve from
     /// a random `Y` coordinate and a random Choice that determines the 
     /// Sign o the `X` coordinate.
+    #[cfg(feature = "rand")]
     pub fn new_random_point<T: Rng + CryptoRng>(rand: &mut T) -> EdwardsPoint {
         // Simply generate a random `ProjectivePoint`
         // and once we get one that is valid, switch 
@@ -914,6 +913,7 @@ impl ProjectivePoint {
     /// This function tries to build a Point over the Doppio Curve from
     /// a random `Y` coordinate and a random Choice that determines the 
     /// Sign o the `X` coordinate.
+    #[cfg(feature = "rand")]
     pub fn new_random_point<T: Rng + CryptoRng>(rand: &mut T) -> ProjectivePoint {
         // Gen a random `Y` coordinate value from an user-provided
         // randomness source.
