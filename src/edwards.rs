@@ -76,7 +76,7 @@ use crate::montgomery::MontgomeryPoint;
 use crate::constants;
 use crate::traits::{Identity, ValidityCheck, ops::*};
 
-
+use rand::{Rng, CryptoRng};
 use subtle::{Choice, ConstantTimeEq};
 
 use std::default::Default;
@@ -588,7 +588,6 @@ impl EdwardsPoint {
     /// This function tries to build a Point over the Doppio Curve from
     /// a random `Y` coordinate and a random Choice that determines the 
     /// Sign o the `X` coordinate.
-    #[cfg(feature = "rand")]
     pub fn new_random_point<T: Rng + CryptoRng>(rand: &mut T) -> EdwardsPoint {
         // Simply generate a random `ProjectivePoint`
         // and once we get one that is valid, switch 
@@ -913,7 +912,6 @@ impl ProjectivePoint {
     /// This function tries to build a Point over the Doppio Curve from
     /// a random `Y` coordinate and a random Choice that determines the 
     /// Sign o the `X` coordinate.
-    #[cfg(feature = "rand")]
     pub fn new_random_point<T: Rng + CryptoRng>(rand: &mut T) -> ProjectivePoint {
         // Gen a random `Y` coordinate value from an user-provided
         // randomness source.
@@ -1069,6 +1067,9 @@ impl Neg for AffinePoint {
 /// Also used to check the correctness of the transformation functions.
 pub mod tests {
     use super::*;
+
+    #[cfg(feature = "rand")]
+    use rand::rngs::OsRng;
 
     pub(self) const P1_AFFINE: AffinePoint = AffinePoint {
         X: FieldElement([13, 0, 0, 0, 0]),
