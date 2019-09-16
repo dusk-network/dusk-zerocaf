@@ -16,6 +16,8 @@
 //! use subtle::Choice;
 //! use core::ops::{Add, Sub, Mul};
 //! 
+//! use rand::rngs::OsRng;
+//! 
 //! // You can work in different point coordinates, such as:
 //! // Affine, Projective or Extended.
 //! // 
@@ -34,10 +36,8 @@
 //! // for the `x-coordinate`.
 //! let ex_point = EdwardsPoint::new_from_y_coord(&y, Choice::from(0u8)).unwrap();
 //! 
-//! // Create a random point. 
-//! let rngp = EdwardsPoint::new_random_point();
 //! 
-//! let example = EdwardsPoint::from(&ProjectivePoint::identity());
+//! let rngp = EdwardsPoint::from(&ProjectivePoint::identity());
 //! 
 //! // The same examples work for the ProjectivePoint struct. 
 //! 
@@ -1319,7 +1319,6 @@ pub mod tests {
 
     #[test]
     fn point_compression() {
-        println!("{:?}", P2_EXTENDED.compress());
         let compr = CompressedEdwardsY::from_slice(&[206, 11, 225, 231, 113, 39, 18, 141, 
                                                      213, 215, 201, 201, 90, 173, 14, 134, 
                                                      192, 119, 133, 134, 164, 26, 38, 1, 

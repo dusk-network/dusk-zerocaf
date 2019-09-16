@@ -12,7 +12,9 @@
 //! use zerocaf::field::FieldElement;
 //! use zerocaf::traits::ops::*;
 //! use zerocaf::constants::EDWARDS_D;
+//! 
 //! use subtle::Choice;
+//! use rand::rngs::OsRng;
 //! 
 //! // You can create a FieldElement from a byte-array as follows:
 //! let a = FieldElement::from_bytes(&[0u8;32]); 
@@ -22,7 +24,7 @@
 //! let c = FieldElement::from(&126297u64);
 //! 
 //! // You can create random FieldElements by calling: 
-//! let rand = FieldElement::generate_random();
+//! let rand = FieldElement::random(&mut OsRng);
 //! 
 //! // The last way of creating a FieldElement it by calling the
 //! // constructor. THIS IS NOT RECOMMENDED since NO checks about

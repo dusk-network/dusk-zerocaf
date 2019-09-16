@@ -402,6 +402,23 @@ impl RistrettoPoint {
         // uniform distribution.
         &R_1 + &R_2
     }
+
+    /// Generate a random `RistrettoPoint` from a 64-byte array generated
+    /// with user-provided rng.
+    /// 
+    /// The provided `rng` has to implement: `Rng` + `CryptoRng`.
+    /// 
+    /// This function uses the elligator hash map twice, once for [0..31] &
+    /// another for [32..64] giving a uniformly distributed random value.
+    /// 
+    /// This implementation follows the idea pointed on the 
+    /// random point generation used in [curve25519-dalek](https://github.com/dalek-cryptography/curve25519-dalek). 
+    #[cfg(feature = "rand")]
+    pub fn new_random_point<T: Rng + CryptoRng>(rand: &mut T) -> RistrettoPoint {
+        let mut bytes = [0u8; 64];
+        rand.try_fill(&mut bytes);
+        RistrettoPoint::from_uniform_bytes(&bytes)
+    }
 }
 
 mod tests {
