@@ -452,7 +452,7 @@ impl RistrettoPoint {
 
 mod tests {
     use super::*;
-    use crate::edwards::CompressedEdwardsY;
+    use crate::edwards::{CompressedEdwardsY, mul_by_pow_2};
 
     #[cfg(feature = "rand")]
     use rand::rngs::OsRng;
@@ -521,16 +521,32 @@ mod tests {
 
      #[test]
     fn four_torsion_diff() { 
-        use crate::edwards::mul_by_pow_2;
-
         let bp_compr_decompr = constants::RISTRETTO_BASEPOINT.compress().decompress().unwrap().0;
 
         // Check that bp_compr_decompr differs from the
         // original RistrettoBasepoint by a point of order 4.
         let point_order_4 = &constants::RISTRETTO_BASEPOINT.0 - &bp_compr_decompr;
 
-        let verif = mul_by_pow_2(&point_order_4, &4);
+        let verif = mul_by_pow_2(&point_order_4, &2);
         assert_eq!(verif.compress(), CompressedEdwardsY::identity());
+    }
+
+    #[cfg(feature = "rand")]
+    #[test]
+    fn four_torsion_diff_random() {
+        let mut rng = OsRng::new().unwrap();
+        let B = &constants::RISTRETTO_BASEPOINT;
+        let P = B * &Scalar::random(&mut rng);
+        let P_coset = P.coset4();
+        for i in 0..4 {
+            assert_eq!(P, RistrettoPoint(P_coset[i]));
+        }
+
+        // Check that P_compr_decompr differs from the
+        // original P by a point of order 4
+        let P_compr_decompr = P.compress().decompress().unwrap();
+        let point_order_4 = &P + &-P_compr_decompr;
+        assert!(mul_by_pow_2(&point_order_4, &2) == RistrettoPoint::identity())
     }
 
     #[test]
@@ -577,5 +593,7 @@ mod tests {
             assert!((constants::RISTRETTO_BASEPOINT * Scalar::random(&mut rng)).is_valid().unwrap_u8() == 1u8);
         };
     }
+
+
 }
 
