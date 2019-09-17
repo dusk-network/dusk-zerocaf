@@ -160,10 +160,10 @@ impl ConstantTimeEq for RistrettoPoint {
     /// and we are on the twisted case, we compare 
     /// `X1*Y2 == Y1*X2 | X1*X2 == Y1*Y2`.
     fn ct_eq(&self, other: &RistrettoPoint) -> Choice {
-        let a = (self.0.X * other.0.Y).to_bytes().ct_eq(
-            &(self.0.Y * other.0.X).to_bytes());
-        let b = (self.0.X * other.0.X).to_bytes().ct_eq(
-            &(self.0.Y * other.0.Y).to_bytes());
+        let a = (self.0.X * other.0.Y).ct_eq(
+            &(self.0.Y * other.0.X));
+        let b = (self.0.X * other.0.X).ct_eq(
+            &(self.0.Y * other.0.Y));
         a | b
     }
 }
@@ -207,9 +207,8 @@ impl ValidityCheck for RistrettoPoint {
     /// - `Choice(0) if the point does not satisfy one of the conditions
     /// mentioned avobe.
     fn is_valid(self) -> Choice {        
-        let identity = RistrettoPoint::identity();
         // Verify that the point has order `L` (Sub group order). 
-        let has_order_l = (self * constants::L).ct_eq(&identity);
+        let has_order_l = (self.0 * constants::L).ct_eq(&EdwardsPoint::identity());
         has_order_l & self.0.is_valid()
     }
 }
@@ -536,6 +535,7 @@ mod tests {
 
     #[test]
     fn validity_check() {
+        use crate::edwards::AffinePoint;
         // RISTRETTO_BASEPOINT should be valid. 
         assert!(constants::RISTRETTO_BASEPOINT.is_valid().unwrap_u8() == 1u8);
         // The identity and multiples of the basepoint should also be valid. 
@@ -554,10 +554,7 @@ mod tests {
                                                         175, 111, 152, 152, 213, 211, 157, 15]);
         let point_8L = EdwardsPoint::new_from_y_coord(&y_coord_bytes_8L, Choice::from(0u8)).unwrap();                                          
         assert!(point_8L.is_valid().unwrap_u8() == 1u8);
-        println!("{:?}", RistrettoPoint(point_8L));
         assert!(RistrettoPoint(point_8L).is_valid().unwrap_u8() == 0u8);
-
-
-    }
+    }   
 }
 
