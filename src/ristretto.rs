@@ -378,13 +378,22 @@ impl RistrettoPoint {
         let N_t = &(&(c * (&r - &one)) * &(d - one).square()) - &D;
         let s_square = s.square();
 
+        // Get the `CompletePoint` coordinates.
+        let X = &(&s + &s) * &D;
+        let Z = &N_t * &constants::SQRT_AD_MINUS_ONE;
+        let Y = &FieldElement::one() - &s_square;
+        let T = &FieldElement::one() + &s_square;
 
-        RistrettoPoint(EdwardsPoint{
-            X: &(&s + &s) * &D,
-            Z: &N_t * &constants::SQRT_AD_MINUS_ONE,
-            Y: &FieldElement::one() - &s_square,
-            T: &FieldElement::one() + &s_square,
+        // Get the `EdwardsPoint` that comes from the
+        // `Completepoint` obtained by the original 
+        // algorithm.
+        RistrettoPoint(EdwardsPoint {
+            X: X * T,
+            Y: Y * Z,
+            Z: Z * T,
+            T: X * Y
         })
+
     }
 
     /// Debugging function used to get the 4coset where a point
@@ -444,6 +453,9 @@ impl RistrettoPoint {
 mod tests {
     use super::*;
     use crate::edwards::CompressedEdwardsY;
+
+    #[cfg(feature = "rand")]
+    use rand::rngs::OsRng;
 
     #[test]
     fn basepoint_compr_decompr() {
@@ -556,5 +568,14 @@ mod tests {
         assert!(point_8L.is_valid().unwrap_u8() == 1u8);
         assert!(RistrettoPoint(point_8L).is_valid().unwrap_u8() == 0u8);
     }   
+
+    #[cfg(feature = "rand")]
+    #[test]
+    fn random_point_validity() {
+        let mut rng = OsRng::new().unwrap();
+        for i in 0..100 {
+            assert!((constants::RISTRETTO_BASEPOINT * Scalar::random(&mut rng)).is_valid().unwrap_u8() == 1u8);
+        };
+    }
 }
 
