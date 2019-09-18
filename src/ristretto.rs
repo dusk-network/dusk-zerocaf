@@ -194,6 +194,7 @@ impl Default for RistrettoPoint {
     }
 }
 
+//TODO: Review RistrettoPoint original implementation correctness: #83.
 impl ValidityCheck for RistrettoPoint {
     /// A valid `RistrettoPoint` should have exactly 
     /// order `L` (Scalar Field Order) and also
@@ -594,6 +595,18 @@ mod tests {
         };
     }
 
+    #[cfg(feature = "hex")]
+    #[test]
+    fn elligator() {
+        let mut r0_bytes = [0u8; 32];
+        r0_bytes.copy_from_slice(&hex::decode("7d3867afa8d4c29858873bb47c26f4b907511c8ea7f52059f736ed39536091e1").unwrap());
+        let ellig_point = RistrettoPoint::elligator_ristretto_flavor(&FieldElement::from_bytes(&r0_bytes));
+        println!("{:?}", ellig_point);
 
+        let exp_fe = FieldElement([4326455388606354, 173549460010606, 1926980059543906, 2396469667013772, 16652295834328]);
+        let expected_point = RistrettoPoint(EdwardsPoint::new_from_y_coord(&exp_fe, Choice::from(0u8)).unwrap());
+        println!("Expected Point {:?}", expected_point);
+        assert!(ellig_point == expected_point);
+    }
 }
 
