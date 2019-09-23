@@ -30,7 +30,7 @@ pub trait ValidityCheck {
     /// # Returns
     /// - `Choice(0)` if the point isn't a valid point. 
     /// - `Choice(1)` if the point is valid.
-    fn is_valid(self) -> Choice;
+    fn is_valid(&self) -> Choice;
 }
 
 pub mod ops {

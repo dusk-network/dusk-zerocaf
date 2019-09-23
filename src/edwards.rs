@@ -337,8 +337,8 @@ impl ValidityCheck for EdwardsPoint {
     /// Verifies if the curve equation (in projective twisted
     /// edwards coordinates) holds given the (X, Y, Z) coordinates 
     /// of a point in Projective Coordinates.
-   fn is_valid(self) -> Choice {
-        ProjectivePoint::from(&self).is_valid()
+   fn is_valid(&self) -> Choice {
+        ProjectivePoint::from(self).is_valid()
    }
 }
 
@@ -663,7 +663,7 @@ impl ValidityCheck for ProjectivePoint {
     /// Verifies if the curve equation (in projective twisted
     /// edwards coordinates) holds given the (X, Y, Z) coordinates 
     /// of a point in Projective Coordinates.
-   fn is_valid(self) -> Choice {
+   fn is_valid(&self) -> Choice {
         // Use `(aX^{2}+Y^{2})Z^{2}=Z^{4}+dX^{2}Y^{2}` 
         let x_sq = self.X.square();
         let y_sq = self.Y.square();
@@ -985,11 +985,11 @@ impl Eq for AffinePoint {}
 impl ValidityCheck for AffinePoint {
     /// Verifies if the curve equation holds given the
     /// (X, Y) coordinates of a point in Affine Coordinates. 
-    fn is_valid(self) -> Choice {
+    fn is_valid(&self) -> Choice {
         let x_sq = self.X.square();
         let y_sq = self.Y.square();
-        let left = (FieldElement::minus_one() * x_sq) + y_sq;
-        let right = FieldElement::one() + (constants::EDWARDS_D * x_sq * y_sq);
+        let left = &(&FieldElement::minus_one() * &x_sq) + &y_sq;
+        let right = &FieldElement::one() + &(&(&constants::EDWARDS_D * &x_sq) * &y_sq);
 
         left.ct_eq(&right)
     }
