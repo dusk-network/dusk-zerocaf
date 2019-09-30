@@ -400,7 +400,6 @@ impl RistrettoPoint {
             Z: W1 * W3,
             T: W0 * W2
         })
-
     }
 
     /// Debugging function used to get the 4coset where a point
@@ -458,9 +457,8 @@ impl RistrettoPoint {
 
 mod tests {
     use super::*;
-    use crate::edwards::{CompressedEdwardsY, mul_by_pow_2};
 
-    #[cfg(feature = "rand")]
+    use crate::edwards::{CompressedEdwardsY, mul_by_pow_2};
     use rand::rngs::OsRng;
 
     #[test]
@@ -471,7 +469,6 @@ mod tests {
         assert!(decompress == RistrettoPoint(constants::BASEPOINT));
     }
 
-    #[cfg(feature = "hex")]
     #[test]
     fn valid_encoding_test_vectors() {
         // The following are the byte encodings of small multiples 
@@ -537,7 +534,6 @@ mod tests {
         assert_eq!(verif.compress(), CompressedEdwardsY::identity());
     }
 
-    #[cfg(feature = "rand")]
     #[test]
     fn four_torsion_diff_random() {
         let mut rng = OsRng::new().unwrap();
@@ -591,75 +587,38 @@ mod tests {
         assert!(RistrettoPoint(point_8L).is_valid().unwrap_u8() == 0u8);
     }   
 
-    #[cfg(feature = "rand")]
     #[test]
     fn random_point_validity() {
         let mut rng = OsRng::new().unwrap();
-        for i in 0..25 {
-            assert!(RistrettoPoint::new_random_point(&mut rng).is_valid().unwrap_u8() == 1u8);
+        for i in 0..100 {
+            let P = RistrettoPoint::new_random_point(&mut rng);
+            // Check that the resulting `EdwardsPoint` relies on the curve.
+            assert!(P.0.is_valid().unwrap_u8() == 1u8);
+            P.compress().decompress();
         };
     }
 
-    #[cfg(feature = "hex")]
     #[test]
-    fn elligator() {
-        let r0s: [&str; 10] = [
-            "a66a699edc7e71684134d97feb3d87630b4a4e44a635f2a3af538bcadf8df4ec",
-            "b99a5e9d9def843a6df7864502be8886ebbf9553797320b376a982b13f234e7e",
-            "a2974b1d33f7434b6dac266a09038bb8a31c51563ded3e6bae40f9f2630c7765",
-            "761a4a38d83426c84379db972169cd7d35fa39927355d2a48211a729ae427f78",
-            "018cd07ed7d939fb851ee1ab9de1f11a4b9c54d95073115a3cf2fcf6a36597aa",
-            "d489508669ebdee692e90ae591e57fdfa05be3394e16a2300d4f1749142e19a2",
-            "2675ee33d17dc5abdfa76c12af68449ff28ce150b1b2d116a3ee8f72dcf747e6",
-            "7c47b91b9f4757b0a9a6e8b1ab344b9765ecef578244f051f38e3a66b4a0983c",
-            "04fa2ecba377af0e1281229b566f5950c3b0d734a7b355e5343013a1a7cec3f5",
-            "b1dac2bdf300e4cd1f321f2cdaf95b88c4675f9e8b5f36182d1364841c0d7f65"
-        ];
-
-        let compr_ellig_points: [&str; 10] = [
-            "481e5af1d4001cb69de38ec49a0d29de26c2049f3a4c499a5f45a6a20c3aa30b",
-            "c8fe921c4ec8a5378dc891aa209d6c00912016a7cd031f98b7b273098eaf9e0d",
-            "4ac07749547116395109253273bdcada6f4518daaa2d6d8cddc600be78ad9506",
-            "2691a60f20b5616649b01029867299f1f8debb7510fc459d947eca778f49f207",
-            "ce84a619568eeebc943234fc3f742e11c5b8a3d5add5bef2495431ece2561404",
-            "5ec630d87bf5b94a2aefb558c66ca8c38a9c9861470e5c586184b72de12d6907",
-            "1a46900494b7b602a95e0e399f675d07164eed3db8665bf75ebd44968b06e90a",
-            "a2e0a8456063b54c5e2f5cec734f24f57bf288f251b7c815f8973205f640cf0d",
-            "6eb301274a936e9d3956f10cce474ed0cee9688dbc36e09960a4d92a540a970e",
-            "9089daffbaca59ec56a457781580906b8c9fdcf62a21dd956fade0123b83a909",
-        ];
-        
-        for i in 0..10 {
-            let mut r0_bytes = [0u8; 32];
-            let mut compr_ristretto_point_bytes = [0u8; 32];
-
-            r0_bytes.copy_from_slice(&hex::decode(r0s[i]).unwrap());
-            compr_ristretto_point_bytes.copy_from_slice(&hex::decode(compr_ellig_points[i]).unwrap());
-            
-            let f_e = FieldElement::from_bytes(&r0_bytes);
-            let comp_point = CompressedRistretto::copy_from_slice(&compr_ristretto_point_bytes);
-
-            assert!(comp_point == RistrettoPoint::elligator_ristretto_flavor(&f_e).compress());
-        }
-    }
-
-    #[cfg(feature = "hex")]
-    #[test]
-    fn utils() {
-        use crate::edwards::AffinePoint;
-
-        let point = RistrettoPoint(EdwardsPoint {
-            X: FieldElement([2540092001196116, 3784756715621701, 1814242880979619, 1117392456187628, 11990935440698]),
-            Y: FieldElement([4303254075288083, 1561555891432216, 2751628063507233, 2858806956288226, 11214346266987]),
+    fn elligator_vs_ristretto_sage() {
+        // This test uses the Sage script `ristretto.sage` located in the
+        // `curve25519-dalek` repository in order to get test vectors of the 
+        // ristretto_elligator algorithm.
+        let expected_point = RistrettoPoint(EdwardsPoint {
+            X: FieldElement([520984263488427, 2866053035698784, 356812350072736, 1177086814167286, 17585355348321]),
+            Y: FieldElement([2224110940152212, 767723869121786, 2519083920383090, 3478258567033985, 6072297619626]),
             Z: FieldElement([1, 0, 0, 0, 0]),
-            T: FieldElement([1237065776631074, 2466024980578134, 2154449949014471, 1511195856276950, 11744736340970])
+            T: FieldElement([3761248848988017, 3474827148739807, 3137090891116602, 1521420215868592, 8052069914602])
         });
-        let raw_bytes = hex::decode("49e385259ab1290854d78e7b1f5fc9aaec60a316cac1a13e9359bf8823933864").unwrap();
-        
+        assert!(expected_point.is_valid().unwrap_u8() == 1u8);
+
+        let raw_bytes = hex::decode("2e2d7c6f887c81c1593f32e2fa31a7b65d4fbbf38f8ab3045ead22fc45743219").unwrap();
         let mut bytes = [0u8;32];
         bytes.copy_from_slice(&raw_bytes);        
         let point_from_ellig = RistrettoPoint::elligator_ristretto_flavor(&FieldElement::from_bytes(&bytes));
-        assert!(point_from_ellig.compress() == point.compress());
+
+        assert!(point_from_ellig.0.is_valid().unwrap_u8() == 1u8);
+        assert!(point_from_ellig == expected_point);
+        assert!(point_from_ellig.compress() == expected_point.compress())
     }
 }
 
