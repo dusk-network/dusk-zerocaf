@@ -1,8 +1,11 @@
 // LFACTOR Computation
 
-sage: L = 2^249 - 15145038707218910765482344729778085401
-sage: (-1 / L) % (2^52)
-547593343082025
+sage: l = 2^249 + 14490550575682688738086195780655237219
+sage: l
+904625697166532776746648320380374280118162305775999595296348570842476562531
+sage: (-1 / l) % (2^52)
+1331240223835829
+
 
 //The result is the LFACTOR needed on the Montgomery Reduction algorithm to adjust the number to be divisible
-by R mod L it also fits on an u64 as 547593343082025 < 2^64
+by R mod L it also fits on an u64 as 1331240223835829 < 2^64
