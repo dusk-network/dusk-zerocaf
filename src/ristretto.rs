@@ -459,6 +459,8 @@ mod tests {
     use super::*;
 
     use crate::edwards::{CompressedEdwardsY, mul_by_pow_2};
+
+    #[cfg(feature = "rand")]
     use rand::rngs::OsRng;
 
     #[test]
@@ -534,6 +536,7 @@ mod tests {
         assert_eq!(verif.compress(), CompressedEdwardsY::identity());
     }
 
+    #[cfg(feature = "rand")]
     #[test]
     fn four_torsion_diff_random() {
         let mut rng = OsRng::new().unwrap();
@@ -553,8 +556,6 @@ mod tests {
 
     #[test]
     fn four_coset_eq_basepoint() {
-        use crate::edwards::AffinePoint;
-
         let basepoint = constants::RISTRETTO_BASEPOINT;
         let basep_coset = basepoint.coset4();
 
@@ -565,7 +566,6 @@ mod tests {
 
     #[test]
     fn validity_check() {
-        use crate::edwards::AffinePoint;
         // RISTRETTO_BASEPOINT should be valid. 
         assert!(constants::RISTRETTO_BASEPOINT.is_valid().unwrap_u8() == 1u8);
         // The identity and multiples of the basepoint should also be valid. 
@@ -587,6 +587,7 @@ mod tests {
         assert!(RistrettoPoint(point_8L).is_valid().unwrap_u8() == 0u8);
     }   
 
+    #[cfg(feature = "rand")]
     #[test]
     fn random_point_validity() {
         let mut rng = OsRng::new().unwrap();
