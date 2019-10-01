@@ -323,17 +323,17 @@ fn m(x: u64, y: u64) -> u128 {
 impl Scalar {
 
     /// Return a Scalar with value = `0`.
-    pub fn zero() -> Scalar {
+    pub const fn zero() -> Scalar {
         Scalar([0,0,0,0,0])
     }
 
     /// Return a Scalar with value = `1`.
-    pub fn one() -> Scalar {
+    pub const fn one() -> Scalar {
         Scalar([1,0,0,0,0])
     }
 
     /// Return a Scalar with value = `-1 (mod l)`.
-    pub fn minus_one() -> Scalar {
+    pub const fn minus_one() -> Scalar {
         Scalar([1129677152307298, 1363544697812651, 714439, 0, 2199023255552])
     }
 

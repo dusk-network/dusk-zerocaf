@@ -529,17 +529,17 @@ fn m(x: u64, y: u64) -> u128 {
 impl FieldElement {
 
     /// Construct zero.
-    pub fn zero() -> FieldElement {
+    pub const fn zero() -> FieldElement {
         FieldElement([0, 0, 0, 0, 0 ])
     }
 
     /// Construct one.
-    pub fn one() -> FieldElement {
+    pub const fn one() -> FieldElement {
         FieldElement([1, 0, 0, 0, 0 ])
     }
 
     /// Construct -1 (mod l).
-    pub fn minus_one() -> FieldElement {
+    pub const fn minus_one() -> FieldElement {
         FieldElement([671914833335276, 3916664325105025, 1367801, 0, 17592186044416])
     }
 
