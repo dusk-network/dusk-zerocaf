@@ -16,6 +16,8 @@
 //! use subtle::Choice;
 //! use core::ops::{Add, Sub, Mul};
 //! 
+//! use rand::rngs::OsRng;
+//! 
 //! // You can work in different point coordinates, such as:
 //! // Affine, Projective or Extended.
 //! // 
@@ -25,19 +27,17 @@
 //! // Additionally, they formats can be directly compressed from just
 //! // a singluar coordinate.  
 //! 
-//! // In order to produce a point over the Doppio curve, 
+//! // In order to produce a point over the Sonny curve, 
 //! // you can do the following: 
 //! 
 //! // From the y-coordinate of a point: 
-//! let y = FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]);
+//! let y = FieldElement([2369245568431362, 2665603790611352, 3317390952748653, 1908583331312524, 8011773354506]);
 //! // The `Choice` specifies the symbol that we want to get as a result
 //! // for the `x-coordinate`.
 //! let ex_point = EdwardsPoint::new_from_y_coord(&y, Choice::from(0u8)).unwrap();
 //! 
-//! // Create a random point. 
-//! let rngp = EdwardsPoint::new_random_point();
 //! 
-//! let example = EdwardsPoint::from(&ProjectivePoint::identity());
+//! let rngp = EdwardsPoint::from(&ProjectivePoint::identity());
 //! 
 //! // The same examples work for the ProjectivePoint struct. 
 //! 
@@ -74,13 +74,10 @@ use crate::field::FieldElement;
 use crate::scalar::Scalar;
 use crate::montgomery::MontgomeryPoint;
 use crate::constants;
-use crate::traits::Identity;
-use crate::traits::ops::*;
+use crate::traits::{Identity, ValidityCheck, ops::*};
 
-
+use rand::{Rng, CryptoRng};
 use subtle::{Choice, ConstantTimeEq};
-
-use rand::{Rng, thread_rng};
 
 use std::default::Default;
 use std::fmt::Debug;
@@ -151,8 +148,6 @@ pub(self) fn find_xx(y: &FieldElement) -> FieldElement {
     a / b
 }
 
-
-
 // ---------------- Point Structs ---------------- //
 
 /// The first 255 bits of a `CompressedEdwardsY` represent the
@@ -202,7 +197,7 @@ impl Default for CompressedEdwardsY {
 
 impl<'a> Neg for &'a CompressedEdwardsY {
     type Output = CompressedEdwardsY;
-    /// Negates an `CompressedEdwardsY` by decompressing
+    /// Negates a  `CompressedEdwardsY` by decompressing
     /// it, negating over Twisted Edwards Extended 
     /// Projective Coordinates and compressing it back.
     fn neg(self) -> CompressedEdwardsY {
@@ -212,7 +207,7 @@ impl<'a> Neg for &'a CompressedEdwardsY {
 
 impl Neg for CompressedEdwardsY {
     type Output = CompressedEdwardsY;
-    /// Negates an `CompressedEdwardsY` by decompressing
+    /// Negates a  `CompressedEdwardsY` by decompressing
     /// it, negating over Twisted Edwards Extended 
     /// Projective Coordinates and compressing it back.
     fn neg(self) -> CompressedEdwardsY {
@@ -251,7 +246,7 @@ impl CompressedEdwardsY {
         CompressedEdwardsY(tmp)
     }
 
-    /// Return the `CompressedEdwardsY` as an array of bytes (it's cannonical state).
+    /// Return the `CompressedEdwardsY` as an array of bytes (its cannonical form).
     pub fn to_bytes(&self) -> [u8; 32] {
         self.0
     }
@@ -338,6 +333,15 @@ impl Identity for EdwardsPoint {
     }
 }
 
+impl ValidityCheck for EdwardsPoint {
+    /// Verifies if the curve equation (in projective twisted
+    /// edwards coordinates) holds given the (X, Y, Z) coordinates 
+    /// of a point in Projective Coordinates.
+   fn is_valid(&self) -> Choice {
+        ProjectivePoint::from(self).is_valid()
+   }
+}
+
 impl<'a> From<&'a ProjectivePoint> for EdwardsPoint {
     /// Given (X:Y:Z) in ε passing to εε can beperformed 
     /// in 3M+ 1S by computing (X*Z, Y*Z, X*Y, Z^2). 
@@ -378,9 +382,11 @@ impl<'a> From<&'a AffinePoint> for EdwardsPoint {
 
 impl<'a> Neg for &'a EdwardsPoint {
     type Output = EdwardsPoint;
-    /// Negates an `EdwardsPoint` giving it as a result.
+    /// Negates a  `EdwardsPoint` giving it's negated value
+    /// as a result.
+    /// 
     /// Since the negative of a point is (-X:Y:Z:-T), it
-    /// gives as a result: `(-X, Y, Z, -T)`.
+    /// gives as a result: `(-X:Y:Z:-T)`.
     fn neg(self) -> EdwardsPoint {
        EdwardsPoint{
            X: -&self.X,
@@ -393,7 +399,7 @@ impl<'a> Neg for &'a EdwardsPoint {
 
 impl Neg for EdwardsPoint {
     type Output = EdwardsPoint;
-    /// Negates an `EdwardsPoint` giving it as a result
+    /// Negates a  `EdwardsPoint` giving it as a result
     fn neg(self) -> EdwardsPoint {
         -&self
     }
@@ -408,22 +414,21 @@ impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
     /// (http://eprint.iacr.org/2008/522), Section 3.1.
     #[inline]
     fn add(self, other: &'b EdwardsPoint) -> EdwardsPoint {
-        let A = &self.X * &other.X;
-        let B = &self.Y * &other.Y;
-        let C = &constants::EDWARDS_D * &(&self.T * &other.T);
-        let D = &self.Z * &other.Z;
-        let E = &(&(&(&self.X + &self.Y) * &(&other.X + &other.Y)) - &A) - &B;
-        let F = &D - &C;
-        let G = &D + &C;
-        let H = &B + &A;
+        let A = self.X * other.X;
+        let B = self.Y * other.Y;
+        let C = constants::EDWARDS_D * self.T * other.T;
+        let D = self.Z * other.Z;
+        let E = (self.X + self.Y) * (other.X + other.Y) - A - B;
+        let F = D - C;
+        let G = D + C;
+        let H = B + A;
 
         EdwardsPoint {
-            X: &E * &F,
-            Y: &G * &H,
-            Z: &F * &G,
-            T: &E * &H
+            X: E * F,
+            Y: G * H,
+            Z: F * G,
+            T: E * H,
         }
-        
     }
 }
 
@@ -495,7 +500,7 @@ impl<'a> Double for &'a EdwardsPoint {
     /// ie. `2*P` over the Twisted Edwards Extended
     /// Coordinates.
     /// 
-    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// This implementation is specific for curves with `a = -1` as Sonny is.
     /// Source: 2008 Hisil–Wong–Carter–Dawson, 
     /// http://eprint.iacr.org/2008/522, Section 3.1.
     /// Cost: 4M+ 4S+ 1D
@@ -528,21 +533,36 @@ impl EdwardsPoint {
        unimplemented!()
     }
 
+    /// Prints the 4Coset where the input `EdwardsPoint` 
+    /// lives in.
+    pub fn coset4(&self) -> [EdwardsPoint; 4] {
+        [
+            self.clone(),
+            self + &constants::FOUR_COSET_GROUP[0],
+            self + &constants::FOUR_COSET_GROUP[1],
+            self + &constants::FOUR_COSET_GROUP[2],
+        ]
+    }
+
     /// Compress this point to `CompressedEdwardsY` format.
     pub fn compress(&self) -> CompressedEdwardsY {
-        let mut sign = Choice::from(0u8);
-        let res = find_xx(&self.Y).mod_sqrt(sign).unwrap();
+        // Get the Affine point coordinates and compress
+        // the point using them.
+        let point = AffinePoint::from(self);
 
-        if res != self.X {sign = Choice::from(1u8);};
-        let mut compr = self.Y.to_bytes();
+        let mut sign = Choice::from(0u8);
+        let res = find_xx(&point.Y).mod_sqrt(sign).unwrap();
+
+        if res != point.X {sign = Choice::from(1u8);};
+        let mut compr = point.Y.to_bytes();
 
         // Set the highest bit of the last byte as the symbol. 
         compr[31] |= sign.unwrap_u8() << 7;
         CompressedEdwardsY::from_slice(&compr)
     }  
 
-    /// This function tries to build a Point over the Sonny Curve from
-    /// a `Y` coordinate and a Choice that determines the sign of the `X`
+    /// This function tries to build a oint over the Sonny Curve from
+    /// a `Y` coordinate and a Choice that determines the sign ofthe `X`
     /// coordinate that the user would like to work with.
     /// 
     /// The function gets `X` by solving: 
@@ -556,8 +576,8 @@ impl EdwardsPoint {
     /// Then Z is always equal to `1`.
     /// 
     /// # Returns
-    /// `Some(EdwardsPoint)` if there exists a result for the `mod_sqrt`
-    /// and `None` if the resulting `x^2` isn't a QR modulo `FIELD_L`. 
+    /// - `Some(EdwardsPoint)` if there exists a result for the `mod_sqrt`.
+    /// - `None` if the resulting `x^2` isn't a QR modulo `FIELD_L`. 
     pub fn new_from_y_coord(y: &FieldElement, sign: Choice) -> Option<EdwardsPoint> {
         match ProjectivePoint::new_from_y_coord(&y, sign) {
             None => return None,
@@ -565,23 +585,23 @@ impl EdwardsPoint {
         }
     } 
 
-    /// This function tries to build a point over the Sonny Curve from
+    /// This function tries to build a Point over the Sonny Curve from
     /// a random `Y` coordinate and a random Choice that determines the 
-    /// sign of the `X` coordinate.
-    pub fn new_random_point() -> EdwardsPoint {
+    /// sign ofthe `X` coordinate.
+    pub fn new_random_point<T: Rng + CryptoRng>(rand: &mut T) -> EdwardsPoint {
         // Simply generate a random `ProjectivePoint`
         // and once we get one that is valid, switch 
         // it to Extended Coordinates.
-        EdwardsPoint::from(&ProjectivePoint::new_random_point())   
+        EdwardsPoint::from(&ProjectivePoint::new_random_point(rand))   
     }
 }
 
 /// A `ProjectivePoint` represents a point on the Sonny Curve expressed
-/// over the Twisted Edwards Projective Coordinates eg. (X, Y, Z).
+/// over the Twisted Edwards Projective Coordinates eg. (X:Y:Z).
 ///  
 /// For Z1≠0 the point (X1:Y1:Z1) represents the affine point (x1= X1/Z1, y1= Y1/Z1)
 /// on EE,a,d.
-/// Projective coordinates represent `x` `y` as `(X Y Z`) satisfying the following equations:
+/// Projective coordinates represent `x` `y` as `(X, Y, Z`) satisfying the following equations:
 /// 
 /// x=X/Z
 /// 
@@ -639,6 +659,23 @@ impl Identity for ProjectivePoint {
     }
 }
 
+impl ValidityCheck for ProjectivePoint {
+    /// Verifies if the curve equation (in projective twisted
+    /// edwards coordinates) holds given the (X, Y, Z) coordinates 
+    /// of a point in Projective Coordinates.
+   fn is_valid(&self) -> Choice {
+        // Use `(aX^{2}+Y^{2})Z^{2}=Z^{4}+dX^{2}Y^{2}` 
+        let x_sq = self.X.square();
+        let y_sq = self.Y.square();
+        let z_sq = self.Z.square();
+
+        let left = ((constants::EDWARDS_A * x_sq) + y_sq) * z_sq;
+        let right = z_sq.square() + (constants::EDWARDS_D * x_sq * y_sq);
+
+        left.ct_eq(&right)
+   }
+}
+
 impl<'a> From<&'a EdwardsPoint> for ProjectivePoint {
     /// Given (X:Y:T:Z) in εε, passing to ε is cost-free by 
     /// simply ignoring `T`.
@@ -678,7 +715,7 @@ impl<'a> From<&'a AffinePoint> for ProjectivePoint {
 
 impl<'a> Neg for &'a ProjectivePoint {
     type Output = ProjectivePoint;
-    /// Negates a `ProjectivePoint` giving it as a result.
+    /// Negates a  `ProjectivePoint` giving it as a result.
     /// Since the negative of a point is (-X:Y:Z:-T), it
     /// gives as a result: `(-X, Y, Z, -T)`.
     fn neg(self) -> ProjectivePoint {
@@ -692,7 +729,7 @@ impl<'a> Neg for &'a ProjectivePoint {
 
 impl Neg for ProjectivePoint {
     type Output = ProjectivePoint;
-    /// Negates a `ProjectivePoint` giving it as a result
+    /// Negates a  `ProjectivePoint` giving it as a result
     fn neg(self) -> ProjectivePoint {
         -&self
     }
@@ -839,7 +876,7 @@ impl<'a> Double for &'a ProjectivePoint {
 impl ProjectivePoint {
 
     /// This function tries to build a Point over the Sonny Curve from
-    /// a `Y` coordinate and a Choice that determines the sign of the `X`
+    /// a `Y` coordinate and a Choice that determines the sign ofthe `X`
     /// coordinate that the user wants to use.
     /// 
     /// The function gets `X` by solving: 
@@ -872,25 +909,26 @@ impl ProjectivePoint {
         })
     }
 
-    /// This function tries to build a Point over the Doppio Curve from
+    /// This function tries to build a Point over the Sonny Curve from
     /// a random `Y` coordinate and a random Choice that determines the 
-    /// sign of the `X` coordinate.
-    pub fn new_random_point() -> ProjectivePoint {
-        // Gen a random `Y` coordinate value.
-        let y = FieldElement::generate_random();
+    /// sign ofthe `X` coordinate.
+    pub fn new_random_point<T: Rng + CryptoRng>(rand: &mut T) -> ProjectivePoint {
+        // Gen a random `Y` coordinate value from an user-provided
+        // randomness source.
+        let y = FieldElement::random(rand);
         // Gen a random sign choice. 
-        let sign = Choice::from(thread_rng().gen_range(0u8, 1u8));
+        let sign = Choice::from(rand.gen_range(0u8, 1u8));
 
         // Until we don't get a valid `Y` value, call the
         // function recursively.
         match ProjectivePoint::new_from_y_coord(&y, sign) {
-            None => ProjectivePoint::new_random_point(),
+            None => ProjectivePoint::new_random_point(rand),
             Some(point) => return point,
-        }    
+        }
     }
 }
 
-/// An `AffinePoint` represents a point on the Doppio Curve expressed
+/// An `AffinePoint` represents a point on the Sonny Curve expressed
 /// over the Twisted Edwards Affine Coordinates also known as 
 /// cartesian coordinates: (X, Y). 
 /// 
@@ -944,6 +982,19 @@ impl PartialEq for AffinePoint {
 
 impl Eq for AffinePoint {}
 
+impl ValidityCheck for AffinePoint {
+    /// Verifies if the curve equation holds given the
+    /// (X, Y) coordinates of a point in Affine Coordinates. 
+    fn is_valid(&self) -> Choice {
+        let x_sq = self.X.square();
+        let y_sq = self.Y.square();
+        let left = &(&FieldElement::minus_one() * &x_sq) + &y_sq;
+        let right = &FieldElement::one() + &(&(&constants::EDWARDS_D * &x_sq) * &y_sq);
+
+        left.ct_eq(&right)
+    }
+}
+
 impl<'a> From<&'a EdwardsPoint> for AffinePoint {
     /// Given (X:Y:Z:T) in εε, passing to affine can be 
     /// performed in 3M+ 1I by computing:
@@ -959,10 +1010,10 @@ impl<'a> From<&'a EdwardsPoint> for AffinePoint {
     /// Huseyin Hisil, Kenneth Koon-Ho Wong, Gary Carter, 
     /// and Ed Dawson.
     fn from(point: &'a EdwardsPoint) -> AffinePoint {
-        let A = point.Z.inverse();
+        let Zinv = point.Z.inverse();
         AffinePoint {
-            X: point.X * A,
-            Y: point.Y * A
+            X: point.X * Zinv,
+            Y: point.Y * Zinv
         }
     }
 }
@@ -977,16 +1028,17 @@ impl<'a> From<&'a ProjectivePoint> for AffinePoint {
     /// Huseyin Hisil, Kenneth Koon-Ho Wong, Gary Carter, 
     /// and Ed Dawson.
     fn from(point: &'a ProjectivePoint) -> AffinePoint {
+        let Zinv =  point.Z.inverse();
         AffinePoint {
-            X: point.X * point.Z.inverse(),
-            Y: point.Y * point.Z.inverse()
+            X: point.X * Zinv,
+            Y: point.Y * Zinv
         }
     }
 }
 
 impl<'a> Neg for &'a AffinePoint {
     type Output = AffinePoint;
-    /// Negates an `AffinePoint` giving it as a result.
+    /// Negates a  `AffinePoint` giving it as a result.
     /// Since the negative of a point is (-X:Y), it
     /// gives as a result: `(-X, Y)`.
     fn neg(self) -> AffinePoint {
@@ -999,7 +1051,7 @@ impl<'a> Neg for &'a AffinePoint {
 
 impl Neg for AffinePoint {
     type Output = AffinePoint;
-    /// Negates an `AffinePoint` giving it as a result.
+    /// Negates a  `AffinePoint` giving it as a result.
     /// Since the negative of a point is (-X:Y), it
     /// gives as a result: `(-X, Y)`.
     fn neg(self) -> AffinePoint {
@@ -1016,110 +1068,99 @@ impl Neg for AffinePoint {
 pub mod tests {
     use super::*;
 
-    pub(self) static P1_AFFINE: AffinePoint = AffinePoint {
-        X: FieldElement([23, 0, 0, 0, 0]),
-        Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998])
+    #[cfg(feature = "rand")]
+    use rand::rngs::OsRng;
+
+    pub(self) const P1_AFFINE: AffinePoint = AffinePoint {
+        X: FieldElement([13, 0, 0, 0, 0]),
+        Y: FieldElement([606320128494542, 1597163540666577, 1835599237877421, 1667478411389512, 3232679738299])
     };
 
-    pub(self) static P2_AFFINE: AffinePoint = AffinePoint {
-        X: FieldElement([68, 0, 0, 0, 0]),
-        Y: FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]),
+    pub(self) const P2_AFFINE: AffinePoint = AffinePoint {
+        X: FieldElement([67, 0, 0, 0, 0]),
+        Y: FieldElement([2369245568431362, 2665603790611352, 3317390952748653, 1908583331312524, 8011773354506]),
     };
 
-    pub(self) static P1_EXTENDED: EdwardsPoint = EdwardsPoint {
-        X: FieldElement([23, 0, 0, 0, 0]),
-        Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]),
+    pub(self) const P1_EXTENDED: EdwardsPoint = EdwardsPoint {
+        X: FieldElement([13, 0, 0, 0, 0]),
+        Y: FieldElement([606320128494542, 1597163540666577, 1835599237877421, 1667478411389512, 3232679738299]),
         Z: FieldElement([1, 0, 0, 0, 0]),
-        T: FieldElement([4351986304670635, 4020128726404030, 674192131526433, 1158854437106827, 6468984742885])
+        T: FieldElement([2034732376387996, 3922598123714460, 1344791952818393, 3662820838581677, 6840464509059])
     };
 
-    pub(self) static P2_EXTENDED: EdwardsPoint = EdwardsPoint {
-        X: FieldElement([68, 0, 0, 0, 0]),
-        Y: FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]),
+    pub(self) const P2_EXTENDED: EdwardsPoint = EdwardsPoint {
+        X: FieldElement([67, 0, 0, 0, 0]),
+        Y: FieldElement([2369245568431362, 2665603790611352, 3317390952748653, 1908583331312524, 8011773354506]),
         Z: FieldElement([1, 0, 0, 0, 0]),
-        T: FieldElement([3505259403500377, 292342788271022, 2608000066641474, 796697979921534, 2995435405555])
+        T: FieldElement([3474019263728064, 2548729061993416, 1588812051971430, 1774293631565269, 9023233419450])
     };
 
     /// `P4_EXTENDED = P1_EXTENDED + P2_EXTENDED` over Twisted Edwards Extended Coordinates. 
-    pub(self) static P4_EXTENDED: EdwardsPoint = EdwardsPoint {
-        X: FieldElement([1933054591726350, 4403792816774408, 3029093546253310, 1134491999944368, 8146384875494]),
-        Y: FieldElement([3369514960042642, 4355698098047571, 1547650124195635, 1314697306673062, 12051634278308]),
-        Z: FieldElement([576719056868307, 1763329757922533, 3184642959683715, 2550235128581121, 11094626825862]),
-        T: FieldElement([4345938036071968, 1280347559053553, 3286762790776823, 3577757860131876, 6505793015434])
+    pub(self) const P4_EXTENDED: EdwardsPoint = EdwardsPoint {
+        X: FieldElement([28731243678497, 3605893500953713, 4417389530006141, 299092414682919, 4656166963268]),
+        Y: FieldElement([1108585916087857, 594338741746768, 1302451816332899, 2952667069736952, 9685400790709]),
+        Z: FieldElement([3678126740275983, 2102367182843193, 1215780564383894, 577880234309233, 3967832577760]),
+        T: FieldElement([1187490310723625, 475595246262913, 1092363334429875, 285623496107549, 15708045001361])
     };
 
     /// `P3_EXTENDED = 2P1_EXTENDED` over Twisted Edwards Extended Coordinates. 
-    pub(self) static P3_EXTENDED: EdwardsPoint = EdwardsPoint {
-        X: FieldElement([3851124475403222, 3539758816612178, 1146717153316815, 2152796892260637, 5956037993247]),
-        Y: FieldElement([980361497621373, 1671502808757874, 2143986549518967, 1109176323830729, 9039277193734]),
-        Z: FieldElement([2942534902618579, 3556685217095302, 1974617438797742, 1657071371119364, 16635295697052]),
-        T: FieldElement([2487305805734419, 681684275336734, 499518740758148, 156812857292600, 3978688323434])
+    pub(self) const P3_EXTENDED: EdwardsPoint = EdwardsPoint {
+        X: FieldElement([1476979596852032, 1246004597497903, 209071396735379, 2301211094775178, 8305779568088]),
+        Y: FieldElement([2443441861872082, 2091934391169607, 4475713698486302, 2663476425643860, 11068724258563]),
+        Z: FieldElement([3359568035147073, 1010422717320416, 4098443973666364, 1207164847672527, 9657319892454]),
+        T: FieldElement([4430735055822517, 4109982164990701, 4066725032805467, 1974812232939042, 2107656041478])
     };
 
-    pub(self) static P1_PROJECTIVE: ProjectivePoint = ProjectivePoint {
-        X: FieldElement([23, 0, 0, 0, 0]),
-        Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]),
+    pub(self) const P1_PROJECTIVE: ProjectivePoint = ProjectivePoint {
+        X: FieldElement([13, 0, 0, 0, 0]),
+        Y: FieldElement([606320128494542, 1597163540666577, 1835599237877421, 1667478411389512, 3232679738299]),
         Z: FieldElement([1, 0, 0, 0, 0])
     };
 
-    pub(self) static P2_PROJECTIVE: ProjectivePoint = ProjectivePoint {
-        X: FieldElement([68, 0, 0, 0, 0]),
-        Y: FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]),
+    pub(self) const P2_PROJECTIVE: ProjectivePoint = ProjectivePoint {
+        X: FieldElement([67, 0, 0, 0, 0]),
+        Y: FieldElement([2369245568431362, 2665603790611352, 3317390952748653, 1908583331312524, 8011773354506]),
         Z: FieldElement([1, 0, 0, 0, 0])
     };
 
     /// `P4_PROJECTIVE = P1_PROJECTIVE + P2_PROJECTIVE` over Twisted Edwards Projective Coordinates. 
-    pub(self) static P4_PROJECTIVE: ProjectivePoint = ProjectivePoint {
-        X: FieldElement([1933054591726350, 4403792816774408, 3029093546253310, 1134491999944368, 8146384875494]),
-        Y: FieldElement([3369514960042642, 4355698098047571, 1547650124195635, 1314697306673062, 12051634278308]),
-        Z: FieldElement([576719056868307, 1763329757922533, 3184642959683715, 2550235128581121, 11094626825862])
+    pub(self) const P4_PROJECTIVE: ProjectivePoint = ProjectivePoint {
+        X: FieldElement([28731243678497, 3605893500953713, 4417389530006141, 299092414682919, 4656166963268]),
+        Y: FieldElement([1108585916087857, 594338741746768, 1302451816332899, 2952667069736952, 9685400790709]),
+        Z: FieldElement([3678126740275983, 2102367182843193, 1215780564383894, 577880234309233, 3967832577760])
     };
 
     /// `P3_PROJECTIVE = 2P1_PROJECTIVE` over Twisted Edwards Projective Coordinates. 
-    pub(self) static P3_PROJECTIVE: ProjectivePoint = ProjectivePoint {
-        X: FieldElement([3851124475403222, 3539758816612178, 1146717153316815, 2152796892260637, 5956037993247]),
-        Y: FieldElement([980361497621373, 1671502808757874, 2143986549518967, 1109176323830729, 9039277193734]),
-        Z: FieldElement([2942534902618579, 3556685217095302, 1974617438797742, 1657071371119364, 16635295697052])
+    pub(self) const P3_PROJECTIVE: ProjectivePoint = ProjectivePoint {
+        X: FieldElement([1476979596852032, 1246004597497903, 209071396735379, 2301211094775178, 8305779568088]),
+        Y: FieldElement([2443441861872082, 2091934391169607, 4475713698486302, 2663476425643860, 11068724258563]),
+        Z: FieldElement([3359568035147073, 1010422717320416, 4098443973666364, 1207164847672527, 9657319892454])
     };
 
     /// `P1_EXTENDED on `CompressedEdwardsY` format.
-    pub(self) static P1_COMPRESSED: CompressedEdwardsY = CompressedEdwardsY([216, 221, 167, 21, 54, 234, 101, 84, 47, 
-                                                                            55, 89, 137, 7, 175, 226, 87, 240, 1, 227, 
-                                                                            18, 81, 168, 46, 95, 65, 36, 110, 118, 217, 
-                                                                            246, 20, 140]);
+    pub(self) const P1_COMPRESSED: CompressedEdwardsY = CompressedEdwardsY([206, 11, 225, 231, 113, 39, 18, 141, 
+                                                                            213, 215, 201, 201, 90, 173, 14, 134, 
+                                                                            192, 119, 133, 134, 164, 26, 38, 1, 
+                                                                            201, 94, 187, 59, 186, 170, 240, 2]);
 
     /// `P1_EXTENDED on `CompressedEdwardsY` format.
-    pub(self) static P2_COMPRESSED: CompressedEdwardsY = CompressedEdwardsY([251, 144, 188, 47, 13, 101, 118, 
-                                                                            114, 201, 185, 169, 115, 255, 111, 
-                                                                            40, 25, 69, 105, 170, 255, 113, 65, 
-                                                                            12, 126, 170, 192, 48, 109, 112, 20, 
-                                                                            221, 14]);
+    pub(self) const P2_COMPRESSED: CompressedEdwardsY = CompressedEdwardsY([2, 245, 125, 248, 208, 106, 136, 57, 
+                                                                            210, 240, 163, 133, 151, 109, 214, 81, 
+                                                                            69, 38, 201, 203, 56, 203, 247, 138, 
+                                                                            125, 108, 10, 162, 231, 98, 73, 7]);
 
                                                                             
     //------------------ Tests ------------------//
 
     #[test]
     fn from_projective_to_extended() {
-        let p3_extended_proj = ProjectivePoint {
-            X: FieldElement([23, 0, 0, 0, 0]),
-            Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]),
-            Z: FieldElement([1, 0, 0, 0, 0])
-        };
-
-        assert!(EdwardsPoint::from(&p3_extended_proj) == P1_EXTENDED);
+        assert!(EdwardsPoint::from(&P1_PROJECTIVE) == P1_EXTENDED);
     }
 
     #[test]
     fn from_extended_to_projective() {
-        let p3_extended_proj = ProjectivePoint {
-            X: FieldElement([23, 0, 0, 0, 0]),
-            Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]),
-            Z: FieldElement([1, 0, 0, 0, 0])
-        };
-
-        assert!(p3_extended_proj == ProjectivePoint::from(&P1_EXTENDED));
+        assert!(P1_PROJECTIVE == ProjectivePoint::from(&P1_EXTENDED));
     }
-
 
     #[test]
     fn extended_point_neg() {
@@ -1145,7 +1186,8 @@ pub mod tests {
     #[test]
     fn extended_point_addition() {
         let res = &P1_EXTENDED + &P2_EXTENDED;
-
+        println!("{:?}", AffinePoint::from(&(&P2_EXTENDED + &P1_EXTENDED)));   
+        println!("{:?}", AffinePoint::from(&(&P2_PROJECTIVE + &P1_PROJECTIVE)));
         assert!(res == P4_EXTENDED);
     }
 
@@ -1159,7 +1201,7 @@ pub mod tests {
     #[test]
     fn extended_point_doubling() {
         let res = P1_EXTENDED.double();
-        
+
         assert!(res == P3_EXTENDED);
     }
 
@@ -1175,13 +1217,13 @@ pub mod tests {
 
     #[test]
     fn extended_point_generation() {
-        let y2 = FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]);
+        let y2 = FieldElement([2369245568431362, 2665603790611352, 3317390952748653, 1908583331312524, 8011773354506]);
         let p2 = EdwardsPoint::new_from_y_coord(&y2, Choice::from(0u8)).unwrap();
 
         assert!(p2 == P2_EXTENDED); 
 
-        let y1 = FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]);
-        let p1 = EdwardsPoint::new_from_y_coord(&y1, Choice::from(1u8)).unwrap();
+        let y1 = FieldElement([606320128494542, 1597163540666577, 1835599237877421, 1667478411389512, 3232679738299]);
+        let p1 = EdwardsPoint::new_from_y_coord(&y1, Choice::from(0u8)).unwrap();
 
         assert!(p1 == P1_EXTENDED);
 
@@ -1227,7 +1269,7 @@ pub mod tests {
 
     #[test]
     fn projective_double_and_add() {
-        // Since we compute ( 8* P ) we don't need
+        // Since we compute (8*P) we don't need
         // to test `mul_by_cofactor` if this passes.
         let expect = P1_PROJECTIVE.double().double().double();
         let res = P1_PROJECTIVE * Scalar::from(&8u8);
@@ -1237,13 +1279,13 @@ pub mod tests {
 
     #[test]
     fn projective_point_generation() {
-        let y2 = FieldElement([1799957170131195, 4493955741554471, 4409493758224495, 3389415867291423, 16342693473584]);
+        let y2 = FieldElement([2369245568431362, 2665603790611352, 3317390952748653, 1908583331312524, 8011773354506]);
         let p2 = ProjectivePoint::new_from_y_coord(&y2, Choice::from(0u8)).unwrap();
 
         assert!(p2 == P2_PROJECTIVE); 
 
-        let y1 = FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]);
-        let p1 = ProjectivePoint::new_from_y_coord(&y1, Choice::from(1u8)).unwrap();
+        let y1 = FieldElement([606320128494542, 1597163540666577, 1835599237877421, 1667478411389512, 3232679738299]);
+        let p1 = ProjectivePoint::new_from_y_coord(&y1, Choice::from(0u8)).unwrap();
 
         assert!(p1 == P1_PROJECTIVE);
 
@@ -1278,18 +1320,16 @@ pub mod tests {
 
     #[test]
     fn point_compression() {
-        println!("{:?}", P1_EXTENDED.compress());
-        let compr = CompressedEdwardsY::from_slice(&[216, 221, 167, 21, 54, 234, 101, 84, 
-                                               47, 55, 89, 137, 7, 175, 226, 87, 240, 
-                                               1, 227, 18, 81, 168, 46, 95, 65, 36, 110, 
-                                               118, 217, 246, 20, 140]);
+        let compr = CompressedEdwardsY::from_slice(&[206, 11, 225, 231, 113, 39, 18, 141, 
+                                                     213, 215, 201, 201, 90, 173, 14, 134, 
+                                                     192, 119, 133, 134, 164, 26, 38, 1, 
+                                                     201, 94, 187, 59, 186, 170, 240, 2]);
         assert!(compr == P1_EXTENDED.compress());
 
-        let compr2 = CompressedEdwardsY::from_slice(&[251, 144, 188, 47, 13, 101, 118, 
-                                                    114, 201, 185, 169, 115, 255, 111, 
-                                                    40, 25, 69, 105, 170, 255, 113, 65, 
-                                                    12, 126, 170, 192, 48, 109, 112, 20, 
-                                                    221, 14]);
+        let compr2 = CompressedEdwardsY::from_slice(&[2, 245, 125, 248, 208, 106, 136, 57, 
+                                                      210, 240, 163, 133, 151, 109, 214, 81, 
+                                                      69, 38, 201, 203, 56, 203, 247, 138, 
+                                                      125, 108, 10, 162, 231, 98, 73, 7]);
         assert!(compr2 == P2_EXTENDED.compress());       
     }
 
@@ -1300,12 +1340,35 @@ pub mod tests {
 
         // Define a compressed point which y coordinate does not
         // rely on the curve.
-        let fail_compr = CompressedEdwardsY::from_slice(&[251, 144, 188, 47, 13, 101, 118, 
+        let fail_compr = CompressedEdwardsY::from_slice(&[250, 144, 188, 47, 13, 101, 118, 
                                                         114, 201, 185, 169, 115, 255, 111, 
                                                         40, 25, 69, 105, 170, 255, 113, 65, 
-                                                        12, 126, 170, 192, 48, 109, 112, 20, 
+                                                        120, 126, 170, 192, 48, 109, 112, 20, 
                                                         221, 149]);
                                              
         assert!(fail_compr.decompress().is_none());
+    }
+
+    #[test]
+    fn validity_check() {
+        // Affine Coords. 
+        assert!(AffinePoint::identity().is_valid().unwrap_u8() == 1u8);
+        assert!(P1_AFFINE.is_valid().unwrap_u8() == 1u8);
+        assert!(P2_AFFINE.is_valid().unwrap_u8() == 1u8);
+    
+        // Projective / Extended Coords (use the same formula).
+        assert!(EdwardsPoint::identity().is_valid().unwrap_u8() == 1u8);
+        assert!(P1_EXTENDED.is_valid().unwrap_u8() == 1u8);
+        assert!(P2_PROJECTIVE.is_valid().unwrap_u8() == 1u8);
+        assert!(P4_EXTENDED.is_valid().unwrap_u8() == 1u8);
+    }
+
+    #[test]
+    fn unique_basepoint_test() {
+        let y = FieldElement::from(&3u8) / FieldElement::from(&5u8);
+        let basep = EdwardsPoint::new_from_y_coord(&y, Choice::from(0u8)).unwrap();
+        
+        assert!(basep.is_valid().unwrap_u8() == 1u8);
+        assert!(basep * constants::L == EdwardsPoint::identity());
     }
 }
