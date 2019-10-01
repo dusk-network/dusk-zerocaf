@@ -1,6 +1,6 @@
 //! Implementation that provides support for Montgomery Points
 //! over the Doppio curve.
-//! 
+//!
 //! A `MontgomeryPoint` is represented as the `u-coordinate`
 //! of itself in LE bytes-format.
 

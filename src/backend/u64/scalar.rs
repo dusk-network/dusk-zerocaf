@@ -1,29 +1,27 @@
 //! Arithmetic mod `2^249 + 14490550575682688738086195780655237219`
 //! with five 52-bit unsigned limbs
 //! represented in radix `2^52`.
-//! 
-//! //! The basic modular operations have been taken from the 
-//! [curve25519-dalek repository](https://github.com/dalek-cryptography/curve25519-dalek) and refactored to work 
+//!
+//! //! The basic modular operations have been taken from the
+//! [curve25519-dalek repository](https://github.com/dalek-cryptography/curve25519-dalek) and refactored to work
 //! for the Doppio sub-group field.
 
-
 use core::fmt::Debug;
+use core::ops::{Add, Mul, Neg, Sub};
 use core::ops::{Index, IndexMut};
-use core::ops::{Add, Sub, Mul, Neg};
 
-
-use std::cmp::{PartialOrd, Ordering, Ord};
+use std::cmp::{Ord, Ordering, PartialOrd};
 
 use num::Integer;
 
 use crate::backend::u64::constants;
-use crate::traits::Identity;
 use crate::traits::ops::*;
+use crate::traits::Identity;
 
 /// The `Scalar` struct represents an Scalar over the modulo
 /// `2^249 + 14490550575682688738086195780655237219` as 5 52-bit limbs
 /// represented in radix `2^52`.
-#[derive(Copy,Clone)]
+#[derive(Copy, Clone)]
 pub struct Scalar(pub [u64; 5]);
 
 impl Debug for Scalar {
@@ -56,7 +54,7 @@ impl Ord for Scalar {
         for i in (0..5).rev() {
             if self[i] > other[i] {
                 return Ordering::Greater;
-            }else if self[i] < other[i] {
+            } else if self[i] < other[i] {
                 return Ordering::Less;
             }
         }
@@ -122,7 +120,7 @@ impl<'a> From<&'a u128> for Scalar {
 impl<'a> Neg for &'a Scalar {
     type Output = Scalar;
     /// Performs the negate operation over the
-    /// sub-group modulo l. 
+    /// sub-group modulo l.
     fn neg(self) -> Scalar {
         &Scalar::zero() - &self
     }
@@ -139,7 +137,7 @@ impl Neg for Scalar {
 
 impl Identity for Scalar {
     /// Returns the `Identity` element for `Scalar`
-    /// which equals `1 (mod l)`. 
+    /// which equals `1 (mod l)`.
     fn identity() -> Scalar {
         Scalar::one()
     }
@@ -161,7 +159,7 @@ impl<'a, 'b> Add<&'b Scalar> for &'a Scalar {
         // subtract l if the sum is >= l
         sum - constants::L
     }
-} 
+}
 
 impl Add<Scalar> for Scalar {
     type Output = Scalar;
@@ -212,11 +210,11 @@ impl<'a, 'b> Mul<&'a Scalar> for &'b Scalar {
     type Output = Scalar;
     /// This `Mul` implementation returns a double precision result.
     /// The result of the standard mul is stored on a [u128; 9].
-    /// 
+    ///
     /// Then, we apply the Montgomery Reduction function to perform
     /// the modulo and the reduction to the `Scalar` format: [u64; 5].
     fn mul(self, b: &'a Scalar) -> Scalar {
-        let ab = Scalar::montgomery_reduce(&Scalar::mul_internal(self, b)); 
+        let ab = Scalar::montgomery_reduce(&Scalar::mul_internal(self, b));
         Scalar::montgomery_reduce(&Scalar::mul_internal(&ab, &constants::RR))
     }
 }
@@ -225,7 +223,7 @@ impl Mul<Scalar> for Scalar {
     type Output = Scalar;
     /// This `Mul` implementation returns a double precision result.
     /// The result of the standard mul is stored on a [u128; 9].
-    /// 
+    ///
     /// Then, we apply the Montgomery Reduction function to perform
     /// the modulo and the reduction to the `Scalar` format: [u64; 5].
     fn mul(self, b: Scalar) -> Scalar {
@@ -237,11 +235,11 @@ impl<'a> Square for &'a Scalar {
     type Output = Scalar;
     /// This `Square` implementation returns a double precision result.
     /// The result of the standard mul is stored on a [u128; 9].
-    /// 
+    ///
     /// Then, we apply the Montgomery Reduction function to perform
-    /// the modulo and the reduction to the `Scalar` format: [u64; 5]. 
+    /// the modulo and the reduction to the `Scalar` format: [u64; 5].
     fn square(self) -> Scalar {
-        let aa = Scalar::montgomery_reduce(&Scalar::square_internal(self)); 
+        let aa = Scalar::montgomery_reduce(&Scalar::square_internal(self));
         Scalar::montgomery_reduce(&Scalar::mul_internal(&aa, &constants::RR))
     }
 }
@@ -249,12 +247,12 @@ impl<'a> Square for &'a Scalar {
 impl<'a> Half for &'a Scalar {
     type Output = Scalar;
     /// Give the half of the Scalar value (mod l).
-    /// 
-    /// This op **SHOULD ONLY** be used with even 
+    ///
+    /// This op **SHOULD ONLY** be used with even
     /// `Scalars` otherways, can produce erroneus
     /// results.
-    /// 
-    /// The implementation for `Scalar` has indeed 
+    ///
+    /// The implementation for `Scalar` has indeed
     /// an `assert!` statement to check this.
     #[inline]
     fn half(self) -> Scalar {
@@ -263,7 +261,7 @@ impl<'a> Half for &'a Scalar {
         let mut remainder = 0u64;
         for i in (0..5).rev() {
             res[i] = res[i] + remainder;
-            match(res[i] == 1, res[i].is_even()){
+            match (res[i] == 1, res[i].is_even()) {
                 (true, _) => {
                     remainder = 4503599627370496u64;
                 }
@@ -276,17 +274,17 @@ impl<'a> Half for &'a Scalar {
                 }
             }
             res[i] = res[i] >> 1;
-        };
+        }
         res
     }
 }
 
 /// Performs the op: `a^b (mod l)`.
-/// 
+///
 /// Exponentiation by squaring classical algorithm
 /// implementation for `Scalar`.
-/// 
-/// Schneier, Bruce (1996). Applied Cryptography: Protocols, 
+///
+/// Schneier, Bruce (1996). Applied Cryptography: Protocols,
 /// Algorithms, and Source Code in C, Second Edition (2nd ed.).
 impl<'a, 'b> Pow<&'b Scalar> for &'a Scalar {
     type Output = Scalar;
@@ -295,17 +293,17 @@ impl<'a, 'b> Pow<&'b Scalar> for &'a Scalar {
         let mut base = self.clone();
         let mut res = Scalar::one();
         let mut expon = exp.clone();
-        
+
         while expon > Scalar::zero() {
             if expon.is_even() {
                 expon = expon.half();
                 base = &base * &base;
             } else {
                 expon = expon - Scalar::one();
-            res = res * base;
+                res = res * base;
 
-            expon = expon.half();
-            base = &base * &base;
+                expon = expon.half();
+                base = &base * &base;
             }
         }
 
@@ -319,17 +317,15 @@ fn m(x: u64, y: u64) -> u128 {
     (x as u128) * (y as u128)
 }
 
-
 impl Scalar {
-
     /// Return a Scalar with value = `0`.
     pub const fn zero() -> Scalar {
-        Scalar([0,0,0,0,0])
+        Scalar([0, 0, 0, 0, 0])
     }
 
     /// Return a Scalar with value = `1`.
     pub const fn one() -> Scalar {
-        Scalar([1,0,0,0,0])
+        Scalar([1, 0, 0, 0, 0])
     }
 
     /// Return a Scalar with value = `-1 (mod l)`.
@@ -348,103 +344,102 @@ impl Scalar {
         for i in 0..4 {
             for j in 0..8 {
                 words[i] |= (bytes[(i * 8) + j] as u64) << (j * 8);
-            } 
+            }
         }
 
         let mask = (1u64 << 52) - 1;
         let top_mask = (1u64 << 48) - 1;
         let mut s = Scalar::zero();
 
-        s[0] =   words[0]                            & mask;
+        s[0] = words[0] & mask;
         // Get the 64-52 = 12 bits and add words[1] (shifting 12 to the left) on the front with `|` then apply mask.
-        s[1] = ((words[0] >> 52) | (words[1] << 12)) & mask; 
+        s[1] = ((words[0] >> 52) | (words[1] << 12)) & mask;
         s[2] = ((words[1] >> 40) | (words[2] << 24)) & mask;
         s[3] = ((words[2] >> 28) | (words[3] << 36)) & mask;
         // Shift 16 to the right to get the 52 bits of the scalar on that limb. Then apply top_mask.
-        s[4] =  (words[3] >> 16)                     & top_mask;
+        s[4] = (words[3] >> 16) & top_mask;
 
         s
     }
 
     /// Reduce a 64 byte / 512 bit scalar mod l
     pub fn from_bytes_wide(_bytes: &[u8; 64]) -> Scalar {
-       // We could provide 512 bit scalar support using Montgomery Reduction. 
-       // But first we need to finnish the 256-bit implementation.
-       unimplemented!()
+        // We could provide 512 bit scalar support using Montgomery Reduction.
+        // But first we need to finnish the 256-bit implementation.
+        unimplemented!()
     }
 
     /// Pack the limbs of this `Scalar` into 32 bytes
     pub fn to_bytes(&self) -> [u8; 32] {
         let mut res = [0u8; 32];
 
-        res[0]  =  (self.0[0] >> 0)                        as u8;
-        res[1]  =  (self.0[0] >> 8)                        as u8;
-        res[2]  =  (self.0[0] >> 16)                       as u8;
-        res[3]  =  (self.0[0] >> 24)                       as u8;
-        res[4]  =  (self.0[0] >> 32)                       as u8;
-        res[5]  =  (self.0[0] >> 40)                       as u8;
-        res[6]  =  ((self.0[0] >> 48) | (self.0[1] << 4))  as u8;
-        res[7]  =  (self.0[1] >> 4)                        as u8;
-        res[8]  =  (self.0[1] >> 12)                       as u8;
-        res[9]  =  (self.0[ 1] >> 20)                      as u8;
-        res[10] =  (self.0[ 1] >> 28)                      as u8;
-        res[11] =  (self.0[ 1] >> 36)                      as u8;
-        res[12] =  (self.0[ 1] >> 44)                      as u8;
-        res[13] =  (self.0[ 2] >>  0)                      as u8;
-        res[14] =  (self.0[ 2] >>  8)                      as u8;
-        res[15] =  (self.0[ 2] >> 16)                      as u8;
-        res[16] =  (self.0[ 2] >> 24)                      as u8;
-        res[17] =  (self.0[ 2] >> 32)                      as u8;
-        res[18] =  (self.0[ 2] >> 40)                      as u8;
-        res[19] = ((self.0[ 2] >> 48) | (self.0[ 3] << 4)) as u8;
-        res[20] =  (self.0[ 3] >>  4)                      as u8;
-        res[21] =  (self.0[ 3] >> 12)                      as u8;
-        res[22] =  (self.0[ 3] >> 20)                      as u8;
-        res[23] =  (self.0[ 3] >> 28)                      as u8;
-        res[24] =  (self.0[ 3] >> 36)                      as u8;
-        res[25] =  (self.0[ 3] >> 44)                      as u8;
-        res[26] =  (self.0[ 4] >>  0)                      as u8;
-        res[27] =  (self.0[ 4] >>  8)                      as u8;
-        res[28] =  (self.0[ 4] >> 16)                      as u8;
-        res[29] =  (self.0[ 4] >> 24)                      as u8;
-        res[30] =  (self.0[ 4] >> 32)                      as u8;
-        res[31] =  (self.0[ 4] >> 40)                      as u8;
+        res[0] = (self.0[0] >> 0) as u8;
+        res[1] = (self.0[0] >> 8) as u8;
+        res[2] = (self.0[0] >> 16) as u8;
+        res[3] = (self.0[0] >> 24) as u8;
+        res[4] = (self.0[0] >> 32) as u8;
+        res[5] = (self.0[0] >> 40) as u8;
+        res[6] = ((self.0[0] >> 48) | (self.0[1] << 4)) as u8;
+        res[7] = (self.0[1] >> 4) as u8;
+        res[8] = (self.0[1] >> 12) as u8;
+        res[9] = (self.0[1] >> 20) as u8;
+        res[10] = (self.0[1] >> 28) as u8;
+        res[11] = (self.0[1] >> 36) as u8;
+        res[12] = (self.0[1] >> 44) as u8;
+        res[13] = (self.0[2] >> 0) as u8;
+        res[14] = (self.0[2] >> 8) as u8;
+        res[15] = (self.0[2] >> 16) as u8;
+        res[16] = (self.0[2] >> 24) as u8;
+        res[17] = (self.0[2] >> 32) as u8;
+        res[18] = (self.0[2] >> 40) as u8;
+        res[19] = ((self.0[2] >> 48) | (self.0[3] << 4)) as u8;
+        res[20] = (self.0[3] >> 4) as u8;
+        res[21] = (self.0[3] >> 12) as u8;
+        res[22] = (self.0[3] >> 20) as u8;
+        res[23] = (self.0[3] >> 28) as u8;
+        res[24] = (self.0[3] >> 36) as u8;
+        res[25] = (self.0[3] >> 44) as u8;
+        res[26] = (self.0[4] >> 0) as u8;
+        res[27] = (self.0[4] >> 8) as u8;
+        res[28] = (self.0[4] >> 16) as u8;
+        res[29] = (self.0[4] >> 24) as u8;
+        res[30] = (self.0[4] >> 32) as u8;
+        res[31] = (self.0[4] >> 40) as u8;
 
         // High bit should be zero.
         //debug_assert!((res[31] & 0b1000_0000u8) == 0u8);
         res
-    }  
+    }
 
     /// Given a `k`: u64, compute `2^k` giving the resulting result
     /// as a `Scalar`.
-    /// 
+    ///
     /// See that the input must be between the range => 0..250.
-    /// 
+    ///
     /// NOTE: This function implements an `assert!` statement that
     /// checks the correctness of the exponent provided as param.
     pub fn two_pow_k(exp: &u64) -> Scalar {
-        
         // Check that exp has to be less than 260.
         // Note that a Scalar can be as much
         // `2^249 - 15145038707218910765482344729778085401` so we pick
         // 250 knowing that 249 will be lower than the prime of the
         // sub group.
         assert!(exp < &253u64, "Exponent can't be greater than 260");
-        
+
         let mut res = Scalar::zero();
         match exp {
             0...51 => {
-               res[0]  = 1u64 << exp;
-            },
+                res[0] = 1u64 << exp;
+            }
             52...103 => {
                 res[1] = 1u64 << (exp - 52);
-            },
+            }
             104...155 => {
                 res[2] = 1u64 << (exp - 104);
-            },
+            }
             156...207 => {
                 res[3] = 1u64 << (exp - 156);
-            },
+            }
             _ => {
                 res[4] = 1u64 << (exp - 208);
             }
@@ -453,54 +448,49 @@ impl Scalar {
     }
 
     /// Compute `a * b`.
-    /// Note that this is just the normal way of performing a product. 
+    /// Note that this is just the normal way of performing a product.
     /// This operation returns back a double precision result stored
     /// on a `[u128; 9] in order to avoid overflowings.
     #[inline]
     pub(self) fn mul_internal(a: &Scalar, b: &Scalar) -> [u128; 9] {
         let mut res = [0u128; 9];
-        
-        res[0] = m(a[0],b[0]);
-        res[1] = m(a[0],b[1]) + m(a[1],b[0]);
-        res[2] = m(a[0],b[2]) + m(a[1],b[1]) + m(a[2],b[0]);
-        res[3] = m(a[0],b[3]) + m(a[1],b[2]) + m(a[2],b[1]) + m(a[3],b[0]);
-        res[4] = m(a[0],b[4]) + m(a[1],b[3]) + m(a[2],b[2]) + m(a[3],b[1]) + m(a[4],b[0]);
-        res[5] =                m(a[1],b[4]) + m(a[2],b[3]) + m(a[3],b[2]) + m(a[4],b[1]);
-        res[6] =                               m(a[2],b[4]) + m(a[3],b[3]) + m(a[4],b[2]);
-        res[7] =                                              m(a[3],b[4]) + m(a[4],b[3]);
-        res[8] =                                                             m(a[4],b[4]);
+
+        res[0] = m(a[0], b[0]);
+        res[1] = m(a[0], b[1]) + m(a[1], b[0]);
+        res[2] = m(a[0], b[2]) + m(a[1], b[1]) + m(a[2], b[0]);
+        res[3] = m(a[0], b[3]) + m(a[1], b[2]) + m(a[2], b[1]) + m(a[3], b[0]);
+        res[4] = m(a[0], b[4]) + m(a[1], b[3]) + m(a[2], b[2]) + m(a[3], b[1]) + m(a[4], b[0]);
+        res[5] = m(a[1], b[4]) + m(a[2], b[3]) + m(a[3], b[2]) + m(a[4], b[1]);
+        res[6] = m(a[2], b[4]) + m(a[3], b[3]) + m(a[4], b[2]);
+        res[7] = m(a[3], b[4]) + m(a[4], b[3]);
+        res[8] = m(a[4], b[4]);
 
         res
     }
 
-    /// Compute `a^2`. 
-    /// 
-    /// This operation returns a double precision result. 
+    /// Compute `a^2`.
+    ///
+    /// This operation returns a double precision result.
     /// So it gives back a `[u128; 9]` with the result of the squaring.
     #[inline]
     pub(self) fn square_internal(a: &Scalar) -> [u128; 9] {
-        let a_sqrt = [
-            a[0]*2,
-            a[1]*2,
-            a[2]*2,
-            a[3]*2,
-        ];
+        let a_sqrt = [a[0] * 2, a[1] * 2, a[2] * 2, a[3] * 2];
 
         [
-            m(a[0],a[0]),
-            m(a_sqrt[0],a[1]),
-            m(a_sqrt[0],a[2]) + m(a[1],a[1]),
-            m(a_sqrt[0],a[3]) + m(a_sqrt[1],a[2]),
-            m(a_sqrt[0],a[4]) + m(a_sqrt[1],a[3]) + m(a[2],a[2]),
-                                m(a_sqrt[1],a[4]) + m(a_sqrt[2],a[3]),
-                                                    m(a_sqrt[2],a[4]) + m(a[3],a[3]),
-                                                                        m(a_sqrt[3],a[4]),
-                                                                        m(a[4],a[4])
+            m(a[0], a[0]),
+            m(a_sqrt[0], a[1]),
+            m(a_sqrt[0], a[2]) + m(a[1], a[1]),
+            m(a_sqrt[0], a[3]) + m(a_sqrt[1], a[2]),
+            m(a_sqrt[0], a[4]) + m(a_sqrt[1], a[3]) + m(a[2], a[2]),
+            m(a_sqrt[1], a[4]) + m(a_sqrt[2], a[3]),
+            m(a_sqrt[2], a[4]) + m(a[3], a[3]),
+            m(a_sqrt[3], a[4]),
+            m(a[4], a[4]),
         ]
     }
 
     /// Give the half of the Scalar value (mod l).
-    /// 
+    ///
     /// This op **SHOULD NEVER** be used by the end-user
     /// since it's designed to allow some behaviours
     /// needed on certain points of algorithm implementations.
@@ -511,7 +501,7 @@ impl Scalar {
         let mut remainder = 0u64;
         for i in (0..5).rev() {
             res[i] = res[i] + remainder;
-            match(res[i] == 1, res[i].is_even()){
+            match (res[i] == 1, res[i].is_even()) {
                 (true, _) => {
                     remainder = 4503599627370496u64;
                 }
@@ -524,18 +514,17 @@ impl Scalar {
                 }
             }
             res[i] = res[i] >> 1;
-        };
+        }
         res
     }
 
     /// Compute `limbs/R` (mod l), where R is the Montgomery modulus 2^260
     #[inline]
     pub(self) fn montgomery_reduce(limbs: &[u128; 9]) -> Scalar {
-
         #[inline]
         fn adjustment_fact(sum: u128) -> (u128, u64) {
             let p = (sum as u64).wrapping_mul(constants::LFACTOR) & ((1u64 << 52) - 1);
-            ((sum + m(p,constants::L[0])) >> 52, p)
+            ((sum + m(p, constants::L[0])) >> 52, p)
         }
 
         #[inline]
@@ -545,23 +534,27 @@ impl Scalar {
         }
 
         let l = &constants::L;
-        
+
         // the first half computes the Montgomery adjustment factor n, and begins adding n*l to make limbs divisible by R
-        let (carry, n0) = adjustment_fact(        limbs[0]);
-        let (carry, n1) = adjustment_fact(carry + limbs[1] + m(n0,l[1]));
-        let (carry, n2) = adjustment_fact(carry + limbs[2] + m(n0,l[2]) + m(n1,l[1]));
-        let (carry, n3) = adjustment_fact(carry + limbs[3] + m(n0,l[3]) + m(n1,l[2]) + m(n2,l[1]));
-        let (carry, n4) = adjustment_fact(carry + limbs[4] + m(n0,l[4]) + m(n1,l[3]) + m(n2,l[2]) + m(n3,l[1]));
+        let (carry, n0) = adjustment_fact(limbs[0]);
+        let (carry, n1) = adjustment_fact(carry + limbs[1] + m(n0, l[1]));
+        let (carry, n2) = adjustment_fact(carry + limbs[2] + m(n0, l[2]) + m(n1, l[1]));
+        let (carry, n3) =
+            adjustment_fact(carry + limbs[3] + m(n0, l[3]) + m(n1, l[2]) + m(n2, l[1]));
+        let (carry, n4) = adjustment_fact(
+            carry + limbs[4] + m(n0, l[4]) + m(n1, l[3]) + m(n2, l[2]) + m(n3, l[1]),
+        );
 
         // limbs is divisible by R now, so we can divide by R by simply storing the upper half as the result
-        let (carry, r0) = montg_red_res(carry + limbs[5]              + m(n1,l[4]) + m(n2,l[3]) + m(n3,l[2]) + m(n4,l[1]));
-        let (carry, r1) = montg_red_res(carry + limbs[6]                           + m(n2,l[4]) + m(n3,l[3]) + m(n4,l[2]));
-        let (carry, r2) = montg_red_res(carry + limbs[7]                                        + m(n3,l[4]) + m(n4,l[3]));
-        let (carry, r3) = montg_red_res(carry + limbs[8]                                                     + m(n4,l[4]));
-        let         r4 = carry as u64;
+        let (carry, r0) =
+            montg_red_res(carry + limbs[5] + m(n1, l[4]) + m(n2, l[3]) + m(n3, l[2]) + m(n4, l[1]));
+        let (carry, r1) = montg_red_res(carry + limbs[6] + m(n2, l[4]) + m(n3, l[3]) + m(n4, l[2]));
+        let (carry, r2) = montg_red_res(carry + limbs[7] + m(n3, l[4]) + m(n4, l[3]));
+        let (carry, r3) = montg_red_res(carry + limbs[8] + m(n4, l[4]));
+        let r4 = carry as u64;
 
         // result may be >= r, so attempt to subtract l
-        &Scalar([r0,r1,r2,r3,r4]) - l
+        &Scalar([r0, r1, r2, r3, r4]) - l
     }
 
     /// Compute `(a * b) / R` (mod l), where R is the Montgomery modulus 2^260
@@ -590,50 +583,114 @@ impl Scalar {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
-        
+
     /// `A = 182687704666362864775460604089535377456991567872`.
     pub static A: Scalar = Scalar([0, 0, 0, 2, 0]);
 
     /// `B = 904625697166532776746648320197686575422163851717637391703244652875051672039`
-    pub static B: Scalar = Scalar([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370493, 2199023255551]);
+    pub static B: Scalar = Scalar([
+        2766226127823335,
+        4237835465749098,
+        4503599626623787,
+        4503599627370493,
+        2199023255551,
+    ]);
 
     /// `AB = A - B (mod l) = `365375409332725729550921208179070754913983135744`.
     pub static AB: Scalar = Scalar([2867050651854460, 1629308859434048, 1461147, 4, 0]);
 
     /// `BA = B - A = 904625697166532776746648320014998870755800986942176787613709275418060104167`.
-    pub static BA: Scalar = Scalar([2766226127823335, 4237835465749098, 4503599626623787, 4503599627370491, 2199023255551]);
+    pub static BA: Scalar = Scalar([
+        2766226127823335,
+        4237835465749098,
+        4503599626623787,
+        4503599627370491,
+        2199023255551,
+    ]);
 
     /// `A ^ B (mod l) = 722079218299359393463304261975695272152587797512052686822897975048879125727`.
-    pub static A_POW_B: Scalar = Scalar([2191545792217572, 448661815025744, 1377760471467833, 2830870192895755, 435342682203]);
+    pub static A_POW_B: Scalar = Scalar([
+        2191545792217572,
+        448661815025744,
+        1377760471467833,
+        2830870192895755,
+        435342682203,
+    ]);
 
     /// A in Montgomery domain; `A_MONT = (A * R) (mod l) = 74956990360519859676823980567085929151483724995760953292439364863916993608`.
-    pub static A_MONT: Scalar = Scalar([690508070349896, 1499135165000273, 3323154938341339, 2542801086174134, 182210350076]);
+    pub static A_MONT: Scalar = Scalar([
+        690508070349896,
+        1499135165000273,
+        3323154938341339,
+        2542801086174134,
+        182210350076,
+    ]);
 
     /// `X = 1809251394333065553493296640760748560207343510400633813116524750123642650623`
-    pub static X: Scalar = Scalar([4503599627370495, 4503599627370495, 4503599627370495, 4503599627370495, 4398046511103]);
-    
-    /// `Y = 717350576871794411262215878514291949349241575907629849852603275827191647632`.
-    pub static Y: Scalar = Scalar([138340288859536, 461913478537005, 1182880083788836, 1688835920473363, 1743782656037]);
+    pub static X: Scalar = Scalar([
+        4503599627370495,
+        4503599627370495,
+        4503599627370495,
+        4503599627370495,
+        4398046511103,
+    ]);
 
-    /// `Y^2 (mod l) = 480582312179500987438513229347407841000328373586967991836637456597269397662`. 
-    pub static Y_SQ: Scalar = Scalar([3511508334592158, 913859277470939, 3383393792942685, 3918279098243301, 1168230887094]);
+    /// `Y = 717350576871794411262215878514291949349241575907629849852603275827191647632`.
+    pub static Y: Scalar = Scalar([
+        138340288859536,
+        461913478537005,
+        1182880083788836,
+        1688835920473363,
+        1743782656037,
+    ]);
+
+    /// `Y^2 (mod l) = 480582312179500987438513229347407841000328373586967991836637456597269397662`.
+    pub static Y_SQ: Scalar = Scalar([
+        3511508334592158,
+        913859277470939,
+        3383393792942685,
+        3918279098243301,
+        1168230887094,
+    ]);
 
     /// `Y/2 = 358675288435897205631107939257145974674620787953814924926301637913595823816`.
-    pub static Y_HALF: Scalar = Scalar([2320969958115016, 230956739268502, 2843239855579666, 3096217773921929, 871891328018]);
-    
+    pub static Y_HALF: Scalar = Scalar([
+        2320969958115016,
+        230956739268502,
+        2843239855579666,
+        3096217773921929,
+        871891328018,
+    ]);
+
     /// Y in Montgomery domain; `Y_MONT = (Y * R) (mod l) = 181593701473289124342215660240169352515908506664531442677698834953613087302`.
-    pub static Y_MONT: Scalar = Scalar([2880674519323206, 1234984943133080, 2849728124521957, 4421863362992372, 441429835402]);
-    
+    pub static Y_MONT: Scalar = Scalar([
+        2880674519323206,
+        1234984943133080,
+        2849728124521957,
+        4421863362992372,
+        441429835402,
+    ]);
+
     /// `(X * Y)/R (mod l) = 394801755993377774325488732071130802534479695819740243486564413323892352807`.
-    pub static X_TIMES_Y_MONT: Scalar = Scalar([228255815821095, 3571367814561020, 2885104738833919, 415982367220597, 959709905966]); 
+    pub static X_TIMES_Y_MONT: Scalar = Scalar([
+        228255815821095,
+        3571367814561020,
+        2885104738833919,
+        415982367220597,
+        959709905966,
+    ]);
 
     /// `X * Y (mod l) = 72607398683238392972008549298495917621610972793940628309128483126058020327`
-    pub static X_TIMES_Y: Scalar = Scalar([3955754814270951, 1675310998682037, 4396625830536378, 1174212537684658, 176498809098]); 
-
+    pub static X_TIMES_Y: Scalar = Scalar([
+        3955754814270951,
+        1675310998682037,
+        4396625830536378,
+        1174212537684658,
+        176498809098,
+    ]);
 
     //------------------ Tests ------------------//
 
@@ -687,7 +744,7 @@ mod tests {
     #[test]
     fn square_internal() {
         let easy_res = Scalar::square_internal(&A);
-        let res_correct: [u128; 9] = [0,0,0,0,0,0,4,0,0];
+        let res_correct: [u128; 9] = [0, 0, 0, 0, 0, 0, 4, 0, 0];
         for i in 0..5 {
             assert!(easy_res[i] == res_correct[i]);
         }
