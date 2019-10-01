@@ -537,7 +537,7 @@ impl EdwardsPoint {
     /// lives in.
     pub fn coset4(&self) -> [EdwardsPoint; 4] {
         [
-            self.clone(),
+            *self,
             self + &constants::FOUR_COSET_GROUP[0],
             self + &constants::FOUR_COSET_GROUP[1],
             self + &constants::FOUR_COSET_GROUP[2],
