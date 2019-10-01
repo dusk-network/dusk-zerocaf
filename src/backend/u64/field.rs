@@ -482,6 +482,7 @@ impl InvSqrt for &FieldElement {
 impl SqrtRatioI<&FieldElement> for FieldElement {
     type Output = (Choice, FieldElement);
 
+    #[allow(non_snake_case)]
     /// The first part of the return value signals whether u/v was square, 
     /// and the second part contains a square root. 
     /// Specifically, it returns:
@@ -491,8 +492,6 @@ impl SqrtRatioI<&FieldElement> for FieldElement {
     ///- (false, zero) if v is zero and u is nonzero;
     ///- (false, +sqrt(i*u/v)) if u/v is nonsquare (so iu/v is square).
     fn sqrt_ratio_i(&self, v: &FieldElement) -> (Choice, FieldElement) {
-
-        let SQRT_MINUS_ONE: FieldElement = FieldElement([3075585030474777, 2451921961843096, 1194333869305507, 2218299809671669, 7376823328646]); 
         let zero = &FieldElement::zero();
 
         match(self == zero, v == zero) {
@@ -506,7 +505,7 @@ impl SqrtRatioI<&FieldElement> for FieldElement {
             // (u/v) is not QR, so we multiply by `i` and 
             // return `(false, +sqrt(i*u/v))`. 
             false => { 
-                let mut res = (&SQRT_MINUS_ONE * &(self / v)).mod_sqrt(Choice::from(1u8)).unwrap();
+                let mut res = (&constants::SQRT_MINUS_ONE * &(self / v)).mod_sqrt(Choice::from(1u8)).unwrap();
                 res.conditional_negate(!res.is_positive());
                 (Choice::from(0u8), res)
             },
@@ -531,12 +530,12 @@ impl FieldElement {
 
     /// Construct zero.
     pub fn zero() -> FieldElement {
-        FieldElement([ 0, 0, 0, 0, 0 ])
+        FieldElement([0, 0, 0, 0, 0 ])
     }
 
     /// Construct one.
     pub fn one() -> FieldElement {
-        FieldElement([ 1, 0, 0, 0, 0 ])
+        FieldElement([1, 0, 0, 0, 0 ])
     }
 
     /// Construct -1 (mod l).
@@ -1108,7 +1107,6 @@ pub mod tests {
     use crate::backend::u64::constants as constants;
     #[allow(unused_imports)]
     use crate::scalar::Ristretto255Scalar;
-    use crate::constants::EDWARDS_D;
 
     /// Bytes representation of `-1 (mod l) = 7237005577332262213973186563042994240857116359379907606001950938285454250988`
     pub static MINUS_ONE_BYTES: [u8; 32] = [236, 211, 245, 92, 26, 99, 18, 88, 214, 156, 247, 162, 222, 249, 222, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16];
@@ -1353,6 +1351,7 @@ pub mod tests {
         assert!(-res == INV_SQRT_27);
     }
 
+    #[allow(non_snake_case)]
     #[test]
     fn non_QRmod_sqrt_tonelli_shanks() {
         // Test for non-valid Quadratic-residue values.
