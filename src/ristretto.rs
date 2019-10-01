@@ -156,7 +156,7 @@ pub struct RistrettoPoint (pub(crate) EdwardsPoint);
 
 impl Debug for RistrettoPoint {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
-        write!(f, "{:?}", &self.0)
+        write!(f, "{:?}", &self.coset4())
     }
 }
 
@@ -455,6 +455,7 @@ impl RistrettoPoint {
     }
 }
 
+#[allow(dead_code)]
 mod tests {
     use super::*;
 
@@ -620,6 +621,44 @@ mod tests {
         assert!(point_from_ellig.0.is_valid().unwrap_u8() == 1u8);
         assert!(point_from_ellig == expected_point);
         assert!(point_from_ellig.compress() == expected_point.compress())
+    }
+
+    #[test]
+    fn elligator() {
+        let r0s: [&str; 1] = [
+            "7ed5e3760a28d8b66b573eba253d30871a333bf54adb532c4f8f9c44ae1a855b",
+        ];
+
+        let compr_ellig_points: [&str; 1] = [
+            "ddc96a74047a298780a352019bd14beca3433acdcd835fd10c04615573eac607",
+        ];
+
+        for i in 0..1 {
+            let mut r0_bytes = [0u8; 32];
+            let mut compr_ristretto_point_bytes = [0u8; 32];
+
+            r0_bytes.copy_from_slice(&hex::decode(r0s[i]).unwrap());
+            compr_ristretto_point_bytes.copy_from_slice(&hex::decode(compr_ellig_points[i]).unwrap());
+            
+            r0_bytes[31] &= 0b0111_1111;
+
+            let f_e = FieldElement::from_bytes(&r0_bytes);
+            let comp_point = CompressedRistretto::copy_from_slice(&compr_ristretto_point_bytes);
+            
+            assert!(comp_point == RistrettoPoint::elligator_ristretto_flavor(&f_e).compress());
+        }
+    }
+
+    #[test]
+    fn refac() {
+       let expected_point = RistrettoPoint(EdwardsPoint {
+            X: FieldElement([946112337138839, 4167458037521004, 4448260436618999, 2915009433812706, 15213664219981]),
+            Y: FieldElement([1720127400546199, 3024568551739006, 511729785123891, 3887856571715389, 3310241319101]),
+            Z: FieldElement([1, 0, 0, 0, 0]),
+            T: FieldElement([2530373528487343, 923930273250942, 609982698840075, 37225648952827, 13255336238220])
+        });
+
+        println!("{:?}", hex::encode(expected_point.compress().as_bytes()));
     }
 }
 
