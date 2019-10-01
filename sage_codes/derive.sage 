@@ -3,7 +3,7 @@
 /// and A+2 which is square in Fp. The reasoning is to make it easy to 
 /// work with each encoding. Additionally, the prime which forms as a result, 
 /// is easier to encode in bits as the remainder fits in a u64 without the 
-/// need to Montgomery reudced form. 
+need to Montgomery reudced form. 
 
 /// Below is the derivation function for the curve. 
 
@@ -39,4 +39,4 @@ sage: x = 2^252 + 27742317777372353535851937790883648493
 ....:                 if is_prime(otwist):
 ....:                     print "A = %s" % A
 ....:                     exit(0)
-sage: 
+
