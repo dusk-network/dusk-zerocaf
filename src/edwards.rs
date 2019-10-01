@@ -586,8 +586,8 @@ impl EdwardsPoint {
     /// - `None` if the resulting `x^2` isn't a QR modulo `FIELD_L`.
     pub fn new_from_y_coord(y: &FieldElement, sign: Choice) -> Option<EdwardsPoint> {
         match ProjectivePoint::new_from_y_coord(&y, sign) {
-            None => return None,
-            Some(point) => return Some(EdwardsPoint::from(&point)),
+            None => None,
+            Some(point) => Some(EdwardsPoint::from(&point)),
         }
     }
 
