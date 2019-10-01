@@ -1,8 +1,7 @@
 //! Contains the curve-constants needed by different algorithm implementations.
 
-use crate::field::FieldElement;
-use crate::edwards::{EdwardsPoint, CompressedEdwardsY};
-use crate::ristretto::{CompressedRistretto, RistrettoPoint};
+use crate::edwards::CompressedEdwardsY;
+use crate::ristretto::CompressedRistretto;
 
 #[cfg(feature = "u64_backend")]
 pub use crate::backend::u64::constants::*;

@@ -3,7 +3,7 @@
 use crate::backend::u64::field::FieldElement;
 use crate::backend::u64::scalar::Scalar;
 use crate::edwards::*;
-use crate::ristretto::{RistrettoPoint, CompressedRistretto};
+use crate::ristretto::RistrettoPoint;
 
 
 /// `L` is the order of base point for Doppio, in this case it is equivalent to 2^249 + 14490550575682688738086195780655237219

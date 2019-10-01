@@ -20,8 +20,6 @@ use subtle::{Choice, ConstantTimeEq, ConditionallySelectable, ConditionallyNegat
 
 use num::Integer;
 
-use rand::{thread_rng, Rng};
-
 use crate::backend::u64::constants as constants;
 use crate::scalar::Ristretto255Scalar;
 use crate::traits::Identity;
