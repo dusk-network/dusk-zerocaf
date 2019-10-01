@@ -5,7 +5,7 @@
 /// This is one of the first steps to take on the implementation of algoritnms
 /// like Diffie-Hellman Key Exchange.
 /// 
-/// Let G be a point over Doppio, let k = Scalar random value over the Doppio Sub-group. 
+/// Let G be a point over Sonny, let k = Scalar random value over the Sonny Sub-group. 
 /// Let P = G*k;
 
 extern crate zerocaf;
