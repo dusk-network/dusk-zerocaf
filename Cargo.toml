@@ -6,9 +6,9 @@ authors = ["Luke Pearson <luke@dusk.network>",
 readme = "README.md"
 documentation = "https://dusk-network.github.io/dusk-zerocaf/zerocaf/index.html"
 repository = "https://github.com/dusk-network/Dusk-Zerocaf"
-keywords = ["cryptography", "ristretto", "doppio-curve", "ECC"]
+keywords = ["cryptography", "ristretto", "sonny-curve", "ECC"]
 categories =["Algorithms", "Cryptography", "Development tools"]
-description = "A pure-Rust implementation of elliptic curve operations over the Doppio-curve"
+description = "A pure-Rust implementation of elliptic curve operations over the Sonny-curve"
 exclude = [
     "**/.gitignore",
     ".gitignore",
