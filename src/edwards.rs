@@ -278,7 +278,7 @@ impl CompressedEdwardsY {
 
 
 
-/// An `EdwardsPoint` represents a point on the Doppio Curve expressed
+/// An `EdwardsPoint` represents a point on the Sonny Curve expressed
 /// over the Twisted Edwards Extended Coordinates eg. (X, Y, Z, T).
 /// 
 /// Extended coordinates represent x y as`(X Y Z T)` satisfying the following equations:
@@ -402,7 +402,7 @@ impl Neg for EdwardsPoint {
 impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Add two EdwardsPoints and give the resulting `EdwardsPoint`.
-    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// This implementation is specific for curves with `a = -1` as Sonny is.
     /// 
     /// [Source: 2008 Hisil–Wong–Carter–Dawson], 
     /// (http://eprint.iacr.org/2008/522), Section 3.1.
@@ -430,7 +430,7 @@ impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
 impl<'a, 'b> Sub<&'b EdwardsPoint> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Substract two EdwardsPoints and give the resulting `EdwardsPoint`
-    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// This implementation is specific for curves with `a = -1` as Sonny is.
     /// Source: 2008 Hisil–Wong–Carter–Dawson, 
     /// http://eprint.iacr.org/2008/522, Section 3.1.
     /// 
@@ -541,14 +541,14 @@ impl EdwardsPoint {
         CompressedEdwardsY::from_slice(&compr)
     }  
 
-    /// This function tries to build a Point over the Doppio Curve from
-    /// a `Y` coordinate and a Choice that determines the Sign o the `X`
-    /// coordinate that the user wants to use.
+    /// This function tries to build a Point over the Sonny Curve from
+    /// a `Y` coordinate and a Choice that determines the sign of the `X`
+    /// coordinate that the user would like to work with.
     /// 
     /// The function gets `X` by solving: 
     /// `+-X = mod_sqrt((y^2 -1)/(dy^2 - a))`. 
     /// 
-    /// The sign of `x` is choosen with a `Choice` parameter. 
+    /// The sign of `x` is chosen with a `Choice` parameter. 
     /// 
     /// For Choice(0) -> Negative result. 
     /// For Choice(1) -> Positive result.
@@ -565,9 +565,9 @@ impl EdwardsPoint {
         }
     } 
 
-    /// This function tries to build a Point over the Doppio Curve from
+    /// This function tries to build a point over the Sonny Curve from
     /// a random `Y` coordinate and a random Choice that determines the 
-    /// Sign o the `X` coordinate.
+    /// sign of the `X` coordinate.
     pub fn new_random_point() -> EdwardsPoint {
         // Simply generate a random `ProjectivePoint`
         // and once we get one that is valid, switch 
@@ -576,7 +576,7 @@ impl EdwardsPoint {
     }
 }
 
-/// A `ProjectivePoint` represents a point on the Doppio Curve expressed
+/// A `ProjectivePoint` represents a point on the Sonny Curve expressed
 /// over the Twisted Edwards Projective Coordinates eg. (X, Y, Z).
 ///  
 /// For Z1≠0 the point (X1:Y1:Z1) represents the affine point (x1= X1/Z1, y1= Y1/Z1)
@@ -678,7 +678,7 @@ impl<'a> From<&'a AffinePoint> for ProjectivePoint {
 
 impl<'a> Neg for &'a ProjectivePoint {
     type Output = ProjectivePoint;
-    /// Negates an `ProjectivePoint` giving it as a result.
+    /// Negates a `ProjectivePoint` giving it as a result.
     /// Since the negative of a point is (-X:Y:Z:-T), it
     /// gives as a result: `(-X, Y, Z, -T)`.
     fn neg(self) -> ProjectivePoint {
@@ -692,7 +692,7 @@ impl<'a> Neg for &'a ProjectivePoint {
 
 impl Neg for ProjectivePoint {
     type Output = ProjectivePoint;
-    /// Negates an `ProjectivePoint` giving it as a result
+    /// Negates a `ProjectivePoint` giving it as a result
     fn neg(self) -> ProjectivePoint {
         -&self
     }
@@ -701,7 +701,7 @@ impl Neg for ProjectivePoint {
 impl<'a, 'b> Add<&'b ProjectivePoint> for &'a ProjectivePoint {
     type Output = ProjectivePoint;
     /// Add two ProjectivePoints and give the resulting `ProjectivePoint`.
-    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// This implementation is specific for curves with `a = -1` as Sonny is.
     /// 
     /// Bernstein D.J., Birkner P., Joye M., Lange T., Peters C. 
     /// (2008) Twisted Edwards Curves. In: Vaudenay S. (eds) 
@@ -729,7 +729,7 @@ impl<'a, 'b> Add<&'b ProjectivePoint> for &'a ProjectivePoint {
 impl Add<ProjectivePoint> for ProjectivePoint {
     type Output = ProjectivePoint;
     /// Add two ProjectivePoints and give the resulting `ProjectivePoint`.
-    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// This implementation is specific for curves with `a = -1` as Sonny is.
     /// 
     /// Bernstein D.J., Birkner P., Joye M., Lange T., Peters C. 
     /// (2008) Twisted Edwards Curves. In: Vaudenay S. (eds) 
@@ -745,7 +745,7 @@ impl Add<ProjectivePoint> for ProjectivePoint {
 impl<'a, 'b> Sub<&'b ProjectivePoint> for &'a ProjectivePoint {
     type Output = ProjectivePoint;
     /// Add two ProjectivePoints, negating the second one,
-    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// This implementation is specific for curves with `a = -1` as Sonny is.
     /// 
     /// Bernstein D.J., Birkner P., Joye M., Lange T., Peters C. 
     /// (2008) Twisted Edwards Curves. In: Vaudenay S. (eds) 
@@ -760,7 +760,7 @@ impl<'a, 'b> Sub<&'b ProjectivePoint> for &'a ProjectivePoint {
 impl Sub<ProjectivePoint> for ProjectivePoint {
     type Output = ProjectivePoint;
     /// Add two ProjectivePoints, negating the second one,
-    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// This implementation is specific for curves with `a = -1` as Sonny is.
     /// 
     /// Bernstein D.J., Birkner P., Joye M., Lange T., Peters C. 
     /// (2008) Twisted Edwards Curves. In: Vaudenay S. (eds) 
@@ -810,7 +810,7 @@ impl Mul<Scalar> for ProjectivePoint {
 impl<'a> Double for &'a ProjectivePoint {
     type Output = ProjectivePoint;
     /// Double the given point following:
-    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// This implementation is specific for curves with `a = -1` as Sonny is.
     /// 
     /// /// Bernstein D.J., Birkner P., Joye M., Lange T., Peters C. 
     /// (2008) Twisted Edwards Curves. In: Vaudenay S. (eds) 
@@ -838,8 +838,8 @@ impl<'a> Double for &'a ProjectivePoint {
 
 impl ProjectivePoint {
 
-    /// This function tries to build a Point over the Doppio Curve from
-    /// a `Y` coordinate and a Choice that determines the Sign o the `X`
+    /// This function tries to build a Point over the Sonny Curve from
+    /// a `Y` coordinate and a Choice that determines the sign of the `X`
     /// coordinate that the user wants to use.
     /// 
     /// The function gets `X` by solving: 
@@ -874,7 +874,7 @@ impl ProjectivePoint {
 
     /// This function tries to build a Point over the Doppio Curve from
     /// a random `Y` coordinate and a random Choice that determines the 
-    /// Sign o the `X` coordinate.
+    /// sign of the `X` coordinate.
     pub fn new_random_point() -> ProjectivePoint {
         // Gen a random `Y` coordinate value.
         let y = FieldElement::generate_random();
@@ -1165,7 +1165,7 @@ pub mod tests {
 
     #[test]
     fn extended_double_and_add() {
-        // Since we compute ( 8* P ) we don't need
+        // Since we compute (8*P) we don't need
         // to test `mul_by_cofactor` if this passes.
         let expect = P1_EXTENDED.double().double().double();
         let res = P1_EXTENDED * Scalar::from(&8u8);
