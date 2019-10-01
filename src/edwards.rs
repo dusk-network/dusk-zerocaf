@@ -1371,4 +1371,5 @@ pub mod tests {
         assert!(basep.is_valid().unwrap_u8() == 1u8);
         assert!(basep * constants::L == EdwardsPoint::identity());
     }
+ }
 }
