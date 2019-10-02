@@ -17,7 +17,7 @@
 //! in order to allow the use of cofactor-888 curves such as Curve25519.
 //!
 //! Internally, a Ristretto point is represented by an Edwards point.
-//! Two Edwards points P,QP, QP,Q may represent the same Ristretto point, in the same way that
+//! Two Edwards points `P, Q` may represent the same Ristretto point, in the same way that
 //! different projective (X,Y,Z) coordinates may represent the same Edwards point.
 //!
 //! Group operations on Ristretto points are carried out with no overhead by performing the
@@ -133,7 +133,7 @@ impl CompressedRistretto {
         let Dy = I * Dx * v;
 
         // Compute ABS(2*s*Dx) and negate if it is negative.
-        let mut x = (&s + &s) * Dx;
+        let mut x = (s + s) * Dx;
         let x_is_pos = x.is_positive();
         x.conditional_negate(!x_is_pos);
         // Compute Y and T coordinates.
@@ -361,18 +361,18 @@ impl RistrettoPoint {
     /// This gets a `RistrettoPoint` from a given
     /// `FieldElement´.
     pub(crate) fn elligator_ristretto_flavor(r_0: &FieldElement) -> RistrettoPoint {
-        let d = &constants::EDWARDS_D;
-        let one = &FieldElement::one();
+        let d = constants::EDWARDS_D;
+        let one = FieldElement::one();
         let mut c = -one;
         // 1 - d^2
-        let one_minus_d_sq = one - &d.square();
+        let one_minus_d_sq = one - d.square();
 
         // r = i*r0^2
-        let r = &constants::SQRT_MINUS_ONE * &r_0.square();
+        let r = constants::SQRT_MINUS_ONE * r_0.square();
         // Ns = a(r+1)*(a+d)*(a-d)
-        let N_s = &(&r + one) * &one_minus_d_sq;
+        let N_s = (r + one) * one_minus_d_sq;
         // D = (d*r -a)*(a*r -d)
-        let D = &(c - (d * &r)) * &(&r + d);
+        let D = (c - (d * r)) * (r + d);
         // s = sqrt(Ns/D)
         let (Ns_D_is_sq, mut s) = N_s.sqrt_ratio_i(&D);
 
@@ -383,14 +383,14 @@ impl RistrettoPoint {
         s.conditional_assign(&s_prim, !Ns_D_is_sq);
         c.conditional_assign(&r, !Ns_D_is_sq);
         // Nt = c(r-1)*(d-1)^2 - D
-        let N_t = &(&(c * (&r - &one)) * &(d - one).square()) - &D;
+        let N_t = ((c * (r - one)) * (d - one).square()) - D;
         let s_square = s.square();
 
         // Get the `CompletePoint` coordinates.
-        let W0 = &(&s + &s) * &D;
-        let W1 = &N_t * &constants::SQRT_AD_MINUS_ONE;
-        let W2 = one - &s_square;
-        let W3 = one + &s_square;
+        let W0 = (s + s) * D;
+        let W1 = N_t * constants::SQRT_AD_MINUS_ONE;
+        let W2 = one - s_square;
+        let W3 = one + s_square;
 
         // Get the `EdwardsPoint` that comes from the
         // `CompletePoint` obtained by the original
@@ -436,7 +436,7 @@ impl RistrettoPoint {
 
         // Applying Elligator twice and adding the results ensures a
         // uniform distribution.
-        &R_1 + &R_2
+        R_1 + R_2
     }
 
     /// Generate a random `RistrettoPoint` from a 64-byte array generated
