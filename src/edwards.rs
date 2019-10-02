@@ -510,7 +510,7 @@ impl<'a> Double for &'a EdwardsPoint {
     /// http://eprint.iacr.org/2008/522, Section 3.1.
     /// Cost: 4M+ 4S+ 1D
     fn double(self) -> EdwardsPoint {
-        let two: FieldElement = FieldElement::from(&2u8);
+        let two: FieldElement = FieldElement::from(2u8);
 
         let A = self.X.square();
         let B = self.Y.square();
@@ -873,7 +873,7 @@ impl<'a> Double for &'a ProjectivePoint {
         let E = &constants::EDWARDS_A * &C;
         let F = &E + &D;
         let H = self.Z.square();
-        let J = &F - &(&FieldElement::from(&2u8) * &H);
+        let J = &F - &(&FieldElement::from(2u8) * &H);
 
         ProjectivePoint {
             X: &(&(&B - &C) - &D) * &J,
@@ -933,7 +933,7 @@ impl ProjectivePoint {
         // function recursively.
         match ProjectivePoint::new_from_y_coord(&y, sign) {
             None => ProjectivePoint::new_random_point(rand),
-            Some(point) => return point,
+            Some(point) => point,
         }
     }
 }
