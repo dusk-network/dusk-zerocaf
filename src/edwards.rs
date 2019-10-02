@@ -37,7 +37,7 @@
 //! let ex_point = EdwardsPoint::new_from_y_coord(&y, Choice::from(0u8)).unwrap();
 //!
 //!
-//! let rngp = EdwardsPoint::from(&ProjectivePoint::identity());
+//! let rngp = EdwardsPoint::from(ProjectivePoint::identity());
 //!
 //! // The same examples work for the ProjectivePoint struct.
 //!
@@ -104,7 +104,7 @@ where
     T: Identity + Clone,
 {
     let mut N = point.clone();
-    let mut n = scalar.clone();
+    let mut n = *scalar;
     let mut Q = T::identity();
 
     while n != Scalar::zero() {
@@ -265,7 +265,7 @@ impl CompressedEdwardsY {
         // Get the y-coordinate without the high bit modified.
         // The max value that the 31st byte can hold is 16(1111),
         // so we truncate it since we already have the sign.
-        let mut y = self.clone();
+        let mut y = *self;
         y[31] &= 0b0000_1111;
 
         // Try to get the x coordinate (if exists).
@@ -307,7 +307,7 @@ impl Debug for EdwardsPoint {
 
 impl ConstantTimeEq for EdwardsPoint {
     fn ct_eq(&self, other: &EdwardsPoint) -> Choice {
-        AffinePoint::from(self).ct_eq(&AffinePoint::from(other))
+        AffinePoint::from(*self).ct_eq(&AffinePoint::from(*other))
     }
 }
 
@@ -343,28 +343,28 @@ impl ValidityCheck for EdwardsPoint {
     /// edwards coordinates) holds given the (X, Y, Z) coordinates
     /// of a point in Projective Coordinates.
     fn is_valid(&self) -> Choice {
-        ProjectivePoint::from(self).is_valid()
+        ProjectivePoint::from(*self).is_valid()
     }
 }
 
-impl<'a> From<&'a ProjectivePoint> for EdwardsPoint {
+impl From <ProjectivePoint> for EdwardsPoint {
     /// Given (X:Y:Z) in ε passing to εε can beperformed
     /// in 3M+ 1S by computing (X*Z, Y*Z, X*Y, Z^2).
     ///
     /// Twisted Edwards Curves Revisited -
     /// Huseyin Hisil, Kenneth Koon-Ho Wong, Gary Carter,
     /// and Ed Dawson, Section 3.
-    fn from(point: &'a ProjectivePoint) -> EdwardsPoint {
+    fn from(point: ProjectivePoint) -> EdwardsPoint {
         EdwardsPoint {
-            X: &point.X * &point.Z,
-            Y: &point.Y * &point.Z,
+            X: point.X * point.Z,
+            Y: point.Y * point.Z,
             Z: point.Z.square(),
-            T: &point.X * &point.Y,
+            T: point.X * point.Y,
         }
     }
 }
 
-impl<'a> From<&'a AffinePoint> for EdwardsPoint {
+impl From<AffinePoint> for EdwardsPoint {
     /// In affine form, each elliptic curve point has 2 coordinates,
     /// like (x,y). In the new projective form,
     /// each point will have 3 coordinates, like (X,Y,Z),
@@ -375,7 +375,7 @@ impl<'a> From<&'a AffinePoint> for EdwardsPoint {
     ///
     /// After this is done, we move from Projective to Extended by
     /// setting the new coordinate `T = X * Y`.
-    fn from(point: &'a AffinePoint) -> EdwardsPoint {
+    fn from(point: AffinePoint) -> EdwardsPoint {
         EdwardsPoint {
             X: point.X,
             Y: point.Y,
@@ -449,20 +449,20 @@ impl<'a, 'b> Sub<&'b EdwardsPoint> for &'a EdwardsPoint {
     fn sub(self, other: &'b EdwardsPoint) -> EdwardsPoint {
         let other_neg = -other;
 
-        let A = &self.X * &other_neg.X;
-        let B = &self.Y * &other_neg.Y;
-        let C = &constants::EDWARDS_D * &(&self.T * &other_neg.T);
-        let D = &self.Z * &other_neg.Z;
-        let E = &(&(&(&self.X + &self.Y) * &(&other_neg.X + &other_neg.Y)) - &A) - &B;
-        let F = &D - &C;
-        let G = &D + &C;
-        let H = &B - &(&constants::EDWARDS_A * &A);
+        let A = self.X * other_neg.X;
+        let B = self.Y * other_neg.Y;
+        let C = constants::EDWARDS_D * self.T * other_neg.T;
+        let D = self.Z * other_neg.Z;
+        let E = (self.X + self.Y) * (other_neg.X + other_neg.Y) - A - B;
+        let F = D - C;
+        let G = D + C;
+        let H = B - (constants::EDWARDS_A * A);
 
         EdwardsPoint {
-            X: &E * &F,
-            Y: &G * &H,
-            Z: &F * &G,
-            T: &E * &H,
+            X: E * F,
+            Y: G * H,
+            Z: F * G,
+            T: E * H,
         }
     }
 }
@@ -552,7 +552,7 @@ impl EdwardsPoint {
     pub fn compress(&self) -> CompressedEdwardsY {
         // Get the Affine point coordinates and compress
         // the point using them.
-        let point = AffinePoint::from(self);
+        let point = AffinePoint::from(*self);
 
         let mut sign = Choice::from(0u8);
         let res = find_xx(&point.Y).mod_sqrt(sign).unwrap();
@@ -587,7 +587,7 @@ impl EdwardsPoint {
     pub fn new_from_y_coord(y: &FieldElement, sign: Choice) -> Option<EdwardsPoint> {
         match ProjectivePoint::new_from_y_coord(&y, sign) {
             None => None,
-            Some(point) => Some(EdwardsPoint::from(&point)),
+            Some(point) => Some(EdwardsPoint::from(point)),
         }
     }
 
@@ -598,7 +598,7 @@ impl EdwardsPoint {
         // Simply generate a random `ProjectivePoint`
         // and once we get one that is valid, switch
         // it to Extended Coordinates.
-        EdwardsPoint::from(&ProjectivePoint::new_random_point(rand))
+        EdwardsPoint::from(ProjectivePoint::new_random_point(rand))
     }
 }
 
@@ -639,7 +639,7 @@ impl Debug for ProjectivePoint {
 
 impl ConstantTimeEq for ProjectivePoint {
     fn ct_eq(&self, other: &ProjectivePoint) -> Choice {
-        AffinePoint::from(self).ct_eq(&AffinePoint::from(other))
+        AffinePoint::from(*self).ct_eq(&AffinePoint::from(*other))
     }
 }
 
@@ -686,14 +686,14 @@ impl ValidityCheck for ProjectivePoint {
     }
 }
 
-impl<'a> From<&'a EdwardsPoint> for ProjectivePoint {
+impl From<EdwardsPoint> for ProjectivePoint {
     /// Given (X:Y:T:Z) in εε, passing to ε is cost-free by
     /// simply ignoring `T`.
     ///
     /// Twisted Edwards Curves Revisited -
     /// Huseyin Hisil, Kenneth Koon-Ho Wong, Gary Carter,
     /// and Ed Dawson, Section 3.
-    fn from(point: &'a EdwardsPoint) -> ProjectivePoint {
+    fn from(point: EdwardsPoint) -> ProjectivePoint {
         ProjectivePoint {
             X: point.X,
             Y: point.Y,
@@ -702,7 +702,7 @@ impl<'a> From<&'a EdwardsPoint> for ProjectivePoint {
     }
 }
 
-impl<'a> From<&'a AffinePoint> for ProjectivePoint {
+impl From<AffinePoint> for ProjectivePoint {
     /// The key idea of projective coordinates is that instead of
     /// performing every division immediately, we defer the
     /// divisions by multiplying them into a denominator.
@@ -714,7 +714,7 @@ impl<'a> From<&'a AffinePoint> for ProjectivePoint {
     ///  
     /// The forward mapping is given by (x,y)→(xz,yz,z),
     /// for any non-zero z (usually chosen to be 1 for convenience).
-    fn from(point: &'a AffinePoint) -> ProjectivePoint {
+    fn from(point: AffinePoint) -> ProjectivePoint {
         ProjectivePoint {
             X: point.X,
             Y: point.Y,
@@ -867,18 +867,18 @@ impl<'a> Double for &'a ProjectivePoint {
     ///
     /// Cost: 3M+ 4S+ +7a + 1D.
     fn double(self) -> ProjectivePoint {
-        let B = (&self.X + &self.Y).square();
+        let B = (self.X + self.Y).square();
         let C = self.X.square();
         let D = self.Y.square();
-        let E = &constants::EDWARDS_A * &C;
-        let F = &E + &D;
+        let E = constants::EDWARDS_A * C;
+        let F = E + D;
         let H = self.Z.square();
-        let J = &F - &(&FieldElement::from(2u8) * &H);
+        let J = F - (FieldElement::from(2u8) * H);
 
         ProjectivePoint {
-            X: &(&(&B - &C) - &D) * &J,
-            Y: &F * &(&E - &D),
-            Z: &F * &J,
+            X: ((B - C) - D) * J,
+            Y: F * (E - D),
+            Z: F * J,
         }
     }
 }
@@ -902,8 +902,10 @@ impl ProjectivePoint {
     /// `Some(ProjectivePoint)` if there exists a result for the `mod_sqrt`
     /// and `None` if the resulting `x^2` isn't a QR modulo `FIELD_L`.
     pub fn new_from_y_coord(y: &FieldElement, sign: Choice) -> Option<ProjectivePoint> {
-        let x;
-        let xx = (y.square() - FieldElement::one())
+        let one = FieldElement::one();
+        let x: FieldElement;
+
+        let xx = (y.square() - one)
             / ((constants::EDWARDS_D * y.square()) - constants::EDWARDS_A);
         // Match the sqrt(x) Option.
         match xx.mod_sqrt(sign) {
@@ -914,8 +916,8 @@ impl ProjectivePoint {
 
         Some(ProjectivePoint {
             X: x,
-            Y: y.clone(),
-            Z: FieldElement::one(),
+            Y: *y,
+            Z: one,
         })
     }
 
@@ -1002,14 +1004,14 @@ impl ValidityCheck for AffinePoint {
     fn is_valid(&self) -> Choice {
         let x_sq = self.X.square();
         let y_sq = self.Y.square();
-        let left = &(&FieldElement::minus_one() * &x_sq) + &y_sq;
-        let right = &FieldElement::one() + &(&(&constants::EDWARDS_D * &x_sq) * &y_sq);
+        let left = (FieldElement::minus_one() * x_sq) + y_sq;
+        let right = FieldElement::one() + ((constants::EDWARDS_D * x_sq) * y_sq);
 
         left.ct_eq(&right)
     }
 }
 
-impl<'a> From<&'a EdwardsPoint> for AffinePoint {
+impl From<EdwardsPoint> for AffinePoint {
     /// Given (X:Y:Z:T) in εε, passing to affine can be
     /// performed in 3M+ 1I by computing:
     ///
@@ -1023,7 +1025,7 @@ impl<'a> From<&'a EdwardsPoint> for AffinePoint {
     /// Twisted Edwards Curves Revisited -
     /// Huseyin Hisil, Kenneth Koon-Ho Wong, Gary Carter,
     /// and Ed Dawson.
-    fn from(point: &'a EdwardsPoint) -> AffinePoint {
+    fn from(point: EdwardsPoint) -> AffinePoint {
         let Zinv = point.Z.inverse();
         AffinePoint {
             X: point.X * Zinv,
@@ -1032,7 +1034,7 @@ impl<'a> From<&'a EdwardsPoint> for AffinePoint {
     }
 }
 
-impl<'a> From<&'a ProjectivePoint> for AffinePoint {
+impl From<ProjectivePoint> for AffinePoint {
     /// Reduce the point from Projective to Affine
     /// coordinates computing: (X*Zinv, Y*Zinv, Z*Zinv).
     ///
@@ -1041,7 +1043,7 @@ impl<'a> From<&'a ProjectivePoint> for AffinePoint {
     /// Twisted Edwards Curves Revisited -
     /// Huseyin Hisil, Kenneth Koon-Ho Wong, Gary Carter,
     /// and Ed Dawson.
-    fn from(point: &'a ProjectivePoint) -> AffinePoint {
+    fn from(point: ProjectivePoint) -> AffinePoint {
         let Zinv = point.Z.inverse();
         AffinePoint {
             X: point.X * Zinv,
@@ -1297,12 +1299,12 @@ pub mod tests {
 
     #[test]
     fn from_projective_to_extended() {
-        assert!(EdwardsPoint::from(&P1_PROJECTIVE) == P1_EXTENDED);
+        assert!(EdwardsPoint::from(P1_PROJECTIVE) == P1_EXTENDED);
     }
 
     #[test]
     fn from_extended_to_projective() {
-        assert!(P1_PROJECTIVE == ProjectivePoint::from(&P1_EXTENDED));
+        assert!(P1_PROJECTIVE == ProjectivePoint::from(P1_EXTENDED));
     }
 
     #[test]
@@ -1321,7 +1323,7 @@ pub mod tests {
 
     #[test]
     fn extended_coords_neg_identity() {
-        let res = -&EdwardsPoint::identity();
+        let res = -EdwardsPoint::identity();
 
         assert!(res == EdwardsPoint::identity())
     }
@@ -1329,25 +1331,18 @@ pub mod tests {
     #[test]
     fn extended_point_addition() {
         let res = &P1_EXTENDED + &P2_EXTENDED;
-        println!("{:?}", AffinePoint::from(&(&P2_EXTENDED + &P1_EXTENDED)));
-        println!(
-            "{:?}",
-            AffinePoint::from(&(&P2_PROJECTIVE + &P1_PROJECTIVE))
-        );
         assert!(res == P4_EXTENDED);
     }
 
     #[test]
     fn extended_point_doubling_by_addition() {
         let res: EdwardsPoint = &P1_EXTENDED + &P1_EXTENDED;
-
         assert!(res == P3_EXTENDED);
     }
 
     #[test]
     fn extended_point_doubling() {
         let res = P1_EXTENDED.double();
-
         assert!(res == P3_EXTENDED);
     }
 
@@ -1475,8 +1470,8 @@ pub mod tests {
 
         // After Point doubling case. Z's are different but points are equivalent.
         assert!(
-            AffinePoint::from(&P3_PROJECTIVE)
-                .ct_eq(&AffinePoint::from(&P1_PROJECTIVE.double()))
+            AffinePoint::from(P3_PROJECTIVE)
+                .ct_eq(&AffinePoint::from(P1_PROJECTIVE.double()))
                 .unwrap_u8()
                 == 1u8
         );
@@ -1487,7 +1482,7 @@ pub mod tests {
         assert!(P1_AFFINE == P1_AFFINE);
         assert!(P1_AFFINE != P2_AFFINE);
 
-        assert!(AffinePoint::from(&P3_PROJECTIVE) == AffinePoint::from(&P1_PROJECTIVE.double()));
+        assert!(AffinePoint::from(P3_PROJECTIVE) == AffinePoint::from(P1_PROJECTIVE.double()));
     }
 
     #[test]
