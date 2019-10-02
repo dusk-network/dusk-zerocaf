@@ -347,7 +347,7 @@ impl ValidityCheck for EdwardsPoint {
     }
 }
 
-impl From <ProjectivePoint> for EdwardsPoint {
+impl From<ProjectivePoint> for EdwardsPoint {
     /// Given (X:Y:Z) in ε passing to εε can beperformed
     /// in 3M+ 1S by computing (X*Z, Y*Z, X*Y, Z^2).
     ///
@@ -437,6 +437,19 @@ impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
     }
 }
 
+impl Add<EdwardsPoint> for EdwardsPoint {
+    type Output = EdwardsPoint;
+    /// Add two EdwardsPoints and give the resulting `EdwardsPoint`.
+    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    ///
+    /// [Source: 2008 Hisil–Wong–Carter–Dawson],
+    /// (http://eprint.iacr.org/2008/522), Section 3.1.
+    #[inline]
+    fn add(self, other: EdwardsPoint) -> EdwardsPoint {
+        &self + &other
+    }
+}
+
 impl<'a, 'b> Sub<&'b EdwardsPoint> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     /// Substract two EdwardsPoints and give the resulting `EdwardsPoint`
@@ -464,6 +477,20 @@ impl<'a, 'b> Sub<&'b EdwardsPoint> for &'a EdwardsPoint {
             Z: F * G,
             T: E * H,
         }
+    }
+}
+
+impl Sub<EdwardsPoint> for EdwardsPoint {
+    type Output = EdwardsPoint;
+    /// Substract two EdwardsPoints and give the resulting `EdwardsPoint`
+    /// This implementation is specific for curves with `a = -1` as Doppio is.
+    /// Source: 2008 Hisil–Wong–Carter–Dawson,
+    /// http://eprint.iacr.org/2008/522, Section 3.1.
+    ///
+    /// The only thing we do is negate the second `EdwardsPoint`
+    /// and add it following the same addition algorithm.
+    fn sub(self, other: EdwardsPoint) -> EdwardsPoint {
+        &self - &other
     }
 }
 
@@ -905,8 +932,7 @@ impl ProjectivePoint {
         let one = FieldElement::one();
         let x: FieldElement;
 
-        let xx = (y.square() - one)
-            / ((constants::EDWARDS_D * y.square()) - constants::EDWARDS_A);
+        let xx = (y.square() - one) / ((constants::EDWARDS_D * y.square()) - constants::EDWARDS_A);
         // Match the sqrt(x) Option.
         match xx.mod_sqrt(sign) {
             // If we get `None`, we know that
