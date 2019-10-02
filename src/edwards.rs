@@ -131,7 +131,7 @@ where
 /// Note: The maximum pow allowed is 249 since otherways
 /// we will be able to get results greater than the
 /// prime of the sub-group.
-pub fn mul_by_pow_2<'a, 'b, T>(point: &'a T, _k: &'b u64) -> T
+pub fn mul_by_pow_2<'a, T>(point: &'a T, _k: u64) -> T
 where
     for<'c> &'c T: Mul<&'c Scalar, Output = T>,
 {

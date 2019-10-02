@@ -273,7 +273,7 @@ impl<'a> Half for &'a Scalar {
                     remainder = 0;
                 }
             }
-            res[i] = res[i] >> 1;
+            res[i] >>= 1;
         }
         res
     }
@@ -290,23 +290,22 @@ impl<'a, 'b> Pow<&'b Scalar> for &'a Scalar {
     type Output = Scalar;
 
     fn pow(self, exp: &'b Scalar) -> Scalar {
-        let mut base = self.clone();
+        let mut base = *self;
         let mut res = Scalar::one();
-        let mut expon = exp.clone();
+        let mut expon = *exp;
 
         while expon > Scalar::zero() {
             if expon.is_even() {
                 expon = expon.half();
-                base = &base * &base;
+                base = base.square();
             } else {
                 expon = expon - Scalar::one();
                 res = res * base;
 
                 expon = expon.half();
-                base = &base * &base;
+                base = base.square();
             }
         }
-
         res
     }
 }
@@ -418,13 +417,13 @@ impl Scalar {
     ///
     /// NOTE: This function implements an `assert!` statement that
     /// checks the correctness of the exponent provided as param.
-    pub fn two_pow_k(exp: &u64) -> Scalar {
+    pub fn two_pow_k(exp: u64) -> Scalar {
         // Check that exp has to be less than 260.
         // Note that a Scalar can be as much
         // `2^249 - 15145038707218910765482344729778085401` so we pick
         // 250 knowing that 249 will be lower than the prime of the
         // sub group.
-        assert!(exp < &253u64, "Exponent can't be greater than 260");
+        assert!(exp < 253u64, "Exponent can't be greater than 260");
 
         let mut res = Scalar::zero();
         match exp {
@@ -497,7 +496,7 @@ impl Scalar {
     #[inline]
     #[doc(hidden)]
     pub(crate) fn inner_half(self) -> Scalar {
-        let mut res = self.clone();
+        let mut res = self;
         let mut remainder = 0u64;
         for i in (0..5).rev() {
             res[i] = res[i] + remainder;
@@ -513,7 +512,7 @@ impl Scalar {
                     remainder = 0;
                 }
             }
-            res[i] = res[i] >> 1;
+            res[i] >>= 1;
         }
         res
     }

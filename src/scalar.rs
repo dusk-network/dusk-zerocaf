@@ -28,7 +28,7 @@
 //! // the correctness of the input will be done. It can be done as
 //! // follows:
 //! let d: Scalar = Scalar([0, 1, 0, 0, 0]); // d = 2^52.
-//! assert!(d == Scalar::two_pow_k(&52u64));
+//! assert!(d == Scalar::two_pow_k(52u64));
 //!
 //! // All of the basuc modular operations are implemented
 //! // for Scalar type:

@@ -540,7 +540,7 @@ mod tests {
         // original RistrettoBasepoint by a point of order 4.
         let point_order_4 = &constants::RISTRETTO_BASEPOINT.0 - &bp_compr_decompr;
 
-        let verif = mul_by_pow_2(&point_order_4, &2);
+        let verif = mul_by_pow_2(&point_order_4, 2);
         assert_eq!(verif.compress(), CompressedEdwardsY::identity());
     }
 
