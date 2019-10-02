@@ -127,32 +127,31 @@ Note: the refactoring relations are expressed as indentations
     - [x] Implement Modular inversion.
     - [x] Research about addition chains inversion methods.
   - [x] Add proper tests for every function.
-- [ ] Implement Edwards Points
-    - [ ] Implement Twisted Edwards Extended Coordiantes.
+- [x] Implement Edwards Points
+    - [x] Implement Twisted Edwards Extended Coordiantes.
        - [x] Implement Point Addition.
        - [x] Implement Point Subtraction.
        - [x] Implement Point Doubling.
        - [x] Implement Scalar Mul.
-       - [ ] Implement from_bytes conversions.
-       - [ ] Implement to byte conversions.
-       - [ ] Implement compressed Edwards point Y-coordinate.
-    - [ ] Implement Twisted Edwards Projective Coordiates.
+       - [x] Implement from_bytes conversions.
+       - [x] Implement to byte conversions.
+       - [x] Implement compressed Edwards point Y-coordinate.
+    - [x] Implement Twisted Edwards Projective Coordiates.
        - [x] Implement Point Addition.
        - [x] Implement Point Subtraction.
        - [x] Implement Point Doubling.
        - [x] Implement Scalar Mul.
-       - [ ] Implement from_bytes conversions.
-       - [ ] Implement to byte conversions.
-       - [ ] Implement compressed Edwards point Y-coordinate.
-    - [ ] Represent Edwards points as Ristretto points using wrapping function (research).
+       - [x] Implement from_bytes conversions.
+       - [x] Implement to byte conversions.
+       - [x] Implement compressed Edwards point Y-coordinate.
+    - [x] Represent Edwards points as Ristretto points using wrapping type or struct.
     - [x] Cargo doc testing and improvement.
-    - [ ] Decide the best use cases of the various Edwards coordinate types (compressed, standard, extended, projective).
-    - [ ] Benchmark different implementations and algorithms.
-    - [ ] Research About Niels and ProjectiveNiels coordinates usage.
-    - [ ] Implement Ristretto Mapping.
-    - [ ] Build and test torsion points.
-    - [ ] Test all point operations for Edwards Points.
- - [ ] Implement Montgomery and Edwards operations & functions.
- 
- 
-> Operations with large numbers are recommended to be done in `SageMath`, from which they can be converted in a continuous format with rust and compiled easily after each computation. 
+    - [x] Decide the best use cases of the various Edwards coordinate types (compressed, standard, extended, projective).
+    - [x] Benchmark different implementations and algorithms.
+- [x] Implement Ristretto Mapping.
+    - [x] Implement 4coset debugging function.
+    - [x] Build and test torsion points.
+    - [x] Implement Ecoding & Decoding algorithms.
+    - [x] Implement Equalty testing.
+    - [x] Implement Elligator-ristretto-flavour.
+    - [x] Test all of the algorithms implemented.
