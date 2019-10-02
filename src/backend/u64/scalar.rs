@@ -63,36 +63,36 @@ impl Ord for Scalar {
 }
 
 //-------------- From Implementations -----------------//
-impl<'a> From<&'a u8> for Scalar {
+impl From<u8> for Scalar {
     /// Performs the conversion.
-    fn from(_inp: &'a u8) -> Scalar {
+    fn from(_inp: u8) -> Scalar {
         let mut res = Scalar::zero();
-        res[0] = *_inp as u64;
+        res[0] = _inp as u64;
         res
     }
 }
 
-impl<'a> From<&'a u16> for Scalar {
+impl From<u16> for Scalar {
     /// Performs the conversion.
-    fn from(_inp: &'a u16) -> Scalar {
+    fn from(_inp: u16) -> Scalar {
         let mut res = Scalar::zero();
-        res[0] = *_inp as u64;
+        res[0] = _inp as u64;
         res
     }
 }
 
-impl<'a> From<&'a u32> for Scalar {
+impl From<u32> for Scalar {
     /// Performs the conversion.
-    fn from(_inp: &'a u32) -> Scalar {
+    fn from(_inp: u32) -> Scalar {
         let mut res = Scalar::zero();
-        res[0] = *_inp as u64;
+        res[0] = _inp as u64;
         res
     }
 }
 
-impl<'a> From<&'a u64> for Scalar {
+impl From<u64> for Scalar {
     /// Performs the conversion.
-    fn from(_inp: &'a u64) -> Scalar {
+    fn from(_inp: u64) -> Scalar {
         let mut res = Scalar::zero();
         let mask = (1u64 << 52) - 1;
         res[0] = _inp & mask;
@@ -101,9 +101,9 @@ impl<'a> From<&'a u64> for Scalar {
     }
 }
 
-impl<'a> From<&'a u128> for Scalar {
+impl From<u128> for Scalar {
     /// Performs the conversion.
-    fn from(_inp: &'a u128) -> Scalar {
+    fn from(_inp: u128) -> Scalar {
         let mut res = Scalar::zero();
         let mask = (1u128 << 52) - 1;
 
@@ -257,7 +257,7 @@ impl<'a> Half for &'a Scalar {
     #[inline]
     fn half(self) -> Scalar {
         assert!(self.is_even(), "The Scalar has to be even.");
-        let mut res = self.clone();
+        let mut res = *self;
         let mut remainder = 0u64;
         for i in (0..5).rev() {
             res[i] = res[i] + remainder;

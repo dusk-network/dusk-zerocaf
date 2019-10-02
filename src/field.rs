@@ -20,8 +20,8 @@
 //! let a = FieldElement::from_bytes(&[0u8;32]);
 //!
 //! // You ca also create a FieldElement from an uint type as follows:
-//! let b = FieldElement::from(&126296u128);
-//! let c = FieldElement::from(&126297u64);
+//! let b = FieldElement::from(126296u128);
+//! let c = FieldElement::from(126297u64);
 //!
 //! // You can create random FieldElements by calling:
 //! let rand = FieldElement::random(&mut OsRng);
@@ -31,7 +31,7 @@
 //! // the correctness of the input will be done at all.
 //! // It can be done as follows:
 //! let d: FieldElement = FieldElement([0, 1, 0, 0, 0]); // d = 2^52.
-//! assert!(d == FieldElement::two_pow_k(&52u64));
+//! assert!(d == FieldElement::two_pow_k(52u64));
 //!
 //! // All of the basuc modular operations are implemented
 //! // for FieldElement type:

@@ -20,8 +20,8 @@
 //! let a = Scalar::from_bytes(&[0u8;32]);
 //!
 //! // You ca also create a Scalar from an uint type as follows:
-//! let b = Scalar::from(&43325u128);
-//! let c = Scalar::from(&86650u64);
+//! let b = Scalar::from(43325u128);
+//! let c = Scalar::from(86650u64);
 //!
 //! // The last way of creating a Scalar it by calling the
 //! // constructor. THIS IS NOT RECOMMENDED since ANY checks about

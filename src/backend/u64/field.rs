@@ -1449,7 +1449,7 @@ pub mod tests {
     #[test]
     fn legendre_symbol() {
         let res1 = A.legendre_symbol();
-        let res2 = FieldElement::from(&17u8).legendre_symbol();
+        let res2 = FieldElement::from(17u8).legendre_symbol();
 
         assert!(!bool::from(res1));
         assert!(bool::from(res2));
@@ -1458,7 +1458,7 @@ pub mod tests {
     #[test]
     fn mod_sqrt_tonelli_shanks() {
         // Test for valid Quadratic-residue values.
-        let inp = FieldElement::from(&17u8);
+        let inp = FieldElement::from(17u8);
         let sqrt = inp.mod_sqrt(Choice::from(0u8)).unwrap();
         assert!(sqrt == SQRT1_27_NEG);
 
@@ -1474,7 +1474,7 @@ pub mod tests {
 
     #[test]
     fn inv_sqrt() {
-        let var = FieldElement::from(&27u8);
+        let var = FieldElement::from(27u8);
         let res = var.inv_sqrt().1;
         assert!(-res == INV_SQRT_27);
     }
@@ -1505,7 +1505,7 @@ pub mod tests {
 
     #[test]
     fn from_u8() {
-        let res = FieldElement::from(&2u8);
+        let res = FieldElement::from(2u8);
         let two = FieldElement([2, 0, 0, 0, 0]);
 
         for i in 0..5 {
@@ -1515,7 +1515,7 @@ pub mod tests {
 
     #[test]
     fn from_u16() {
-        let res = FieldElement::from(&32768u16);
+        let res = FieldElement::from(32768u16);
         let two_pow_15 = FieldElement([32768, 0, 0, 0, 0]);
 
         for i in 0..5 {
@@ -1525,7 +1525,7 @@ pub mod tests {
 
     #[test]
     fn from_u32() {
-        let res = FieldElement::from(&2147483648u32);
+        let res = FieldElement::from(2147483648u32);
         let two_pow_31 = FieldElement([2147483648, 0, 0, 0, 0]);
         print!("{:?}", res);
         for i in 0..5 {
@@ -1535,7 +1535,7 @@ pub mod tests {
 
     #[test]
     fn from_u64() {
-        let res = FieldElement::from(&18446744073709551615u64);
+        let res = FieldElement::from(18446744073709551615u64);
         let two_pow_64_minus_one = FieldElement([4503599627370495, 4095, 0, 0, 0]);
         for i in 0..5 {
             assert!(res[i] == two_pow_64_minus_one[i]);
@@ -1544,7 +1544,7 @@ pub mod tests {
 
     #[test]
     fn from_u128() {
-        let res = FieldElement::from(&170141183460469231731687303715884105727u128);
+        let res = FieldElement::from(170141183460469231731687303715884105727u128);
         let two_pow_127_minus_one =
             FieldElement([4503599627370495, 4503599627370495, 8388607, 0, 0]);
         for i in 0..5 {
@@ -1601,25 +1601,25 @@ pub mod tests {
     #[test]
     fn inner_two_pow_k() {
         // Check for 0 value
-        let zero = FieldElement::inner_two_pow_k(&0u64);
+        let zero = FieldElement::inner_two_pow_k(0u64);
         for i in 0..5 {
             assert!(zero[i] == FieldElement::one()[i]);
         }
 
         // Check for MAX value
-        let max = FieldElement::inner_two_pow_k(&252u64);
+        let max = FieldElement::inner_two_pow_k(252u64);
         for i in 0..5 {
             assert!(max[i] == TWO_POW_252[i]);
         }
 
         // Check for non 52-multiple `k` values
-        let non_multiple = FieldElement::inner_two_pow_k(&197u64);
+        let non_multiple = FieldElement::inner_two_pow_k(197u64);
         for i in 0..5 {
             assert!(non_multiple[i] == TWO_POW_197[i]);
         }
 
         // Check for 52-multiple `k` values
-        let non_multiple = FieldElement::inner_two_pow_k(&104u64);
+        let non_multiple = FieldElement::inner_two_pow_k(104u64);
         for i in 0..5 {
             assert!(non_multiple[i] == TWO_POW_104[i]);
         }

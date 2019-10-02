@@ -51,7 +51,7 @@
 //! // Point doubling:
 //! let p3 = &ex_point.double();
 //! // Scalar mul:
-//! let p4 = double_and_add(&ex_point, &Scalar::from(&8u8));
+//! let p4 = double_and_add(&ex_point, &Scalar::from(8u8));
 //!
 //! // You can also multiply by the cofactor directly:
 //! assert!(p4 == mul_by_cofactor(&ex_point));
@@ -123,7 +123,7 @@ pub fn mul_by_cofactor<'a, T>(point: &'a T) -> T
 where
     for<'c> &'c T: Mul<&'c Scalar, Output = T>,
 {
-    point * &Scalar::from(&8u8)
+    point * &Scalar::from(8u8)
 }
 
 /// Compute ([2^k] * P (mod l)).
@@ -1356,7 +1356,7 @@ pub mod tests {
         // Since we compute ( 8* P ) we don't need
         // to test `mul_by_cofactor` if this passes.
         let expect = P1_EXTENDED.double().double().double();
-        let res = P1_EXTENDED * Scalar::from(&8u8);
+        let res = P1_EXTENDED * Scalar::from(8u8);
 
         assert!(expect == res);
     }
@@ -1386,7 +1386,7 @@ pub mod tests {
         assert!(p1 == P1_EXTENDED);
 
         // `A = 15` which is not a QR over the prime of the field.
-        let y_failure = FieldElement::from(&15u8);
+        let y_failure = FieldElement::from(15u8);
         let p_fail = EdwardsPoint::new_from_y_coord(&y_failure, Choice::from(0u8));
         assert!(p_fail.is_none())
     }
@@ -1430,7 +1430,7 @@ pub mod tests {
         // Since we compute ( 8* P ) we don't need
         // to test `mul_by_cofactor` if this passes.
         let expect = P1_PROJECTIVE.double().double().double();
-        let res = P1_PROJECTIVE * Scalar::from(&8u8);
+        let res = P1_PROJECTIVE * Scalar::from(8u8);
 
         assert!(expect == res);
     }
@@ -1460,7 +1460,7 @@ pub mod tests {
         assert!(p1 == P1_PROJECTIVE);
 
         // `A = 15` which is not a QR over the prime of the field.
-        let y_failure = FieldElement::from(&15u8);
+        let y_failure = FieldElement::from(15u8);
         let p_fail = ProjectivePoint::new_from_y_coord(&y_failure, Choice::from(0u8));
         assert!(p_fail.is_none())
     }
@@ -1536,7 +1536,7 @@ pub mod tests {
 
     #[test]
     fn unique_basepoint_test() {
-        let y = FieldElement::from(&3u8) / FieldElement::from(&5u8);
+        let y = FieldElement::from(3u8) / FieldElement::from(5u8);
         let basep = EdwardsPoint::new_from_y_coord(&y, Choice::from(0u8)).unwrap();
 
         assert!(basep.is_valid().unwrap_u8() == 1u8);
