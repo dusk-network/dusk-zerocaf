@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![allow(non_snake_case)]
 //! Implementation of the Ristretto Protocol over the
-//! Doppio curve.
+//! Sonnycurve.
 //!
 //! Notes extracted from: https://ristretto.group/ristretto.html.
 //! Go there for the full lecture or check the paper here:

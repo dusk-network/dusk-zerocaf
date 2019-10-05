@@ -5,7 +5,7 @@
 //!
 //! The basic modular operations have been taken from the
 //! [Curve25519-dalek repository](https://github.com/dalek-cryptography/curve25519-dalek) and refactored to work
-//! for the Doppio finite field.
+//! for the Sonny finite field.
 
 use core::convert::From;
 use core::fmt::Debug;
