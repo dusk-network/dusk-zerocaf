@@ -387,7 +387,7 @@ os.chdir(sys.argv[i])
 verify()
 
 ## Curve Paramaters section.
-/// The size of the prime field when Doppio is
+/// The size of the prime field when Sonny is
 /// a curve defined as E where #E(Fp), and p
 /// is the prime of the field, defined as:
 sage: p
