@@ -5,7 +5,7 @@ use crate::backend::u64::scalar::Scalar;
 use crate::edwards::*;
 use crate::ristretto::RistrettoPoint;
 
-/// `L` is the order of base point for Doppio, in this case it is equivalent to 2^249 + 14490550575682688738086195780655237219
+/// `L` is the order of base point for Sonny, in this case it is equivalent to 2^249 + 14490550575682688738086195780655237219
 pub const L: Scalar = Scalar([1129677152307299, 1363544697812651, 714439, 0, 2199023255552]);
 
 /// `(L - 1) / 2` used to check positiveness of a `FieldElement` on the Decaf paper.
@@ -26,7 +26,7 @@ pub const RR: Scalar = Scalar([
     1314911199310,
 ]);
 
-/// `FIELD_L` is the order of the Prime field for Doppio, n this case it is equivalent to 2^252 + 27742317777372353535851937790883648493`
+/// `FIELD_L` is the order of the Prime field for Sonny, n this case it is equivalent to 2^252 + 27742317777372353535851937790883648493`
 pub const FIELD_L: FieldElement = FieldElement([
     671914833335277,
     3916664325105025,

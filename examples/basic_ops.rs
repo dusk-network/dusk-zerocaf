@@ -1,12 +1,12 @@
 #![allow(non_snake_case)]
 extern crate rand;
 /// The purpose of this implementation is to provide support for one of the most
-/// commonly used operations over EC which is Random Scalar Mul.
+/// commonly used operations in Elliptic Curve Cryptography (ECC), which is Random Scalar Mul.
 ///
-/// This is one of the first steps to take on the implementation of algoritnms
-/// like Diffie-Hellman Key Exchange.
+/// This is one of the first steps to take on the implementation of algorithms,
+/// such as  Diffie-Hellman Key Exchange.
 ///
-/// Let G be a point over Doppio, let k = Scalar random value over the Doppio Sub-group.
+/// Let G be a point over Sonny, let k = Scalar random value over the Sonny Sub-group.
 /// Let P = G*k;
 extern crate zerocaf;
 
@@ -17,7 +17,7 @@ use zerocaf::scalar::Scalar;
 use rand::{thread_rng, Rng};
 
 fn main() -> () {
-    // Let G be an `EdwardsPoint` which is a point over the Twisted Eds Extended Coordinates.
+    // Let G be an `EdwardsPoint` which is a point over the Twisted Edwards Extended Coordinates.
     let G: EdwardsPoint = EdwardsPoint {
         X: FieldElement([23, 0, 0, 0, 0]),
         Y: FieldElement([
@@ -51,8 +51,8 @@ pub fn rand_scalar_generation() -> Scalar {
     // Gen random 32-byte array.
     let mut bytes = [0u8; 32];
 
-    // Fill the bytes varible with random bytes. We can use the 32 bytes co give
-    // total randomness but then we will need to be aware because we can generate
+    // Fill the bytes varible with random bytes. We can use the 32 bytes to give
+    // total randomness, but then we will need to be aware because we can also generate
     // values greater than `L = 2^252 + 27742317777372353535851937790883648493` and
     // the program will panic if we don't catch the error correctly on the
     // `from_bytes()` Scalar method call.

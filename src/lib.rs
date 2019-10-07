@@ -36,7 +36,7 @@
 //! The main goal of the library, as said before, is to be the base of operations over set inclusion proofs
 //! and other Zero-Knowledge protocols.<br>
 //!
-//! But since Zerocaf is build upon the Doppio Curve using the Ristretto protocol, it allows other devs to build
+//! But since Zerocaf is build upon the SonnyCurve using the Ristretto protocol, it allows other devs to build
 //! cryptographic protocols over it without needing to take care about the co-factor of the curve. <br>
 //!
 //! This, brings to developers, a good mathematical backend library which can be used as a `mid-level` API

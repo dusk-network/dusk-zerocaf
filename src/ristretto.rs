@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![allow(non_snake_case)]
 //! Implementation of the Ristretto Protocol over the
-//! Doppio curve.
+//! Sonnycurve.
 //!
 //! Notes extracted from: https://ristretto.group/ristretto.html.
 //! Go there for the full lecture or check the paper here:
@@ -14,7 +14,7 @@
 //! Ristretto is a construction of a prime-order group using a non-prime-order Edwards curve.
 //! The Decaf paper suggests using a non-prime-order curve E\mathcal EE to implement a prime-order
 //! group by constructing a quotient group. Ristretto uses the same idea, but with different formulas,
-//! in order to allow the use of cofactor-888 curves such as Curve25519.
+//! in order to allow the use of cofactor 8 curves such as Curve25519.
 //!
 //! Internally, a Ristretto point is represented by an Edwards point.
 //! Two Edwards points `P, Q` may represent the same Ristretto point, in the same way that
