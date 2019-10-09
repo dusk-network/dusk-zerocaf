@@ -1,4 +1,4 @@
-# Dusk-Zerocaf [![Build Status](https://travis-ci.com/dusk-network/Dusk-Zerocaf.svg?branch=master)](https://travis-ci.com/dusk-network/Dusk-Zerocaf)  [![codecov](https://codecov.io/gh/dusk-network/dusk-corretto/branch/master/graph/badge.svg)](https://codecov.io/gh/dusk-network/dusk-corretto) ![GitHub closed issues](https://img.shields.io/github/issues-closed/dusk-network/dusk-zerocaf.svg?color=4C4CFF) ![Crates.io](https://img.shields.io/crates/v/zerocaf.svg)
+# Dusk-Zerocaf [![Build Status](https://travis-ci.com/dusk-network/Dusk-Zerocaf.svg?branch=master)](https://travis-ci.com/dusk-network/Dusk-Zerocaf)  [![codecov](https://codecov.io/gh/dusk-network/dusk-zerocaf/branch/master/graph/badge.svg)](https://codecov.io/gh/dusk-network/dusk-zerocaf) ![GitHub closed issues](https://img.shields.io/github/issues-closed/dusk-network/dusk-zerocaf.svg?color=4C4CFF) ![Crates.io](https://img.shields.io/crates/v/zerocaf.svg)
 
 <img
  width="100%"
