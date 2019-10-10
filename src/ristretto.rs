@@ -22,7 +22,8 @@
 //!
 //! Group operations on Ristretto points are carried out with no overhead by performing the
 //! operations on the representative Edwards points.
-
+//! 
+//! Reference: https://tools.ietf.org/html/draft-hdevalence-cfrg-ristretto-00
 use crate::constants;
 use crate::edwards::{double_and_add, EdwardsPoint};
 use crate::field::FieldElement;
