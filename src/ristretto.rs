@@ -309,6 +309,22 @@ impl<'a, 'b> Mul<&'b Scalar> for &'a RistrettoPoint {
     }
 }
 
+impl<'a, 'b> Mul<&'b RistrettoPoint> for &'a Scalar {
+    type Output = RistrettoPoint;
+    /// Scalar multiplication: compute `self * Scalar`.
+    /// This implementation uses the algorithm:
+    /// `add_and_doubling` which is the standard one for
+    /// this operations and also adds less constraints on
+    /// R1CS.
+    ///
+    /// Hankerson, Darrel; Vanstone, Scott; Menezes, Alfred (2004).
+    /// Guide to Elliptic Curve Cryptography.
+    /// Springer Professional Computing. New York: Springer-Verlag.
+    fn mul(self, point: &'b RistrettoPoint) -> RistrettoPoint {
+        double_and_add(point, &self)
+    }
+}
+
 impl Mul<Scalar> for RistrettoPoint {
     type Output = RistrettoPoint;
     /// Scalar multiplication: compute `self * Scalar`.
@@ -322,6 +338,22 @@ impl Mul<Scalar> for RistrettoPoint {
     /// Springer Professional Computing. New York: Springer-Verlag.
     fn mul(self, scalar: Scalar) -> RistrettoPoint {
         &self * &scalar
+    }
+}
+
+impl Mul<RistrettoPoint> for Scalar {
+    type Output = RistrettoPoint;
+    /// Scalar multiplication: compute `self * Scalar`.
+    /// This implementation uses the algorithm:
+    /// `add_and_doubling` which is the standard one for
+    /// this operations and also adds less constraints on
+    /// R1CS.
+    ///
+    /// Hankerson, Darrel; Vanstone, Scott; Menezes, Alfred (2004).
+    /// Guide to Elliptic Curve Cryptography.
+    /// Springer Professional Computing. New York: Springer-Verlag.
+    fn mul(self, point: RistrettoPoint) -> RistrettoPoint {
+        &self * &point
     }
 }
 
