@@ -4,7 +4,7 @@
 //!
 //! //! The basic modular operations have been taken from the
 //! [curve25519-dalek repository](https://github.com/dalek-cryptography/curve25519-dalek) and refactored to work
-//! for the Doppio sub-group field.
+//! for the Sonny sub-group field.
 
 use core::fmt::Debug;
 use core::ops::{Add, Mul, Neg, Sub};

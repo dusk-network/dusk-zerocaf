@@ -1,4 +1,4 @@
-# Dusk-Zerocaf [![Build Status](https://travis-ci.com/dusk-network/Dusk-Zerocaf.svg?branch=master)](https://travis-ci.com/dusk-network/Dusk-Zerocaf)  [![codecov](https://codecov.io/gh/dusk-network/dusk-corretto/branch/master/graph/badge.svg)](https://codecov.io/gh/dusk-network/dusk-corretto) ![GitHub closed issues](https://img.shields.io/github/issues-closed/dusk-network/dusk-zerocaf.svg?color=4C4CFF) ![Crates.io](https://img.shields.io/crates/v/zerocaf.svg)
+# Dusk-Zerocaf [![Build Status](https://travis-ci.com/dusk-network/Dusk-Zerocaf.svg?branch=master)](https://travis-ci.com/dusk-network/Dusk-Zerocaf) [![codecov](https://codecov.io/gh/dusk-network/dusk-zerocaf/branch/master/graph/badge.svg)](https://codecov.io/gh/dusk-network/dusk-zerocaf) ![GitHub closed issues](https://img.shields.io/github/issues-closed/dusk-network/dusk-zerocaf.svg?color=4C4CFF) ![Crates.io](https://img.shields.io/crates/v/zerocaf.svg)
 
 <img
  width="100%"
@@ -8,7 +8,7 @@
 
 ## Fast, efficient and bulletproof-friendly cryptographic operations.
 
-This repository contains an implementation of the Doppio curve over the `Ristretto Scalar field`: a pure Rust implementation designed by [Dusk](https://dusk.network) team.
+This repository contains an implementation of the Sonnycurve over the `Ristretto Scalar field`: a pure Rust implementation designed by [Dusk](https://dusk.network) team.
 
 Special thanks to Isis Agora Lovecruft and Henry de Valence for their implementation of [Curve25519-dalek library](https://github.com/dalek-cryptography/curve25519-dalek),
 which has been so useful in order to get some of the basic arithmetic ops and the structure of our library.
@@ -22,7 +22,7 @@ Ristretto was designed by the [dalek-cryprography](https://github.com/dalek-cryp
 
 ### Ristretto Scalar Field And Bulletproofs.
 
-Originally designed to abstract _non-prime-order curves into prime-order scalar fields_, the `Ristretto` abstraction would have been far too inefficient to implement for Bulletproofs zero-knowledge proof. Therefore the `Ristretto scalar field` is used to **solve all negative impacts of using cofactors equalling 8 on the Ristretto curve.**. The strategy is to use a _Ristretto embedded curve_ (also called `Doppio Curve`), as the initial operations within `zerocaf` are performed therein. `zerocaf` opens up new opportunities for the use cases of **zero-knowledge proofs** inside the Dusk Network protocol as well as making a _Bulletproof-integrated ring signature substitute possible_, with orders of magnitude performance improvements compared to the fastest ringsig implementation.
+Originally designed to abstract _non-prime-order curves into prime-order scalar fields_, the `Ristretto` abstraction would have been far too inefficient to implement for Bulletproofs zero-knowledge proof. Therefore the `Ristretto scalar field` is used to **solve all negative impacts of using cofactors equalling 8 on the Ristretto curve.**. The strategy is to use a _Ristretto embedded curve_ (also called `SonnyCurve`), as the initial operations within `zerocaf` are performed therein. `zerocaf` opens up new opportunities for the use cases of **zero-knowledge proofs** inside the Dusk Network protocol as well as making a _Bulletproof-integrated ring signature substitute possible_, with orders of magnitude performance improvements compared to the fastest ringsig implementation.
 
 Within this library, the implementation of the Ristretto to construct the curve with desired properties is made possible by 
 defining the curve over the scalar field, using only a thin abstraction layer, which in turn allows for systems that use signatures to be safely extended with zero-knowledge protocols. These zero-knowledge protocols are utilised with no additional cryptographic assumptions and minimal changes in the code. The Ristretto scalar field is Bulletproof friendly, which makes it possible to use both cryptographic protocols in tandem with one another, as they are centric to contemporary applications of elliptic curve operations.

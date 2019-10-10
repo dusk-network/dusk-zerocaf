@@ -5,7 +5,7 @@
 //!
 //! The basic modular operations have been taken from the
 //! [Curve25519-dalek repository](https://github.com/dalek-cryptography/curve25519-dalek) and refactored to work
-//! for the Doppio finite field.
+//! for the Sonny finite field.
 
 use core::convert::From;
 use core::fmt::Debug;
@@ -178,7 +178,7 @@ impl Neg for FieldElement {
     type Output = FieldElement;
     /// Computes `-self (mod l)`.
     ///
-    /// Compute the negated value that correspond's to the
+    /// Compute the negated value that corresponds to the
     /// two's complement of the input FieldElement.
     #[inline]
     fn neg(self) -> FieldElement {
@@ -282,7 +282,7 @@ impl<'a, 'b> Div<&'a FieldElement> for &'b FieldElement {
     type Output = FieldElement;
     /// Performs the op: `x / y (mod l)`.
     ///
-    /// Since on modular fields we don't divide, the equivanelnt op
+    /// Since on modular fields we don't divide, the equivalent op
     /// is: `x * (y^-1 (mod l))`, which is equivalent to the naive
     /// division but for Finite Fields.
     #[inline]
@@ -296,7 +296,7 @@ impl Div<FieldElement> for FieldElement {
     type Output = FieldElement;
     /// Performs the op: `x / y (mod l)`.
     ///
-    /// Since on modular fields we don't divide, the equivanelnt op
+    /// Since on modular fields we don't divide, the equivalent op
     /// is: `x * (y^-1 (mod l))`, which is equivalent to the naive
     /// division but for Finite Fields.
     #[inline]
@@ -571,7 +571,7 @@ impl FieldElement {
 
     /// Performs the operation `((a + constants::FIELD_L) >> 2) % l)`.
     /// This function SHOULD ONLY be used on the Kalinski's modular
-    /// inverse algorithm, since it's the only way we have to add `l`
+    /// inverse algorithm, since it is the only way we have to add `l`
     /// to a `FieldElement` without obtaining the same number.
     ///
     /// On Kalinski's `PhaseII`, this function allows us to trick the
@@ -901,7 +901,7 @@ impl FieldElement {
 
     /// Compute `a^-1 (mod l)` using the the Kalinski implementation
     /// of the Montgomery Modular Inverse algorithm.
-    /// B. S. Kaliski Jr. - The  Montgomery  inverse  and  its  applica-tions.
+    /// B. S. Kaliski Jr. - The  Montgomery  inverse  and  its  applications.
     /// IEEE Transactions on Computers, 44(8):1064–1065, August-1995
     #[inline]
     #[allow(dead_code)]
