@@ -7,9 +7,9 @@ use criterion::{Benchmark, Criterion};
 
 use zerocaf::backend::u64::{field, scalar};
 use zerocaf::edwards::EdwardsPoint;
-
+use zerocaf::ristretto::RistrettoPoint;
 use zerocaf::traits::ops::*;
-
+use zerocaf::constants::*;
 #[allow(unused_imports)]
 use zerocaf::traits::Identity;
 
@@ -61,7 +61,7 @@ mod field_benches {
         c.bench(
             "Field Element",
             Benchmark::new("Two Pow k (2^k)", |b| {
-                b.iter(|| FieldElement::two_pow_k(&213u64))
+                b.iter(|| FieldElement::two_pow_k(213u64))
             }),
         );
 
@@ -286,6 +286,34 @@ mod edwards_benches {
     }
 }
 
+mod ecdh_benches {
+    use super::*;
+    use rand::rngs::OsRng;
+    use scalar::Scalar;
+    
+    fn generate_kp() -> (Scalar, RistrettoPoint) {
+        let sk = Scalar::random(&mut OsRng);
+        let pk = RISTRETTO_BASEPOINT * sk;
+
+        (sk, pk)
+    } 
+
+    fn ecdh() -> () {
+        let alice_kp = generate_kp();
+        let bob_kp = generate_kp();
+
+        let alice_computes_S = bob_kp.1 * alice_kp.0;
+        let bob_computes_S = alice_kp.1 * bob_kp.0;
+    }
+
+    pub fn bench_ecdh(c: &mut Criterion) {
+        c.bench(
+                "ECDH key exchange",
+                Benchmark::new("Key Exchange.", |b| b.iter(|| ecdh())),
+            );
+    }
+}
+
 criterion_group!(
     benchmarks,
     field_benches::bench_field_element_ops,
@@ -293,7 +321,7 @@ criterion_group!(
     scalar_benches::bench_scalar_element_ops,
     edwards_benches::bench_extended_point_ops,
     edwards_benches::bench_projective_point_ops,
-    edwards_benches::bench_point_compression_decompression
+    edwards_benches::bench_point_compression_decompression,
+    ecdh_benches::bench_ecdh
 );
-//criterion_group!(benchmarks, field_benches::bench_modular_inverse);
 criterion_main!(benchmarks);
