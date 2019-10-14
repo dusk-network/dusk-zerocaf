@@ -8,7 +8,7 @@ documentation = "https://dusk-network.github.io/dusk-zerocaf/zerocaf/index.html"
 repository = "https://github.com/dusk-network/Dusk-Zerocaf"
 keywords = ["cryptography", "ristretto", "doppio-curve", "ECC"]
 categories =["Algorithms", "Cryptography", "Development tools"]
-description = "A pure-Rust implementation of elliptic curve operations over the Doppio-curve"
+description = "A pure-Rust implementation of elliptic curve operations over the Sonny-curve"
 exclude = [
     "**/.gitignore",
     ".gitignore",
@@ -28,6 +28,7 @@ rand = "0.7.0"
 [dev-dependencies]
 criterion = "0.2"
 rand = "0.7.0"
+hex = "0.3.2"
 
 
 # Criterion benchmarks

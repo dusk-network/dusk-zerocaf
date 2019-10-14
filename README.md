@@ -8,7 +8,8 @@
 
 ## Fast, efficient and bulletproof-friendly cryptographic operations.
 
-This repository contains an implementation of the Sonny curve over the `Ristretto Scalar field`: a pure Rust implementation designed by [Dusk](https://dusk.network) team.
+**This repository contains an implementation of the Sonny curve over the `Ristretto Scalar field`: a pure Rust implementation designed by [Dusk](https://dusk.network) team.**
+
 
 Special thanks to Isis Agora Lovecruft and Henry de Valence for their implementation of [Curve25519-dalek library](https://github.com/dalek-cryptography/curve25519-dalek),
 which has been so useful in order to get some of the basic arithmetic ops and the structure of our library.
@@ -122,38 +123,31 @@ Note: the refactoring relations are expressed as indentations
     - [x] Implement Modular inversion.
     - [x] Research about addition chains inversion methods.
   - [x] Add proper tests for every function.
-- [ ] Implement Edwards Points
-    - [ ] Implement Twisted Edwards Extended Coordiantes.
+- [x] Implement Edwards Points
+    - [x] Implement Twisted Edwards Extended Coordiantes.
        - [x] Implement Point Addition.
        - [x] Implement Point Subtraction.
        - [x] Implement Point Doubling.
        - [x] Implement Scalar Mul.
        - [x] Implement from_bytes conversions.
        - [x] Implement to byte conversions.
-       - [ ] Implement compressed Edwards point Y-coordinate.
-    - [ ] Implement Twisted Edwards Projective Coordiates.
+       - [x] Implement compressed Edwards point Y-coordinate.
+    - [x] Implement Twisted Edwards Projective Coordiates.
        - [x] Implement Point Addition.
        - [x] Implement Point Subtraction.
        - [x] Implement Point Doubling.
        - [x] Implement Scalar Mul.
        - [x] Implement from_bytes conversions.
        - [x] Implement to byte conversions.
-       - [ ] Implement compressed Edwards point Y-coordinate.
-    - [ ] Represent Edwards points as Ristretto points using wrapping function (research).
+       - [x] Implement compressed Edwards point Y-coordinate.
+    - [x] Represent Edwards points as Ristretto points using wrapping type or struct.
     - [x] Cargo doc testing and improvement.
     - [x] Decide the best use cases of the various Edwards coordinate types (compressed, standard, extended, projective).
-    - [ ] Benchmark different implementations and algorithms.
-    - [ ] Research About Niels and ProjectiveNiels coordinates usage.
-    - [x] Implement Ristretto Mapping.
-    - [ ] Build and test torsion points.
-    - [ ] Test all point operations for Edwards Points.
-    - [x] Generate Ristretto points from basepoint 
-    - [ ] Generate random Ristretto points 
-    - [x] Implement encoding process for Ristretto points 
-    - [x] Implement decoding process for Ristretto points
-    - [ ] Implement equality testing for Ristretto points
- - [ ] Implement Montgomery and Edwards operations & functions.
- - [x] Find torquing points and cannoically lift curve points
- 
- 
-> Operations with large numbers are recommended to be done in `SageMath`, from which they can be converted in a continuous format with rust and compiled easily after each computation. 
+    - [x] Benchmark different implementations and algorithms.
+- [x] Implement Ristretto Mapping.
+    - [x] Implement 4coset debugging function.
+    - [x] Build and test torsion points.
+    - [x] Implement Ecoding & Decoding algorithms.
+    - [x] Implement Equalty testing.
+    - [x] Implement Elligator-ristretto-flavour.
+    - [x] Test all of the algorithms implemented.
