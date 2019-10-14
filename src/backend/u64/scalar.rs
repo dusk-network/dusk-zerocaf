@@ -19,6 +19,9 @@ use crate::backend::u64::constants;
 use crate::traits::ops::*;
 use crate::traits::Identity;
 
+use subtle::ConstantTimeEq;
+
+
 /// The `Scalar` struct represents an Scalar over the modulo
 /// `2^249 + 14490550575682688738086195780655237219` as 5 52-bit limbs
 /// represented in radix `2^52`.
@@ -344,6 +347,24 @@ impl Scalar {
     /// Evaluate if a `Scalar` is even or not.
     pub fn is_even(self) -> bool {
         self.0[0].is_even()
+    }
+
+    /// Returns the bit representation of the given `Scalar` as
+    /// an array of 256 bits represented as `u8`.
+    pub fn into_bits(&self) -> [u8; 256] {
+        let bytes = self.to_bytes();
+        let mut res = [0u8; 256];
+
+        let mut j = 0;
+
+        for byte in &bytes {
+            for i in 0..8 {
+                let bit = byte >> i as u8;
+                res[j] = !bit.is_even() as u8;
+                j+=1;
+            };
+        };
+        res
     }
 
     /// Unpack a 32 byte / 256 bit Scalar into 5 52-bit limbs.
@@ -891,5 +912,38 @@ mod tests {
         assert!(Scalar::two_pow_k(249)>>248 == Scalar::from(2u8));
         // Reduction
         assert!(Scalar::two_pow_k(249)>>249 == Scalar::one());
+    }
+
+    #[test]
+    fn into_bits() {
+        // Define following results as bit-arrays. 
+        let zero = [0u8; 256];
+        let one = {
+            let mut res = zero.clone();
+            res[0] = 1;
+            res
+        };
+        let nine = {
+            let mut res = one.clone();
+            res[3] = 1;
+            res
+        };
+        let two_pow_249 = {
+            let mut res = zero.clone();
+            res[249] = 1;
+            res
+        };
+        let minus_one = [0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0];
+
+        // 0 case. 
+        assert!(&Scalar::zero().into_bits()[..] == &zero[..]);
+        // 1 case. 
+        assert!(&Scalar::one().into_bits()[..] == &one[..]);
+        // Odd case. 
+        assert!(&Scalar::from(9u8).into_bits()[..] == &nine[..]); 
+        // Even case. 
+        assert!(&Scalar::two_pow_k(249).into_bits()[..] == &two_pow_249[..]);
+        // MAX case. 
+        assert!(&Scalar::minus_one().into_bits()[..] == &minus_one[..]);
     }
 }
