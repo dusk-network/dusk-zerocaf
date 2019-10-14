@@ -11,6 +11,7 @@ use core::ops::{Add, Mul, Neg, Sub};
 use core::ops::{Index, IndexMut};
 
 use std::cmp::{Ord, Ordering, PartialOrd};
+use std::ops::Shr;
 
 use num::Integer;
 
@@ -143,6 +144,18 @@ impl Identity for Scalar {
     }
 }
 
+impl Shr<u8> for Scalar {
+    type Output = Scalar;
+
+    fn shr(self, _rhs: u8) -> Scalar {
+        let mut res = self;
+        for _ in 0.._rhs {
+            res = res.inner_half();
+        }
+        res
+    }
+}
+
 impl<'a, 'b> Add<&'b Scalar> for &'a Scalar {
     type Output = Scalar;
     /// Compute `a + b (mod l)`.
@@ -248,12 +261,8 @@ impl<'a> Half for &'a Scalar {
     type Output = Scalar;
     /// Give the half of the Scalar value (mod l).
     ///
-    /// This op **SHOULD ONLY** be used with even
-    /// `Scalars` otherways, can produce erroneus
-    /// results.
-    ///
-    /// The implementation for `Scalar` has indeed
-    /// an `assert!` statement to check this.
+    /// # Panics
+    /// If the `Scalar` is not even.
     #[inline]
     fn half(self) -> Scalar {
         assert!(self.is_even(), "The Scalar has to be even.");
@@ -415,28 +424,28 @@ impl Scalar {
     ///
     /// See that the input must be between the range => 0..250.
     ///
-    /// NOTE: This function implements an `assert!` statement that
-    /// checks the correctness of the exponent provided as param.
+    /// # Panics
+    /// If the input is greater than the Sub-group order.
     pub fn two_pow_k(exp: u64) -> Scalar {
         // Check that exp has to be less than 260.
         // Note that a Scalar can be as much
         // `2^249 - 15145038707218910765482344729778085401` so we pick
         // 250 knowing that 249 will be lower than the prime of the
         // sub group.
-        assert!(exp < 253u64, "Exponent can't be greater than 260");
+        assert!(exp < 250u64, "Exponent can't be greater than the sub-group order");
 
         let mut res = Scalar::zero();
         match exp {
-            0...51 => {
+            0..=51 => {
                 res[0] = 1u64 << exp;
             }
-            52...103 => {
+            52..=103 => {
                 res[1] = 1u64 << (exp - 52);
             }
-            104...155 => {
+            104..=155 => {
                 res[2] = 1u64 << (exp - 104);
             }
-            156...207 => {
+            156..=207 => {
                 res[3] = 1u64 << (exp - 156);
             }
             _ => {
@@ -853,5 +862,34 @@ mod tests {
         use subtle::ConstantTimeEq;
         assert!(A.ct_eq(&A).unwrap_u8() == 1u8);
         assert!(A.ct_eq(&B).unwrap_u8() == 0u8);
+    }
+
+
+    #[test]
+    fn two_pow_k() {
+        // 0 case.  
+        assert!(Scalar::two_pow_k(0) == Scalar::one());
+        // 1 case. 
+        assert!(Scalar::two_pow_k(1) == Scalar::from(2u8));
+        // Normal case. 
+        assert!(Scalar::two_pow_k(249) == Scalar([0, 0, 0, 0, 2199023255552]));
+        assert!(Scalar::two_pow_k(248) == Scalar([0, 0, 0, 0, 1099511627776]));
+    }
+
+    #[test]
+    fn shr() {
+        // Normal case.
+        assert!(A >>1 == Scalar([0, 0, 0, 1, 0]));
+        // Limb reduction case.
+        assert!(Scalar([0, 0, 0, 1, 0]) >>1 == Scalar([0, 0, 2251799813685248, 0, 0]));
+        // Last limb with 1 case. 
+        assert!(Scalar::one() >>1 == Scalar([0, 0, 0, 0, 0]));
+        // Zero case. 
+        assert!(Scalar::zero() >>1 == Scalar::zero());
+        // Max case. 
+        assert!(Scalar::minus_one() >>250 == Scalar::zero());
+        assert!(Scalar::two_pow_k(249)>>248 == Scalar::from(2u8));
+        // Reduction
+        assert!(Scalar::two_pow_k(249)>>249 == Scalar::one());
     }
 }
