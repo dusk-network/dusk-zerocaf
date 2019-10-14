@@ -131,63 +131,63 @@ mod edwards_benches {
     use zerocaf::scalar::Scalar;
 
     pub static P1_EXTENDED: EdwardsPoint = EdwardsPoint {
-        X: FieldElement([23, 0, 0, 0, 0]),
+        X: FieldElement([13, 0, 0, 0, 0]),
         Y: FieldElement([
-            1664892896009688,
-            132583819244870,
-            812547420185263,
-            637811013879057,
-            13284180325998,
+            606320128494542,
+            1597163540666577,
+            1835599237877421,
+            1667478411389512,
+            3232679738299,
         ]),
         Z: FieldElement([1, 0, 0, 0, 0]),
         T: FieldElement([
-            4351986304670635,
-            4020128726404030,
-            674192131526433,
-            1158854437106827,
-            6468984742885,
+            2034732376387996,
+            3922598123714460,
+            1344791952818393,
+            3662820838581677,
+            6840464509059,
         ]),
     };
 
     pub static P2_EXTENDED: EdwardsPoint = EdwardsPoint {
-        X: FieldElement([68, 0, 0, 0, 0]),
+        X: FieldElement([67, 0, 0, 0, 0]),
         Y: FieldElement([
-            1799957170131195,
-            4493955741554471,
-            4409493758224495,
-            3389415867291423,
-            16342693473584,
+            2369245568431362,
+            2665603790611352,
+            3317390952748653,
+            1908583331312524,
+            8011773354506,
         ]),
         Z: FieldElement([1, 0, 0, 0, 0]),
         T: FieldElement([
-            3505259403500377,
-            292342788271022,
-            2608000066641474,
-            796697979921534,
-            2995435405555,
+            3474019263728064,
+            2548729061993416,
+            1588812051971430,
+            1774293631565269,
+            9023233419450,
         ]),
     };
 
     pub static P1_PROJECTIVE: ProjectivePoint = ProjectivePoint {
-        X: FieldElement([23, 0, 0, 0, 0]),
+        X: FieldElement([13, 0, 0, 0, 0]),
         Y: FieldElement([
-            1664892896009688,
-            132583819244870,
-            812547420185263,
-            637811013879057,
-            13284180325998,
+            606320128494542,
+            1597163540666577,
+            1835599237877421,
+            1667478411389512,
+            3232679738299,
         ]),
         Z: FieldElement([1, 0, 0, 0, 0]),
     };
 
     pub static P2_PROJECTIVE: ProjectivePoint = ProjectivePoint {
-        X: FieldElement([68, 0, 0, 0, 0]),
+        X: FieldElement([67, 0, 0, 0, 0]),
         Y: FieldElement([
-            1799957170131195,
-            4493955741554471,
-            4409493758224495,
-            3389415867291423,
-            16342693473584,
+            2369245568431362,
+            2665603790611352,
+            3317390952748653,
+            1908583331312524,
+            8011773354506,
         ]),
         Z: FieldElement([1, 0, 0, 0, 0]),
     };
@@ -197,8 +197,8 @@ mod edwards_benches {
 
     /// `P1_EXTENDED on `CompressedEdwardsY` format.
     pub(self) static P1_COMPRESSED: CompressedEdwardsY = CompressedEdwardsY([
-        216, 221, 167, 21, 54, 234, 101, 84, 47, 55, 89, 137, 7, 175, 226, 87, 240, 1, 227, 18, 81,
-        168, 46, 95, 65, 36, 110, 118, 217, 246, 20, 140,
+        206, 11, 225, 231, 113, 39, 18, 141, 213, 215, 201, 201, 90, 173, 14, 134, 192, 119, 133,
+        134, 164, 26, 38, 1, 201, 94, 187, 59, 186, 170, 240, 2,
     ]);
 
     pub fn bench_extended_point_ops(c: &mut Criterion) {
@@ -258,11 +258,11 @@ mod edwards_benches {
                 b.iter(|| {
                     ProjectivePoint::new_from_y_coord(
                         &FieldElement([
-                            1799957170131195,
-                            4493955741554471,
-                            4409493758224495,
-                            3389415867291423,
-                            16342693473584,
+                            2369245568431362,
+                            2665603790611352,
+                            3317390952748653,
+                            1908583331312524,
+                            8011773354506,
                         ]),
                         Choice::from(1u8),
                     )
@@ -290,7 +290,7 @@ mod ecdh_benches {
     use super::*;
     use rand::rngs::OsRng;
     use scalar::Scalar;
-    
+
     fn generate_kp() -> (Scalar, RistrettoPoint) {
         let sk = Scalar::random(&mut OsRng);
         let pk = RISTRETTO_BASEPOINT * sk;
@@ -312,6 +312,13 @@ mod ecdh_benches {
                 Benchmark::new("Key Exchange.", |b| b.iter(|| ecdh())),
             );
     }
+
+    criterion_group! {
+        name = ecdh_benches;
+        config = Criterion::default();
+        targets =
+        bench_ecdh
+    }
 }
 
 criterion_group!(
@@ -322,6 +329,8 @@ criterion_group!(
     edwards_benches::bench_extended_point_ops,
     edwards_benches::bench_projective_point_ops,
     edwards_benches::bench_point_compression_decompression,
-    ecdh_benches::bench_ecdh
 );
-criterion_main!(benchmarks);
+criterion_main!(
+    ecdh_benches::ecdh_benches,
+    benchmarks,
+);
