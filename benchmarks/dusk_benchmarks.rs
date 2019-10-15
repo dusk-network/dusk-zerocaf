@@ -14,6 +14,8 @@ use zerocaf::scalar::*;
 #[allow(unused_imports)]
 use zerocaf::traits::Identity;
 
+use rand::rngs::OsRng;
+
 mod field_benches {
 
     use super::*;
@@ -113,6 +115,8 @@ mod field_benches {
                 b.iter(|| inp.0.inv_sqrt());
             }
         );
+
+        c.bench_function("Random FieldElement generation", |b| b.iter(|| FieldElement::random(&mut OsRng)));
     }
 }
 
@@ -189,6 +193,8 @@ mod scalar_benches {
                 b.iter(|| inp.1 >> 135);
             }
         );
+
+        c.bench_function("Random Scalar generation", |b| b.iter(|| Scalar::random(&mut OsRng)));
     }
 }
 
@@ -314,6 +320,8 @@ mod edwards_benches {
                 b.iter(|| EdwardsPoint::new_from_y_coord(&y_gen.0, y_gen.1));
             }
         );
+
+        c.bench_function("Random EdwardsPoint generation", |b| b.iter(|| EdwardsPoint::new_random_point(&mut OsRng)));
     }
 
     pub fn bench_projective_point_ops(c: &mut Criterion) {
@@ -356,6 +364,8 @@ mod edwards_benches {
                 b.iter(|| ProjectivePoint::new_from_y_coord(&y_gen.0, y_gen.1));
             }
         );
+
+        c.bench_function("Random ProjectivePoint generation", |b| b.iter(|| ProjectivePoint::new_random_point(&mut OsRng)));
     }
 
     pub fn bench_point_compression_decompression(c: &mut Criterion) {
@@ -378,6 +388,82 @@ mod edwards_benches {
 mod ristretto_benches {
     use super::*;
 
+    /// `D = 904625697166532776746648320197686575422163851717637391703244652875051672039`
+    pub static D: Scalar = Scalar([
+        2766226127823335,
+        4237835465749098,
+        4503599626623787,
+        4503599627370493,
+        2199023255551,
+    ]);
+
+    pub fn bench_ristretto_point_ops(c: &mut Criterion) {
+
+        let proj_inp = (RISTRETTO_BASEPOINT, D);
+        
+        c.bench_with_input(
+            BenchmarkId::new("Ristretto Random Point Addition", "Fixed Points"), &proj_inp , |b, &proj_inp| {
+                b.iter(|| proj_inp.0 + proj_inp.0);
+            }
+        );
+
+        c.bench_with_input(
+            BenchmarkId::new("Ristretto Random Point Subtraction", "Fixed Points"), &proj_inp , |b, &proj_inp| {
+                b.iter(|| proj_inp.0 + -proj_inp.0);
+            }
+        );
+
+        c.bench_with_input(
+            BenchmarkId::new("Ristretto Random Point Doubling", "Fixed Point"), &proj_inp , |b, &proj_inp| {
+                b.iter(|| proj_inp.0.double());
+            }
+        );
+
+        c.bench_with_input(
+            BenchmarkId::new("Ristretto Random Point Multiplication", "Fixed Points"), &proj_inp , |b, &proj_inp| {
+                b.iter(|| proj_inp.0 * proj_inp.1);
+            }
+        );
+
+        c.bench_function("Ristretto random Point generation", |b| b.iter(|| RistrettoPoint::new_random_point(&mut OsRng)));
+    }
+
+    pub fn bench_ristretto_protocol_impl(c: &mut Criterion) {
+
+        let inputs = (RISTRETTO_BASEPOINT, 
+                        FieldElement([
+                            2369245568431362,
+                            2665603790611352,
+                            3317390952748653,
+                            1908583331312524,
+                            8011773354506,
+                        ]),
+                        RISTRETTO_BASEPOINT_COMPRESSED);
+
+        c.bench_with_input(
+            BenchmarkId::new("Ristretto Encoding", "Ristretto Basepoint"), &inputs , |b, &inputs| {
+                b.iter(|| inputs.0.compress());
+            }
+        );
+
+        c.bench_with_input(
+            BenchmarkId::new("Ristretto Decoding", "Ristretto Basepoint"), &inputs , |b, &inputs| {
+                b.iter(|| inputs.2.decompress().unwrap());
+            }
+        );
+
+        c.bench_with_input(
+            BenchmarkId::new("Ristretto Elligator", "Fixed FieldElement"), &inputs , |b, &inputs| {
+                b.iter(|| RistrettoPoint::elligator_ristretto_flavor(&inputs.1));
+            }
+        );
+
+        c.bench_with_input(
+            BenchmarkId::new("Ristretto Equalty", "Ristretto Basepoint"), &inputs , |b, &inputs| {
+                b.iter(|| inputs.0 == inputs.0);
+            }
+        );
+    }    
 }
 
 mod comparaisons {
@@ -482,13 +568,15 @@ mod comparaisons {
 
 criterion_group!(
     benchmarks,
-    comparaisons::bench_ecdh,
     field_benches::bench_field_element_ops,
     scalar_benches::bench_scalar_element_ops,
     edwards_benches::bench_extended_point_ops, 
     edwards_benches::bench_projective_point_ops, 
     edwards_benches::bench_point_compression_decompression,
     comparaisons::bench_point_ops_impl,
+    comparaisons::bench_ecdh,
+    ristretto_benches::bench_ristretto_point_ops,
+    ristretto_benches::bench_ristretto_protocol_impl,
 );
 criterion_main!(
     benchmarks,

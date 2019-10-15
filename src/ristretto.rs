@@ -393,7 +393,7 @@ impl RistrettoPoint {
     /// Computes the Ristretto Elligator map.
     /// This gets a `RistrettoPoint` from a given
     /// `FieldElement´.
-    pub(crate) fn elligator_ristretto_flavor(r_0: &FieldElement) -> RistrettoPoint {
+    pub fn elligator_ristretto_flavor(r_0: &FieldElement) -> RistrettoPoint {
         let d = constants::EDWARDS_D;
         let one = FieldElement::one();
         let mut c = -one;
