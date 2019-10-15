@@ -382,6 +382,7 @@ mod ristretto_benches {
 
 mod comparaisons {
     use super::*;
+    use rand::rngs::OsRng;
 
     static P1_EXTENDED: EdwardsPoint = EdwardsPoint {
         X: FieldElement([13, 0, 0, 0, 0]),
@@ -434,20 +435,60 @@ mod comparaisons {
             |b, &mul| b.iter(|| ltr_bin_mul(&mul.0, &mul.1)));
         
         group.finish();
-    }    
+    }   
+
+    // Helpers for benchmarking the whole ECDH process //
+    fn generate_kp_ltrs() -> (Scalar, RistrettoPoint) {
+        let sk = Scalar::random(&mut OsRng);
+        let pk = RISTRETTO_BASEPOINT * sk;
+
+        (sk, pk)
+    } 
+
+    fn ecdh_ltrs() -> () {
+        let alice_kp = generate_kp_ltrs();
+        let bob_kp = generate_kp_ltrs();
+
+        let alice_computes_S = ltr_bin_mul(&bob_kp.1, &alice_kp.0);
+        let bob_computes_S = ltr_bin_mul(&alice_kp.1, &bob_kp.0);
+    }
+
+    fn generate_kp_double_add() -> (Scalar, RistrettoPoint) {
+        let sk = Scalar::random(&mut OsRng);
+        let pk = ltr_bin_mul(&RISTRETTO_BASEPOINT, &sk);
+
+        (sk, pk)
+    } 
+
+    fn ecdh_double_add() -> () {
+        let alice_kp = generate_kp_double_add();
+        let bob_kp = generate_kp_double_add();
+
+        let alice_computes_S = bob_kp.1 * alice_kp.0;
+        let bob_computes_S = alice_kp.1 * bob_kp.0;
+    }
+
+    /// ECDH bench function.
+    pub fn bench_ecdh(c: &mut Criterion) {
+        let mut group = c.benchmark_group("ECDH");
+
+        group.bench_function("Double and Add", |b| b.iter(|| ecdh_double_add()));
+        group.bench_function("Left to right binary method", |b| b.iter(|| ecdh_ltrs()));
+        
+        group.finish();
+    } 
 
 }
 
 criterion_group!(
     benchmarks,
+    comparaisons::bench_ecdh,
     field_benches::bench_field_element_ops,
     scalar_benches::bench_scalar_element_ops,
     edwards_benches::bench_extended_point_ops, 
     edwards_benches::bench_projective_point_ops, 
     edwards_benches::bench_point_compression_decompression,
     comparaisons::bench_point_ops_impl,
-
-
 );
 criterion_main!(
     benchmarks,
