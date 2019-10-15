@@ -3,7 +3,7 @@
 #[macro_use]
 extern crate criterion;
 
-use criterion::{Benchmark, criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
 
 use zerocaf::edwards::*;
 use zerocaf::ristretto::*;
@@ -192,10 +192,262 @@ mod scalar_benches {
     }
 }
 
+mod edwards_benches {
+
+    use super::*;
+    use subtle::Choice;
+
+    pub static P1_EXTENDED: EdwardsPoint = EdwardsPoint {
+        X: FieldElement([13, 0, 0, 0, 0]),
+        Y: FieldElement([
+            606320128494542,
+            1597163540666577,
+            1835599237877421,
+            1667478411389512,
+            3232679738299,
+        ]),
+        Z: FieldElement([1, 0, 0, 0, 0]),
+        T: FieldElement([
+            2034732376387996,
+            3922598123714460,
+            1344791952818393,
+            3662820838581677,
+            6840464509059,
+        ]),
+    };
+
+    pub static P2_EXTENDED: EdwardsPoint = EdwardsPoint {
+        X: FieldElement([67, 0, 0, 0, 0]),
+        Y: FieldElement([
+            2369245568431362,
+            2665603790611352,
+            3317390952748653,
+            1908583331312524,
+            8011773354506,
+        ]),
+        Z: FieldElement([1, 0, 0, 0, 0]),
+        T: FieldElement([
+            3474019263728064,
+            2548729061993416,
+            1588812051971430,
+            1774293631565269,
+            9023233419450,
+        ]),
+    };
+
+    pub static P1_PROJECTIVE: ProjectivePoint = ProjectivePoint {
+        X: FieldElement([13, 0, 0, 0, 0]),
+        Y: FieldElement([
+            606320128494542,
+            1597163540666577,
+            1835599237877421,
+            1667478411389512,
+            3232679738299,
+        ]),
+        Z: FieldElement([1, 0, 0, 0, 0]),
+    };
+
+    pub static P2_PROJECTIVE: ProjectivePoint = ProjectivePoint {
+        X: FieldElement([67, 0, 0, 0, 0]),
+        Y: FieldElement([
+            2369245568431362,
+            2665603790611352,
+            3317390952748653,
+            1908583331312524,
+            8011773354506,
+        ]),
+        Z: FieldElement([1, 0, 0, 0, 0]),
+    };
+
+    /// `D = 904625697166532776746648320197686575422163851717637391703244652875051672039`
+    pub static D: Scalar = Scalar([
+        2766226127823335,
+        4237835465749098,
+        4503599626623787,
+        4503599627370493,
+        2199023255551,
+    ]);
+
+    /// `P1_EXTENDED on `CompressedEdwardsY` format.
+    pub(self) static P1_COMPRESSED: CompressedEdwardsY = CompressedEdwardsY([
+        206, 11, 225, 231, 113, 39, 18, 141, 213, 215, 201, 201, 90, 173, 14, 134, 192, 119, 133,
+        134, 164, 26, 38, 1, 201, 94, 187, 59, 186, 170, 240, 2,
+    ]);
+
+    pub fn bench_extended_point_ops(c: &mut Criterion) {
+
+        let extend_inp = (P1_EXTENDED, P2_EXTENDED, D);
+        let y_gen = (FieldElement([
+                            2369245568431362,
+                            2665603790611352,
+                            3317390952748653,
+                            1908583331312524,
+                            8011773354506,
+                        ]), Choice::from(1u8));
+        
+        c.bench_with_input(
+            BenchmarkId::new("Extended Coordinates Point Addition", "Fixed Points"), &extend_inp , |b, &extend_inp| {
+                b.iter(|| extend_inp.0 + extend_inp.1);
+            }
+        );
+
+        c.bench_with_input(
+            BenchmarkId::new("Extended Coordinates Point Subtraction", "Fixed Points"), &extend_inp , |b, &extend_inp| {
+                b.iter(|| extend_inp.0 - extend_inp.1);
+            }
+        );
+
+        c.bench_with_input(
+            BenchmarkId::new("Extended Coordinates Point Doubling", "Fixed Points"), &extend_inp , |b, &extend_inp| {
+                b.iter(|| extend_inp.0.double());
+            }
+        );
+
+        c.bench_with_input(
+            BenchmarkId::new("Extended Coordinates Point Multiplication", "Fixed Points"), &extend_inp , |b, &extend_inp| {
+                b.iter(|| extend_inp.0 * extend_inp.2);
+            }
+        );
+
+        c.bench_with_input(
+            BenchmarkId::new("Extended Coordinates Point Generation", "Fixed y-coordinate"), &y_gen , |b, &y_gen| {
+                b.iter(|| EdwardsPoint::new_from_y_coord(&y_gen.0, y_gen.1));
+            }
+        );
+    }
+
+    pub fn bench_projective_point_ops(c: &mut Criterion) {
+
+        let proj_inp = (P1_PROJECTIVE, P2_PROJECTIVE, D);
+        let y_gen = (FieldElement([
+                            2369245568431362,
+                            2665603790611352,
+                            3317390952748653,
+                            1908583331312524,
+                            8011773354506,
+                        ]), Choice::from(1u8));
+        
+        c.bench_with_input(
+            BenchmarkId::new("Projective Coordinates Point Addition", "Fixed Points"), &proj_inp , |b, &proj_inp| {
+                b.iter(|| proj_inp.0 + proj_inp.1);
+            }
+        );
+
+        c.bench_with_input(
+            BenchmarkId::new("Projective Coordinates Point Subtraction", "Fixed Points"), &proj_inp , |b, &proj_inp| {
+                b.iter(|| proj_inp.0 - proj_inp.1);
+            }
+        );
+
+        c.bench_with_input(
+            BenchmarkId::new("Projective Coordinates Point Doubling", "Fixed Point"), &proj_inp , |b, &proj_inp| {
+                b.iter(|| proj_inp.0.double());
+            }
+        );
+
+        c.bench_with_input(
+            BenchmarkId::new("Projective Coordinates Point Multiplication", "Fixed Points"), &proj_inp , |b, &proj_inp| {
+                b.iter(|| proj_inp.0 * proj_inp.2);
+            }
+        );
+
+        c.bench_with_input(
+            BenchmarkId::new("Projective Coordinates Point Generation", "Fixed y-coordinate"), &y_gen , |b, &y_gen| {
+                b.iter(|| ProjectivePoint::new_from_y_coord(&y_gen.0, y_gen.1));
+            }
+        );
+    }
+
+    pub fn bench_point_compression_decompression(c: &mut Criterion) {
+        let cd_inp = (P1_COMPRESSED, P1_EXTENDED);
+        
+        c.bench_with_input(
+            BenchmarkId::new("Point Compression", "Fixed Extended Point"), &cd_inp , |b, &cd_inp| {
+                b.iter(|| cd_inp.1.compress());
+            }
+        );
+
+        c.bench_with_input(
+            BenchmarkId::new("Point Decompression", "Fixed Compressed-Point"), &cd_inp , |b, &cd_inp| {
+                b.iter(|| cd_inp.0.decompress().unwrap());
+            }
+        );
+    }
+}
+
+mod ristretto_benches {
+    use super::*;
+
+}
+
+mod comparaisons {
+    use super::*;
+
+    static P1_EXTENDED: EdwardsPoint = EdwardsPoint {
+        X: FieldElement([13, 0, 0, 0, 0]),
+        Y: FieldElement([
+            606320128494542,
+            1597163540666577,
+            1835599237877421,
+            1667478411389512,
+            3232679738299,
+        ]),
+        Z: FieldElement([1, 0, 0, 0, 0]),
+        T: FieldElement([
+            2034732376387996,
+            3922598123714460,
+            1344791952818393,
+            3662820838581677,
+            6840464509059,
+        ]),
+    };
+
+    /// `D = 904625697166532776746648320197686575422163851717637391703244652875051672039`
+    pub static D: Scalar = Scalar([
+        2766226127823335,
+        4237835465749098,
+        4503599626623787,
+        4503599627370493,
+        2199023255551,
+    ]);
+
+    pub fn bench_point_ops_impl(c: &mut Criterion) {
+        let i = P1_EXTENDED;
+        let mul = (P1_EXTENDED, D);
+
+        // Equalty
+        let mut group = c.benchmark_group("Equalty");
+
+        group.bench_with_input(BenchmarkId::new("Compressing", "Fixed Point"), &i, 
+            |b, &i| b.iter(|| i.compress() == i.compress()));
+        group.bench_with_input(BenchmarkId::new("To Affine", "Fixed Point"), &i, 
+            |b, &i| b.iter(|| i == i));
+        
+        group.finish();
+
+        // Point Mul
+        let mut group = c.benchmark_group("Point Multiplication");
+
+        group.bench_with_input(BenchmarkId::new("Double And Add", "Fixed inputs"), &mul, 
+            |b, &mul| b.iter(|| double_and_add(&mul.0, &mul.1)));
+        group.bench_with_input(BenchmarkId::new("Left to right binary method", "Fixed inputs"), &mul, 
+            |b, &mul| b.iter(|| ltr_bin_mul(&mul.0, &mul.1)));
+        
+        group.finish();
+    }    
+
+}
+
 criterion_group!(
     benchmarks,
     field_benches::bench_field_element_ops,
     scalar_benches::bench_scalar_element_ops,
+    edwards_benches::bench_extended_point_ops, 
+    edwards_benches::bench_projective_point_ops, 
+    edwards_benches::bench_point_compression_decompression,
+    comparaisons::bench_point_ops_impl,
+
+
 );
 criterion_main!(
     benchmarks,
