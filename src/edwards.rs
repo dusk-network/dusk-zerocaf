@@ -118,6 +118,20 @@ where
     Q
 }
 
+pub fn ltr_bin_mul<'a, 'b, T>(point: &'a T, scalar: &'b Scalar) -> T
+where
+    for<'c> &'c T: Add<Output = T> + Double<Output = T>,
+    T: Identity + Clone,
+{
+    let scalar_bits = scalar.into_bits();
+    let mut Q = T::identity();
+    for i in (0..249).rev() {
+        Q = Q.double();
+        if scalar_bits[i] == 1u8 {Q = &Q + &point;};
+    }
+    Q
+}
+
 /// Multiply by the cofactor: return (8 P).
 pub fn mul_by_cofactor<'a, T>(point: &'a T) -> T
 where
@@ -1562,5 +1576,10 @@ pub mod tests {
 
         assert!(basep.is_valid().unwrap_u8() == 1u8);
         assert!(basep * constants::L == EdwardsPoint::identity());
+    }
+
+    #[test]
+    fn left_to_right_bin_mul() {
+        assert!(P1_EXTENDED * Scalar::two_pow_k(215) == ltr_bin_mul(&P1_EXTENDED, &Scalar::two_pow_k(215)));
     }
 }
