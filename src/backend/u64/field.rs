@@ -8,7 +8,7 @@
 //! for the Sonny finite field.
 
 use core::convert::From;
-use core::fmt::Debug;
+use std::fmt::{Debug, Display};
 
 use std::cmp::{Ord, Ordering, PartialOrd};
 use std::default::Default;
@@ -35,6 +35,12 @@ pub struct FieldElement(pub [u64; 5]);
 
 impl Debug for FieldElement {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "FieldElement({:?})", &self.0[..])
+    }
+}
+
+impl Display for FieldElement {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         write!(f, "FieldElement({:?})", &self.0[..])
     }
 }
@@ -1021,8 +1027,9 @@ impl FieldElement {
     /// The `PhaseII` it's substituded by 1 or 2 Montgomery Multiplications,
     /// what makes the second part compute in almost ConstTime.
     ///
-    /// Note: It is not possible to invert `0` by obvious reasons. So an
-    /// assert! check has been implemented to prevent errors.
+    /// # Panics
+    /// It is not possible to invert `0` by obvious reasons. So an
+    /// the function panics when trying to invert zero.
     ///
     /// Special issue on Montgomery arithmetic.
     /// Montgomery inversion - Erkay Sava ̧s & Çetin Kaya Koç
