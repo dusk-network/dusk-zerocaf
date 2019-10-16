@@ -367,6 +367,23 @@ impl Scalar {
         res
     }
 
+    pub fn compute_NAF(&self) -> [u8; 256] {
+        let mut k = *self;
+        let mut i = 0;
+        let one = Scalar::one();
+        let mut res = [0u8; 256];
+
+        while k >= one {
+            if k.is_even() {res[i] = 1};
+        }
+        unimplemented!()
+    }
+
+    pub(self) fn mod4(&self) -> u8 {
+        let bytes = self.to_bytes();
+        bytes[0] & 0b0000_0011
+    }
+
     /// Unpack a 32 byte / 256 bit Scalar into 5 52-bit limbs.
     pub fn from_bytes(bytes: &[u8; 32]) -> Scalar {
         let mut words = [0u64; 4];
@@ -945,5 +962,16 @@ mod tests {
         assert!(&Scalar::two_pow_k(249).into_bits()[..] == &two_pow_249[..]);
         // MAX case. 
         assert!(&Scalar::minus_one().into_bits()[..] == &minus_one[..]);
+    }
+
+    #[test]
+    fn mod_four() {
+        // Modulo case.
+        assert!(Scalar::from(4u8).mod4() == 0u8);
+        // Low case.
+        assert!(Scalar::from(3u8).mod4() == 3u8);
+        // Bignum case. 
+        assert!(Scalar::from(557u16).mod4() == 1u8);
+        assert!(Scalar::from(42535295865117307932887201356513780707u128).mod4() == 3u8);
     }
 }
