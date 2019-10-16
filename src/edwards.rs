@@ -132,8 +132,12 @@ where
     Q
 }
 
-pub fn binary_naf_mul(point: &EdwardsPoint, scalar: &Scalar) -> EdwardsPoint {
-    let mut Q = EdwardsPoint::identity();
+pub fn binary_naf_mul<'a, 'b, T>(point: &'a T, scalar: &'b Scalar) -> T 
+where 
+    for <'c> &'c T: Add<Output = T> + Double<Output = T> + Sub<Output = T>,
+    T: Identity,
+{
+    let mut Q = T::identity();
     let k_naf = scalar.compute_NAF();
 
     for i in (0..250).rev() {
