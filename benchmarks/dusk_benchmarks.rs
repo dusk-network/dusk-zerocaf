@@ -137,7 +137,7 @@ mod scalar_benches {
     ]);
 
     pub fn bench_scalar_element_ops(c: &mut Criterion) {
-        let inp = (C, D);
+        let inp = (C, D, 4u8);
         let pow = 215u64;
 
         c.bench_with_input(
@@ -196,7 +196,7 @@ mod scalar_benches {
 
         c.bench_with_input(
             BenchmarkId::new("Scalar mod 4", "Fixed Scalar"), &inp , |b, &inp| {
-                b.iter(|| inp.1.mod_2_pow_k(4u8);
+                b.iter(|| inp.1.mod_2_pow_k(inp.2));
             }
         );
 
