@@ -380,8 +380,7 @@ impl Scalar {
     }
 
     pub(self) fn mod4(&self) -> u8 {
-        let bytes = self.to_bytes();
-        bytes[0] & 0b0000_0011
+        (self.0[0] & 0b0000_0011) as u8
     }
 
     /// Unpack a 32 byte / 256 bit Scalar into 5 52-bit limbs.
