@@ -206,6 +206,12 @@ mod scalar_benches {
             }
         );
 
+        c.bench_with_input(
+            BenchmarkId::new("Compute windowed-NAF", "Fixed Scalar"), &inp , |b, &inp| {
+                b.iter(|| inp.1.compute_window_NAF(inp.2));
+            }
+        );
+
         c.bench_function("Random Scalar generation", |b| b.iter(|| Scalar::random(&mut OsRng)));
     }
 }
