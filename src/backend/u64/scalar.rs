@@ -430,6 +430,7 @@ impl Scalar {
         // Shift 16 to the right to get the 52 bits of the scalar on that limb. Then apply top_mask.
         s[4] = (words[3] >> 16) & top_mask;
 
+        assert!(s <= Scalar::minus_one());
         s
     }
 

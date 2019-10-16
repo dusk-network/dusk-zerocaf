@@ -194,6 +194,18 @@ mod scalar_benches {
             }
         );
 
+        c.bench_with_input(
+            BenchmarkId::new("Scalar mod 4", "Fixed Scalar"), &inp , |b, &inp| {
+                b.iter(|| inp.1.mod4());
+            }
+        );
+
+        c.bench_with_input(
+            BenchmarkId::new("Compute NAF", "Fixed Scalar"), &inp , |b, &inp| {
+                b.iter(|| inp.1.compute_NAF());
+            }
+        );
+
         c.bench_function("Random Scalar generation", |b| b.iter(|| Scalar::random(&mut OsRng)));
     }
 }
@@ -519,14 +531,18 @@ mod comparaisons {
             |b, &mul| b.iter(|| double_and_add(&mul.0, &mul.1)));
         group.bench_with_input(BenchmarkId::new("Left to right binary method", "Fixed inputs"), &mul, 
             |b, &mul| b.iter(|| ltr_bin_mul(&mul.0, &mul.1)));
+        group.bench_with_input(BenchmarkId::new("NAF binary", "Fixed inputs"), &mul, 
+            |b, &mul| b.iter(|| binary_naf_mul(&mul.0, &mul.1)));
         
         group.finish();
     }   
 
     // Helpers for benchmarking the whole ECDH process //
+
+    // Left to right shift method.
     fn generate_kp_ltrs() -> (Scalar, RistrettoPoint) {
         let sk = Scalar::random(&mut OsRng);
-        let pk = RISTRETTO_BASEPOINT * sk;
+        let pk = ltr_bin_mul(&RISTRETTO_BASEPOINT, &sk);
 
         (sk, pk)
     } 
@@ -539,9 +555,26 @@ mod comparaisons {
         let bob_computes_S = ltr_bin_mul(&alice_kp.1, &bob_kp.0);
     }
 
+    // Binary NAF
+    fn generate_kp_binary_naf() -> (Scalar, EdwardsPoint) {
+        let sk = Scalar::random(&mut OsRng);
+        let pk = binary_naf_mul(&RISTRETTO_BASEPOINT.0, &sk);
+
+        (sk, pk)
+    } 
+
+    fn ecdh_binary_naf() -> () {
+        let alice_kp = generate_kp_binary_naf();
+        let bob_kp = generate_kp_binary_naf();
+
+        let alice_computes_S = binary_naf_mul(&bob_kp.1, &alice_kp.0);
+        let bob_computes_S = binary_naf_mul(&alice_kp.1, &bob_kp.0);
+    }
+
+    // Double and Add
     fn generate_kp_double_add() -> (Scalar, RistrettoPoint) {
         let sk = Scalar::random(&mut OsRng);
-        let pk = ltr_bin_mul(&RISTRETTO_BASEPOINT, &sk);
+        let pk = double_and_add(&RISTRETTO_BASEPOINT, &sk);
 
         (sk, pk)
     } 
@@ -550,9 +583,11 @@ mod comparaisons {
         let alice_kp = generate_kp_double_add();
         let bob_kp = generate_kp_double_add();
 
-        let alice_computes_S = bob_kp.1 * alice_kp.0;
-        let bob_computes_S = alice_kp.1 * bob_kp.0;
+        let alice_computes_S = double_and_add(&bob_kp.1, &alice_kp.0);
+        let bob_computes_S = double_and_add(&alice_kp.1, &bob_kp.0);
     }
+
+    
 
     /// ECDH bench function.
     pub fn bench_ecdh(c: &mut Criterion) {
@@ -560,6 +595,7 @@ mod comparaisons {
 
         group.bench_function("Double and Add", |b| b.iter(|| ecdh_double_add()));
         group.bench_function("Left to right binary method", |b| b.iter(|| ecdh_ltrs()));
+        group.bench_function("Binary NAF method", |b| b.iter(|| ecdh_binary_naf()));
         
         group.finish();
     } 
@@ -568,13 +604,13 @@ mod comparaisons {
 
 criterion_group!(
     benchmarks,
+    comparaisons::bench_point_ops_impl,
+    comparaisons::bench_ecdh,
     field_benches::bench_field_element_ops,
     scalar_benches::bench_scalar_element_ops,
     edwards_benches::bench_extended_point_ops, 
     edwards_benches::bench_projective_point_ops, 
     edwards_benches::bench_point_compression_decompression,
-    comparaisons::bench_point_ops_impl,
-    comparaisons::bench_ecdh,
     ristretto_benches::bench_ristretto_point_ops,
     ristretto_benches::bench_ristretto_protocol_impl,
 );

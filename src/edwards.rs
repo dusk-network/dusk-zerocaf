@@ -121,13 +121,28 @@ where
 pub fn ltr_bin_mul<'a, 'b, T>(point: &'a T, scalar: &'b Scalar) -> T
 where
     for<'c> &'c T: Add<Output = T> + Double<Output = T>,
-    T: Identity + Clone,
+    T: Identity,
 {
     let scalar_bits = scalar.into_bits();
     let mut Q = T::identity();
     for i in (0..249).rev() {
         Q = Q.double();
         if scalar_bits[i] == 1u8 {Q = &Q + &point;};
+    }
+    Q
+}
+
+pub fn binary_naf_mul(point: &EdwardsPoint, scalar: &Scalar) -> EdwardsPoint {
+    let mut Q = EdwardsPoint::identity();
+    let k_naf = scalar.compute_NAF();
+
+    for i in (0..250).rev() {
+        Q = Q.double();
+        match k_naf[i] as i16 {
+            1i16 => Q = &Q + point,
+            -1_i16 => Q = &Q - point,
+            _ => (),
+        };
     }
     Q
 }
@@ -1581,5 +1596,18 @@ pub mod tests {
     #[test]
     fn left_to_right_bin_mul() {
         assert!(P1_EXTENDED * Scalar::two_pow_k(215) == ltr_bin_mul(&P1_EXTENDED, &Scalar::two_pow_k(215)));
+        assert!(P1_EXTENDED * Scalar::minus_one() == ltr_bin_mul(&P1_EXTENDED, &Scalar::minus_one()));
+    }
+
+    #[test]
+    fn naf_bin_mul() {
+        let scalar = Scalar::two_pow_k(7);
+        assert!(double_and_add(&P1_EXTENDED, &scalar) == binary_naf_mul(&P1_EXTENDED, &scalar));
+        let scalar = Scalar::two_pow_k(215);
+        assert!(double_and_add(&P1_EXTENDED, &scalar) == binary_naf_mul(&P1_EXTENDED, &scalar));
+        let scalar = Scalar::two_pow_k(249) - Scalar::one();
+        assert!(binary_naf_mul(&P1_EXTENDED, &scalar) == double_and_add(&P1_EXTENDED, &scalar));
+
+        assert!(P1_EXTENDED * Scalar::minus_one() == binary_naf_mul(&P1_EXTENDED, &Scalar::minus_one()));
     }
 }
