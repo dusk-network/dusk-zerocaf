@@ -1596,7 +1596,6 @@ pub mod tests {
     #[test]
     fn left_to_right_bin_mul() {
         assert!(P1_EXTENDED * Scalar::two_pow_k(215) == ltr_bin_mul(&P1_EXTENDED, &Scalar::two_pow_k(215)));
-        assert!(P1_EXTENDED * Scalar::minus_one() == ltr_bin_mul(&P1_EXTENDED, &Scalar::minus_one()));
     }
 
     #[test]

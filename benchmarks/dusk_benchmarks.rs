@@ -196,7 +196,7 @@ mod scalar_benches {
 
         c.bench_with_input(
             BenchmarkId::new("Scalar mod 4", "Fixed Scalar"), &inp , |b, &inp| {
-                b.iter(|| inp.1.mod4());
+                b.iter(|| inp.1.mod_2_pow_k(4u8);
             }
         );
 

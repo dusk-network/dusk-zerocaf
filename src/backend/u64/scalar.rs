@@ -384,6 +384,7 @@ impl Scalar {
         res
     }
 
+    /// Compute the Non-Adjacent form f a given `Scalar`.
     pub fn compute_NAF(&self) -> [i8; 256] {
         let mut k = *self;
         let mut i = 0;
@@ -392,7 +393,7 @@ impl Scalar {
 
         while k >= one {
             if !k.is_even() {
-                let ki = 2i8 - k.mod4() as i8;
+                let ki = 2i8 - k.mod_2_pow_k(2u8) as i8;
                 res[i] = ki;
                 k = k - Scalar::from(ki);
             } else {
@@ -405,8 +406,11 @@ impl Scalar {
         res
     }
 
-    pub fn mod4(&self) -> u8 {
-        (self.0[0] & 0b0000_0011) as u8
+    /// Compute the result from `Scalar (mod k)`
+    /// **where `k` HAS TO be a power of `2` of maximum
+    /// 256 (8 bits)**.  
+    pub fn mod_2_pow_k(&self, k: u8) -> u8 {
+        (self.0[0] & ((1 << k) -1)) as u8
     }
 
     /// Unpack a 32 byte / 256 bit Scalar into 5 52-bit limbs.
@@ -993,12 +997,12 @@ mod tests {
     #[test]
     fn mod_four() {
         // Modulo case.
-        assert!(Scalar::from(4u8).mod4() == 0u8);
+        assert!(Scalar::from(4u8).mod_2_pow_k(2u8) == 0u8);
         // Low case.
-        assert!(Scalar::from(3u8).mod4() == 3u8);
+        assert!(Scalar::from(3u8).mod_2_pow_k(2u8) == 3u8);
         // Bignum case. 
-        assert!(Scalar::from(557u16).mod4() == 1u8);
-        assert!(Scalar::from(42535295865117307932887201356513780707u128).mod4() == 3u8);
+        assert!(Scalar::from(557u16).mod_2_pow_k(2u8) == 1u8);
+        assert!(Scalar::from(42535295865117307932887201356513780707u128).mod_2_pow_k(2u8) == 3u8);
     }
 
     #[test]
