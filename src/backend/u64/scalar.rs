@@ -67,6 +67,23 @@ impl Ord for Scalar {
 }
 
 //-------------- From Implementations -----------------//
+impl From<i8> for Scalar {
+    /// Performs the conversion. 
+    fn from(_inp: i8) -> Scalar {
+        let mut res = Scalar::zero();
+
+        match _inp >= 0 {
+            true => {
+                res[0] = _inp as u64;
+                return res
+            },
+            false => {
+                res[0] = _inp.abs() as u64;
+                return -res
+            }
+        }
+    }
+}
 impl From<u8> for Scalar {
     /// Performs the conversion.
     fn from(_inp: u8) -> Scalar {
@@ -367,19 +384,28 @@ impl Scalar {
         res
     }
 
-    pub fn compute_NAF(&self) -> [u8; 256] {
+    pub fn compute_NAF(&self) -> [i8; 256] {
         let mut k = *self;
         let mut i = 0;
         let one = Scalar::one();
-        let mut res = [0u8; 256];
+        let mut res = [0i8; 256];
 
         while k >= one {
-            if k.is_even() {res[i] = 1};
+            if !k.is_even() {
+                let ki = 2i8 - k.mod4() as i8;
+                res[i] = ki;
+                k = k - Scalar::from(ki);
+            } else {
+                res[i] = 0i8;
+            };
+
+            k = k.inner_half();
+            i +=1;
         }
-        unimplemented!()
+        res
     }
 
-    pub(self) fn mod4(&self) -> u8 {
+    pub fn mod4(&self) -> u8 {
         (self.0[0] & 0b0000_0011) as u8
     }
 
@@ -972,5 +998,11 @@ mod tests {
         // Bignum case. 
         assert!(Scalar::from(557u16).mod4() == 1u8);
         assert!(Scalar::from(42535295865117307932887201356513780707u128).mod4() == 3u8);
+    }
+
+    #[test]
+    fn naf() {
+        let seven_in_naf = [-1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        assert!(&Scalar::from(7u8).compute_NAF()[..4] == &seven_in_naf[..4]);
     }
 }
