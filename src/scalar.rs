@@ -103,6 +103,8 @@ impl Scalar {
     {
         let mut bytes = [0u8; 32];
         rand.fill_bytes(&mut bytes);
+        // Ensure that the value is lower than `L`.
+        bytes[31] &= 0b0000_0001;
         Scalar::from_bytes(&bytes)
     }
 }
