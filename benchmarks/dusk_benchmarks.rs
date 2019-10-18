@@ -488,7 +488,7 @@ mod comparaisons {
     use super::*;
     use rand::rngs::OsRng;
 
-    static P1_EXTENDED: EdwardsPoint = EdwardsPoint {
+    static P1_EXTENDED: RistrettoPoint = RistrettoPoint( EdwardsPoint {
         X: FieldElement([13, 0, 0, 0, 0]),
         Y: FieldElement([
             606320128494542,
@@ -505,7 +505,7 @@ mod comparaisons {
             3662820838581677,
             6840464509059,
         ]),
-    };
+    });
 
     /// `D = 904625697166532776746648320197686575422163851717637391703244652875051672039`
     pub static D: Scalar = Scalar([
@@ -519,7 +519,7 @@ mod comparaisons {
     pub fn bench_point_ops_impl(c: &mut Criterion) {
         let i = P1_EXTENDED;
         let mul = (P1_EXTENDED, D);
-
+        /*
         // Equalty
         let mut group = c.benchmark_group("Equalty");
 
@@ -529,7 +529,7 @@ mod comparaisons {
             |b, &i| b.iter(|| i == i));
         
         group.finish();
-
+*/
         // Point Mul
         let mut group = c.benchmark_group("Point Multiplication");
 
@@ -562,9 +562,9 @@ mod comparaisons {
     }
 
     // Binary NAF
-    fn generate_kp_binary_naf() -> (Scalar, EdwardsPoint) {
+    fn generate_kp_binary_naf() -> (Scalar, RistrettoPoint) {
         let sk = Scalar::random(&mut OsRng);
-        let pk = binary_naf_mul(&RISTRETTO_BASEPOINT.0, &sk);
+        let pk = binary_naf_mul(&RISTRETTO_BASEPOINT, &sk);
 
         (sk, pk)
     } 

@@ -174,7 +174,6 @@ impl<'a> Neg for &'a FieldElement {
     /// Computes `-self (mod l)`.
     /// Compute the negated value that corresponds to the
     /// complement of the two, of the input FieldElement.
-    #[inline]
     fn neg(self) -> FieldElement {
         &FieldElement::zero() - self
     }
@@ -186,7 +185,6 @@ impl Neg for FieldElement {
     ///
     /// Compute the negated value that corresponds to the
     /// two's complement of the input FieldElement.
-    #[inline]
     fn neg(self) -> FieldElement {
         -&self
     }
@@ -195,7 +193,6 @@ impl Neg for FieldElement {
 impl<'a, 'b> Add<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
     /// Compute `a + b (mod l)`.
-    #[inline]
     fn add(self, b: &'b FieldElement) -> FieldElement {
         let mut sum = FieldElement::zero();
         let mask = (1u64 << 52) - 1;
@@ -214,7 +211,6 @@ impl<'a, 'b> Add<&'b FieldElement> for &'a FieldElement {
 impl Add<FieldElement> for FieldElement {
     type Output = FieldElement;
     /// Compute `a + b (mod l)`.
-    #[inline]
     fn add(self, b: FieldElement) -> FieldElement {
         &self + &b
     }
@@ -223,7 +219,6 @@ impl Add<FieldElement> for FieldElement {
 impl<'a, 'b> Sub<&'b FieldElement> for &'a FieldElement {
     type Output = FieldElement;
     /// Compute `a - b (mod l)`
-    #[inline]
     fn sub(self, b: &'b FieldElement) -> FieldElement {
         let mut sub = 0u64;
         let mut difference: FieldElement = FieldElement::zero();
@@ -249,7 +244,6 @@ impl<'a, 'b> Sub<&'b FieldElement> for &'a FieldElement {
 impl Sub<FieldElement> for FieldElement {
     type Output = FieldElement;
     /// Compute `a + b (mod l)`.
-    #[inline]
     fn sub(self, b: FieldElement) -> FieldElement {
         &self - &b
     }
@@ -263,7 +257,6 @@ impl<'a, 'b> Mul<&'b FieldElement> for &'a FieldElement {
     ///
     /// Then, we apply the Montgomery Reduction function to perform
     /// the modulo and the reduction to the `FieldElement` format: [u64; 5].
-    #[inline]
     fn mul(self, _rhs: &'b FieldElement) -> FieldElement {
         let prod = FieldElement::montgomery_reduce(&FieldElement::mul_internal(self, _rhs));
         FieldElement::montgomery_reduce(&FieldElement::mul_internal(&prod, &constants::RR_FIELD))
@@ -278,7 +271,6 @@ impl Mul<FieldElement> for FieldElement {
     ///
     /// Then, we apply the Montgomery Reduction function to perform
     /// the modulo and the reduction to the `FieldElement` format: [u64; 5].
-    #[inline]
     fn mul(self, _rhs: FieldElement) -> FieldElement {
         &self * &_rhs
     }
@@ -291,7 +283,6 @@ impl<'a, 'b> Div<&'a FieldElement> for &'b FieldElement {
     /// Since on modular fields we don't divide, the equivalent op
     /// is: `x * (y^-1 (mod l))`, which is equivalent to the naive
     /// division but for Finite Fields.
-    #[inline]
     fn div(self, _rhs: &'a FieldElement) -> FieldElement {
         assert!(_rhs != &FieldElement::zero(), "Cannot divide by zero.");
         self * &_rhs.inverse()
@@ -305,7 +296,6 @@ impl Div<FieldElement> for FieldElement {
     /// Since on modular fields we don't divide, the equivalent op
     /// is: `x * (y^-1 (mod l))`, which is equivalent to the naive
     /// division but for Finite Fields.
-    #[inline]
     fn div(self, _rhs: FieldElement) -> FieldElement {
         &self * &_rhs.inverse()
     }
@@ -320,7 +310,6 @@ impl<'a> Square for &'a FieldElement {
     ///
     /// Then, we apply the Montgomery Reduction function to perform
     /// the modulo and the reduction to the `FieldElement` format: [u64; 5].
-    #[inline]
     fn square(self) -> FieldElement {
         let aa = FieldElement::montgomery_reduce(&FieldElement::square_internal(self));
         FieldElement::montgomery_reduce(&FieldElement::mul_internal(&aa, &constants::RR_FIELD))
@@ -334,7 +323,6 @@ impl<'a> Half for &'a FieldElement {
     /// This function SHOULD ONLY be used with even
     /// `FieldElements` otherways, can produce erroneus
     /// results.
-    #[inline]
     fn half(self) -> FieldElement {
         assert!(self.is_even(), "The FieldElement has to be even.");
         let mut res = *self;
@@ -539,8 +527,7 @@ impl SqrtRatioI<&FieldElement> for FieldElement {
     }
 }
 
-/// u64 * u64 = u128 inline func multiply helper
-#[inline]
+/// u64 * u64 = u128 inline func multiply helpe
 fn m(x: u64, y: u64) -> u128 {
     (x as u128) * (y as u128)
 }
@@ -582,7 +569,6 @@ impl FieldElement {
     ///
     /// On Kalinski's `PhaseII`, this function allows us to trick the
     /// addition and be able to divide odd numbers by `2`.
-    #[inline]
     pub(self) fn plus_p_and_half(&self) -> FieldElement {
         let mut res = *self;
         for i in 0..5 {
@@ -691,7 +677,6 @@ impl FieldElement {
     ///
     /// NOTE: This function implements an `assert!` statement that
     /// checks the correctness of the exponent provided as param.
-    #[inline]
     pub fn two_pow_k(exp: u64) -> FieldElement {
         // Check that exp has to be less than 260.
         // Note that a FieldElement can be as much
@@ -733,13 +718,11 @@ impl FieldElement {
     ///
     /// `0`  -> `Input (mod l) == 0`. Not implemented since you can't pass
     /// an input which is multiple of `FIELD_L`.
-    #[inline]
     pub fn legendre_symbol(&self) -> Choice {
         let res = self.pow(&FieldElement::minus_one().half());
         res.ct_eq(&FieldElement::minus_one()) ^ Choice::from(1u8)
     }
 
-    #[inline]
     #[doc(hidden)]
     /// This half implementation has no restriction for odd values
     /// and is used in some parts of algorithms which impl require
@@ -803,7 +786,6 @@ impl FieldElement {
     }
 
     /// Compute `a * b` with the function multiplying helper
-    #[inline]
     pub(self) fn mul_internal(a: &FieldElement, b: &FieldElement) -> [u128; 9] {
         let mut res = [0u128; 9];
         // Note that this is just the normal way of performing a product.
@@ -826,7 +808,6 @@ impl FieldElement {
     ///
     /// This operation is multo-precision. So it gives back
     /// an `[u128; 9]` with the result of the squaring.
-    #[inline]
     pub(self) fn square_internal(a: &FieldElement) -> [u128; 9] {
         let a_sqrt = [a[0] * 2, a[1] * 2, a[2] * 2, a[3] * 2];
 
@@ -844,15 +825,14 @@ impl FieldElement {
     }
 
     /// Compute `limbs/R` (mod l), where R is the Montgomery modulus 2^260
-    #[inline]
     pub(self) fn montgomery_reduce(limbs: &[u128; 9]) -> FieldElement {
-        #[inline]
+
         fn adjustment_fact(sum: u128) -> (u128, u64) {
             let p = (sum as u64).wrapping_mul(constants::LFACTOR_FIELD) & ((1u64 << 52) - 1);
             ((sum + m(p, constants::FIELD_L[0])) >> 52, p)
         }
 
-        #[inline]
+
         fn montg_red_res(sum: u128) -> (u128, u64) {
             let w = (sum as u64) & ((1u64 << 52) - 1);
             (sum >> 52, w)
@@ -883,20 +863,17 @@ impl FieldElement {
     //--------------------InverseModMontgomery tools-----------------------//
 
     /// Compute `(a * b) / R` (mod l), where R is the Montgomery modulus 2^253
-    #[inline]
     pub(self) fn montgomery_mul(a: &FieldElement, b: &FieldElement) -> FieldElement {
         FieldElement::montgomery_reduce(&FieldElement::mul_internal(a, b))
     }
 
     /// Puts a FieldElement into Montgomery form, i.e. computes `a*R (mod l)`
-    #[inline]
     #[allow(dead_code)]
     pub(self) fn to_montgomery(&self) -> FieldElement {
         FieldElement::montgomery_mul(self, &constants::RR_FIELD)
     }
 
     /// Takes a FieldElement out of Montgomery form, i.e. computes `a/R (mod l)`
-    #[inline]
     pub(self) fn from_montgomery(&self) -> FieldElement {
         let mut limbs = [0u128; 9];
         for i in 0..5 {
@@ -909,7 +886,6 @@ impl FieldElement {
     /// of the Montgomery Modular Inverse algorithm.
     /// B. S. Kaliski Jr. - The  Montgomery  inverse  and  its  applications.
     /// IEEE Transactions on Computers, 44(8):1064–1065, August-1995
-    #[inline]
     #[allow(dead_code)]
     pub(self) fn kalinski_inverse(&self) -> FieldElement {
         /// This Phase I indeed is the Binary GCD algorithm, a version of Steins algorithm
@@ -925,7 +901,7 @@ impl FieldElement {
         /// Montgomery inversion - Erkay Sava ̧s & Çetin Kaya Koç
         /// J Cryptogr Eng (2018) 8:201–210
         /// https://doi.org/10.1007/s13389-017-0161-x
-        #[inline]
+
         fn phase1(a: &FieldElement) -> (FieldElement, u64) {
             // Declare L = 2^252 + 27742317777372353535851937790883648493
             let p = FieldElement([
@@ -982,7 +958,7 @@ impl FieldElement {
         /// the Montgomery inverse.
         ///
         /// Output: `a^(-1) * 2^n  (mod l)`  where `n = 253 = log2(p) = log2(FIELD_L)`
-        #[inline]
+
         fn phase2(r: &FieldElement, k: u64) -> FieldElement {
             let mut rr = *r;
             let _p = &constants::FIELD_L;
@@ -1035,7 +1011,6 @@ impl FieldElement {
     /// Montgomery inversion - Erkay Sava ̧s & Çetin Kaya Koç
     /// J Cryptogr Eng (2018) 8:201–210
     /// https://doi.org/10.1007/s13389-017-0161-x.
-    #[inline]
     pub fn inverse(&self) -> FieldElement {
         /// This Phase I is indeed the Binary GCD algorithm , a version of Stein's algorithm
         /// which tries to remove the expensive division operation from the Classical
@@ -1044,7 +1019,7 @@ impl FieldElement {
         /// Output = `a^(-1) * 2^k (mod l)` where `k = log2(FIELD_L) == 253`.
         ///
         /// Stein, J.: Computational problems associated with Racah algebra.J. Comput. Phys.1, 397–405 (1967).
-        #[inline]
+
         fn phase1(a: &FieldElement) -> (FieldElement, u64) {
             assert!(a != &FieldElement::zero());
 

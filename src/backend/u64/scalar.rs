@@ -283,7 +283,6 @@ impl<'a> Half for &'a Scalar {
     ///
     /// # Panics
     /// If the `Scalar` is not even.
-    #[inline]
     fn half(self) -> Scalar {
         assert!(self.is_even(), "The Scalar has to be even.");
         let mut res = *self;
@@ -339,8 +338,7 @@ impl<'a, 'b> Pow<&'b Scalar> for &'a Scalar {
     }
 }
 
-/// u64 * u64 = u128 inline func multiply helper.
-#[inline]
+/// u64 * u64 = u128 inline func multiply helper
 fn m(x: u64, y: u64) -> u128 {
     (x as u128) * (y as u128)
 }
@@ -411,7 +409,7 @@ impl Scalar {
     /// Compute the Windowed-Non-Adjacent Form of a given `Scalar`.
     /// 
     /// ## Inputs
-    /// - `width` => Represents the window-width.
+    /// - `width` => Represents the window-width i.e. `width = 2^width`.
     pub fn compute_window_NAF(&self, width: u8) -> [i8; 256] {
         let mut k = *self;
         let mut i = 0;
@@ -420,7 +418,7 @@ impl Scalar {
 
         while k >= one {
             if !k.is_even() {
-                let ki = k.mod_2_pow_k(width) as i8;
+                let ki = k.mods_2_pow_k(width);
                 res[i] = ki;
                 k = k - Scalar::from(ki);
             } else {
@@ -433,11 +431,29 @@ impl Scalar {
         res
     }
 
-    /// Compute the result from `Scalar (mod k)`
-    /// **where `k` HAS TO be a power of `2` of maximum
-    /// 256 (8 bits)**.  
+    /// Compute the result from `Scalar (mod k)`.
+    /// 
+    /// # Panics
+    /// 
+    /// If the given k is > 32 (5 bits) as the value gets 
+    /// greater than the limb.  
     pub fn mod_2_pow_k(&self, k: u8) -> u8 {
         (self.0[0] & ((1 << k) -1)) as u8
+    }
+
+    /// Compute the result from `Scalar (mods k)`.
+    /// 
+    /// # Panics
+    /// 
+    /// If the given k is > 32 (5 bits) as the value gets 
+    /// greater than the limb.   
+    pub fn mods_2_pow_k(&self, k: u8) -> i8 {
+        let modulus = self.mod_2_pow_k(k) as i16;
+
+        match modulus >= (1i16 << k) -1i16 {
+            false => return modulus as i8,
+            true => return ((modulus as i16) - (1i16 << k)) as i8,
+        }
     }
 
     /// Unpack a 32 byte / 256 bit Scalar into 5 52-bit limbs.
@@ -554,7 +570,6 @@ impl Scalar {
     /// Note that this is just the normal way of performing a product.
     /// This operation returns back a double precision result stored
     /// on a `[u128; 9] in order to avoid overflowings.
-    #[inline]
     pub(self) fn mul_internal(a: &Scalar, b: &Scalar) -> [u128; 9] {
         let mut res = [0u128; 9];
 
@@ -575,7 +590,6 @@ impl Scalar {
     ///
     /// This operation returns a double precision result.
     /// So it gives back a `[u128; 9]` with the result of the squaring.
-    #[inline]
     pub(self) fn square_internal(a: &Scalar) -> [u128; 9] {
         let a_sqrt = [a[0] * 2, a[1] * 2, a[2] * 2, a[3] * 2];
 
@@ -597,7 +611,6 @@ impl Scalar {
     /// This op **SHOULD NEVER** be used by the end-user
     /// since it's designed to allow some behaviours
     /// needed on certain points of algorithm implementations.
-    #[inline]
     #[doc(hidden)]
     pub(crate) fn inner_half(self) -> Scalar {
         let mut res = self;
@@ -622,15 +635,14 @@ impl Scalar {
     }
 
     /// Compute `limbs/R` (mod l), where R is the Montgomery modulus 2^260
-    #[inline]
     pub(self) fn montgomery_reduce(limbs: &[u128; 9]) -> Scalar {
-        #[inline]
+
         fn adjustment_fact(sum: u128) -> (u128, u64) {
             let p = (sum as u64).wrapping_mul(constants::LFACTOR) & ((1u64 << 52) - 1);
             ((sum + m(p, constants::L[0])) >> 52, p)
         }
 
-        #[inline]
+
         fn montg_red_res(sum: u128) -> (u128, u64) {
             let w = (sum as u64) & ((1u64 << 52) - 1);
             (sum >> 52, w)
@@ -661,21 +673,18 @@ impl Scalar {
     }
 
     /// Compute `(a * b) / R` (mod l), where R is the Montgomery modulus 2^260
-    #[inline]
     #[allow(dead_code)]
     pub(self) fn montgomery_mul(a: &Scalar, b: &Scalar) -> Scalar {
         Scalar::montgomery_reduce(&Scalar::mul_internal(a, b))
     }
 
     /// Puts a Scalar into Montgomery form, i.e. computes `a*R (mod l)`
-    #[inline]
     #[allow(dead_code)]
     pub(self) fn to_montgomery(&self) -> Scalar {
         Scalar::montgomery_mul(self, &constants::RR)
     }
 
     /// Takes a Scalar out of Montgomery form, i.e. computes `a/R (mod l)`
-    #[inline]
     #[allow(dead_code)]
     pub(self) fn from_montgomery(&self) -> Scalar {
         let mut limbs = [0u128; 9];
@@ -1040,7 +1049,6 @@ mod tests {
 
     #[test]
     fn window_naf() {
-        let twenty_seven_window_4_naf = [3, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        assert!(&twenty_seven_window_4_naf[..] == &Scalar::from(27u8).compute_window_NAF(2u8)[..])
+        println!("{:?}", &Scalar::from(1122334455u64).compute_window_NAF(4)[..]);
     }
 }
