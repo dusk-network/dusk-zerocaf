@@ -75,6 +75,7 @@ use crate::field::FieldElement;
 use crate::montgomery::MontgomeryPoint;
 use crate::scalar::Scalar;
 use crate::traits::{ops::*, Identity, ValidityCheck};
+use crate::ristretto::RistrettoPoint;
 
 use rand::{CryptoRng, Rng};
 use subtle::{Choice, ConstantTimeEq};
@@ -148,6 +149,24 @@ where
             _ => (),
         };
     }
+    Q
+}
+
+pub fn window_naf_mul(scalar: &Scalar, window_width: u8) -> RistrettoPoint {
+
+    let mut Q = RistrettoPoint::identity();
+    let scalar_wnaf = scalar.compute_window_NAF(window_width);
+
+    for i in (0..250).rev() {
+        Q = Q.double();
+        let ki = scalar_wnaf[i];
+        match (ki == 0i8, ki > 0i8) {
+            (true, _) => (),
+            (false, true) => Q = &Q + &constants::BASEPOINT_ODD_MULTIPLES_TABLE[(ki.abs() as usize)],
+            (false, false) => Q = &Q - &constants::BASEPOINT_ODD_MULTIPLES_TABLE[(ki.abs() as usize)],
+        }
+        println!("{:?}", Q);
+    };
     Q
 }
 
@@ -450,7 +469,6 @@ impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
     ///
     /// [Source: 2008 Hisil–Wong–Carter–Dawson],
     /// (http://eprint.iacr.org/2008/522), Section 3.1.
-    #[inline]
     fn add(self, other: &'b EdwardsPoint) -> EdwardsPoint {
         let A = self.X * other.X;
         let B = self.Y * other.Y;
@@ -477,7 +495,6 @@ impl Add<EdwardsPoint> for EdwardsPoint {
     ///
     /// [Source: 2008 Hisil–Wong–Carter–Dawson],
     /// (http://eprint.iacr.org/2008/522), Section 3.1.
-    #[inline]
     fn add(self, other: EdwardsPoint) -> EdwardsPoint {
         &self + &other
     }
@@ -815,7 +832,6 @@ impl<'a, 'b> Add<&'b ProjectivePoint> for &'a ProjectivePoint {
     /// Progress in Cryptology – AFRICACRYPT 2008. AFRICACRYPT 2008.
     /// Lecture Notes in Computer Science, vol 5023. Springer, Berlin, Heidelberg.
     /// See: https://eprint.iacr.org/2008/013.pdf - Section 6.
-    #[inline]
     fn add(self, other: &'b ProjectivePoint) -> ProjectivePoint {
         let A = self.Z * other.Z;
         let B = A.square();
@@ -843,7 +859,6 @@ impl Add<ProjectivePoint> for ProjectivePoint {
     /// Progress in Cryptology – AFRICACRYPT 2008. AFRICACRYPT 2008.
     /// Lecture Notes in Computer Science, vol 5023. Springer, Berlin, Heidelberg.
     /// See: https://eprint.iacr.org/2008/013.pdf - Section 6.
-    #[inline]
     fn add(self, other: ProjectivePoint) -> ProjectivePoint {
         &self + &other
     }
@@ -874,7 +889,6 @@ impl Sub<ProjectivePoint> for ProjectivePoint {
     /// Progress in Cryptology – AFRICACRYPT 2008. AFRICACRYPT 2008.
     /// Lecture Notes in Computer Science, vol 5023. Springer, Berlin, Heidelberg.
     /// See: https://eprint.iacr.org/2008/013.pdf - Section 6.
-    #[inline]
     fn sub(self, other: ProjectivePoint) -> ProjectivePoint {
         &self - &other
     }
@@ -1613,4 +1627,18 @@ pub mod tests {
 
         assert!(P1_EXTENDED * Scalar::minus_one() == binary_naf_mul(&P1_EXTENDED, &Scalar::minus_one()));
     }
+
+    /*#[test]
+    fn window_naf() {
+        let scalar = Scalar::one();
+        assert!(double_and_add(&constants::RISTRETTO_BASEPOINT, &scalar).0 == window_naf_mul(&scalar, 3u8).0);
+        let scalar = Scalar::two_pow_k(7);
+        assert!(double_and_add(&constants::RISTRETTO_BASEPOINT, &scalar) == window_naf_mul(&scalar, 3u8));
+        let scalar = Scalar::two_pow_k(215);
+        assert!(double_and_add(&constants::RISTRETTO_BASEPOINT, &scalar) == window_naf_mul(&scalar, 3u8));
+        let scalar = Scalar::two_pow_k(249) - Scalar::one();
+        assert!(window_naf_mul(&scalar,3u8) == double_and_add(&constants::RISTRETTO_BASEPOINT, &scalar));
+
+        assert!(constants::RISTRETTO_BASEPOINT * Scalar::minus_one() == window_naf_mul(&scalar, 3u8));
+    }*/
 }

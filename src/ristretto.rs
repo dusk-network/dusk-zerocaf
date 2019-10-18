@@ -159,7 +159,7 @@ pub struct RistrettoPoint(pub EdwardsPoint);
 
 impl Debug for RistrettoPoint {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
-        write!(f, "{:?}", &self.coset4())
+        write!(f, "{:?}", &self.0)
     }
 }
 
