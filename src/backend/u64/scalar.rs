@@ -169,8 +169,8 @@ impl Shr<u8> for Scalar {
 
     fn shr(self, _rhs: u8) -> Scalar {
         let mut res = self;
-        for _ in 0.._rhs {
-            res = res.inner_half();
+        for limb in &mut res.0 {
+            *limb >>= _rhs;
         }
         res
     }
@@ -431,7 +431,7 @@ impl Scalar {
         res
     }
 
-    /// Compute the result from `Scalar (mod k)`.
+    /// Compute the result from `Scalar (mod 2^k)`.
     /// 
     /// # Panics
     /// 
@@ -445,14 +445,16 @@ impl Scalar {
     /// 
     /// # Panics
     /// 
-    /// If the given k is > 32 (5 bits) as the value gets 
+    /// If the given `k > 32 (5 bits)` || `k == 0` as the value gets 
     /// greater than the limb.   
-    pub fn mods_2_pow_k(&self, k: u8) -> i8 {
-        let modulus = self.mod_2_pow_k(k) as i16;
+    pub fn mods_2_pow_k(&self, w: u8) -> i8 {
+        assert!(w < 32u8);
+        let modulus = self.mod_2_pow_k(w) as i8; 
+        let two_pow_w_minus_one = 1i8 << (w - 1);
 
-        match modulus >= (1i16 << k) -1i16 {
-            false => return modulus as i8,
-            true => return ((modulus as i16) - (1i16 << k)) as i8,
+        match modulus >= two_pow_w_minus_one {
+            false => return modulus,
+            true => return modulus - ((1u8 << w) as i8),
         }
     }
 
@@ -1049,6 +1051,26 @@ mod tests {
 
     #[test]
     fn window_naf() {
-        println!("{:?}", &Scalar::from(1122334455u64).compute_window_NAF(4)[..]);
+        let scalar = Scalar::from(1122334455u64);
+        // Case NAF2
+        let naf2_scalar = [-1, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0, 0, -1, 0, -1, 0, 1, 0, -1, 0, 0 ,-1, 0,1,0,0,0,1];
+        assert!(&naf2_scalar[..] == &scalar.compute_window_NAF(2)[..31]);
+
+        // Case NAF3
+        let naf3_scalar = [-1, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0, 0, 3,0,0,1,0,0,-1,0,0,3,0,0,0,0,0,1];
+        assert!(&naf3_scalar[..] == &scalar.compute_window_NAF(3)[..31]);
+
+        // Case NAF4
+        let naf4_scalar = [7,0,0,0,-1,0,0,0,7,0,0,0,7,0,0,0,5,0,0,0,0,7,0,0,0,1,0,0,0,0,1];
+        assert!(&naf4_scalar[..] == &scalar.compute_window_NAF(4)[..31]);
+
+        // Case NAF5
+        let naf5_scalar = [-9,0,0,0,0,0,0,0,-9,0,0,0,0,0,0,11,0,0,0,0,0,-9,0,0,0,0,-15,0,0,0,0,1];
+        assert!(&naf5_scalar[..] == &scalar.compute_window_NAF(5)[..32]);
+
+        //Case NAF6
+        let naf6_scalar = [-9,0,0,0,0,0,0,0,-9,0,0,0,0,0,0,11,0,0,0,0,0,23,0,0,0,0,0,0,0,0,1];
+        assert!(&naf6_scalar[..] == &scalar.compute_window_NAF(6)[..31]);
+
     }
 }
