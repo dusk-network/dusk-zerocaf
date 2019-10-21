@@ -319,10 +319,6 @@ impl<'a> Square for &'a FieldElement {
 impl<'a> Half for &'a FieldElement {
     type Output = FieldElement;
     /// Give the half of the FieldElement value (mod l).
-    ///
-    /// This function SHOULD ONLY be used with even
-    /// `FieldElements` otherways, can produce erroneus
-    /// results.
     fn half(self) -> FieldElement {
         self * &constants::INVERSE_MOD_TWO
     }
@@ -337,6 +333,7 @@ impl<'a, 'b> Pow<&'b FieldElement> for &'a FieldElement {
     ///
     /// Schneier, Bruce (1996). Applied Cryptography: Protocols,
     /// Algorithms, and Source Code in C, Second Edition (2nd ed.).
+    /// TODO: Review the while with the different half implementations.
     fn pow(self, exp: &'b FieldElement) -> FieldElement {
         let (zero, one) = (FieldElement::zero(), FieldElement::one());
         let mut base = *self;
@@ -405,7 +402,7 @@ impl<'a> ModSqrt for &'a FieldElement {
         let mut s = zero;
         while q.is_even() {
             s = s + one;
-            q = q.half();
+            q = q.fast_even_half();
         }
 
         // Select a z which is a quadratic non resudue modulo p.
@@ -413,7 +410,7 @@ impl<'a> ModSqrt for &'a FieldElement {
         let mut c = six.pow(&q);
 
         // Search for a solution.
-        let mut x = self.pow(&(q + one).half());
+        let mut x = self.pow(&(q + one).fast_even_half());
         let mut t = self.pow(&q);
         let mut m = s;
 
@@ -514,6 +511,7 @@ fn m(x: u64, y: u64) -> u128 {
 }
 
 impl FieldElement {
+
     /// Construct zero.
     pub const fn zero() -> FieldElement {
         FieldElement([0, 0, 0, 0, 0])
@@ -670,6 +668,33 @@ impl FieldElement {
         res
     }
 
+    /// Returns the half of an **EVEN** `FieldElement`.
+    /// 
+    /// This function performs almost 4x faster than the
+    /// `Half` implementation but SHOULD be used carefully.
+    pub fn fast_even_half(self) -> FieldElement {
+        assert!(self.is_even());
+        let mut res = self;
+        let mut remainder = 0u64;
+        for i in (0..5).rev() {
+            res[i] = res[i] + remainder;
+            match (res[i] == 1, res[i].is_even()) {
+                (true, _) => {
+                    remainder = 4503599627370496u64;
+                }
+                (_, false) => {
+                    res[i] = res[i] - 1u64;
+                    remainder = 4503599627370496u64;
+                }
+                (_, true) => {
+                    remainder = 0;
+                }
+            }
+            res[i] >>= 1;
+        }
+        res
+    }
+
     /// Given a FieldElement, this function evaluates if it is a quadratic
     /// residue (mod l).
     ///
@@ -683,6 +708,7 @@ impl FieldElement {
     ///
     /// `0`  -> `Input (mod l) == 0`. Not implemented since you can't pass
     /// an input which is multiple of `FIELD_L`.
+    /// TODO: Refactor minus_one.half by a constant.
     pub fn legendre_symbol(&self) -> Choice {
         let res = self.pow(&FieldElement::minus_one().half());
         res.ct_eq(&FieldElement::minus_one()) ^ Choice::from(1u8)
@@ -865,25 +891,25 @@ impl FieldElement {
                 match (u.is_even(), v.is_even(), u > v, v >= u) {
                     // u is even
                     (true, _, _, _) => {
-                        u = u.half();
+                        u = u.fast_even_half();
                         s = s * two;
                     }
                     // u isn't even but v is even
                     (false, true, _, _) => {
-                        v = v.half();
+                        v = v.fast_even_half();
                         r = r * two;
                     }
                     // u and v aren't even and u > v
                     (false, false, true, _) => {
                         u = u - v;
-                        u = u.half();
+                        u = u.fast_even_half();
                         r = r + s;
                         s = s * two;
                     }
                     // u and v aren't even and v > u
                     (false, false, false, true) => {
                         v = v - u;
-                        v = v.half();
+                        v = v.fast_even_half();
                         s = r + s;
                         r = r * two;
                     }

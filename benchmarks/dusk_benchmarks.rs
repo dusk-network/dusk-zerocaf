@@ -508,9 +508,9 @@ mod comparaisons {
         ]),
     });
 
-    /// `D = 904625697166532776746648320197686575422163851717637391703244652875051672039`
+    /// `D = 904625697166532776746648320197686575422163851717637391703244652875051672038`
     pub static D: Scalar = Scalar([
-        2766226127823335,
+        2766226127823334,
         4237835465749098,
         4503599626623787,
         4503599627370493,
@@ -520,6 +520,16 @@ mod comparaisons {
     pub fn bench_point_ops_impl(c: &mut Criterion) {
         let i = P1_EXTENDED;
         let mul = (RISTRETTO_BASEPOINT, D);
+
+        let mut group = c.benchmark_group("Half");
+
+        group.bench_with_input(BenchmarkId::new("Fast Even Half", "Fixed even FieldElement"), &i, 
+            |b, &i| b.iter(|| i.0.T.old_half()));
+        group.bench_with_input(BenchmarkId::new("Constant usage impl", "Fixed even FieldElement"), &i, 
+            |b, &i| b.iter(|| i.0.T.half()));
+        
+        group.finish();
+
         
         // Equalty
         let mut group = c.benchmark_group("Equalty");
