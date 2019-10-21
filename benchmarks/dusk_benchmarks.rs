@@ -487,6 +487,7 @@ mod ristretto_benches {
 mod comparaisons {
     use super::*;
     use rand::rngs::OsRng;
+    use zerocaf::constants::RISTRETTO_BASEPOINT;
 
     static P1_EXTENDED: RistrettoPoint = RistrettoPoint( EdwardsPoint {
         X: FieldElement([13, 0, 0, 0, 0]),
@@ -518,8 +519,8 @@ mod comparaisons {
 
     pub fn bench_point_ops_impl(c: &mut Criterion) {
         let i = P1_EXTENDED;
-        let mul = (P1_EXTENDED, D);
-        /*
+        let mul = (RISTRETTO_BASEPOINT, D);
+        
         // Equalty
         let mut group = c.benchmark_group("Equalty");
 
@@ -529,7 +530,7 @@ mod comparaisons {
             |b, &i| b.iter(|| i == i));
         
         group.finish();
-*/
+
         // Point Mul
         let mut group = c.benchmark_group("Point Multiplication");
 
@@ -539,6 +540,8 @@ mod comparaisons {
             |b, &mul| b.iter(|| ltr_bin_mul(&mul.0, &mul.1)));
         group.bench_with_input(BenchmarkId::new("NAF binary", "Fixed inputs"), &mul, 
             |b, &mul| b.iter(|| binary_naf_mul(&mul.0, &mul.1)));
+        group.bench_with_input(BenchmarkId::new("Window w-NAF binary", "Fixed inputs"), &mul, 
+            |b, &mul| b.iter(|| window_naf_mul(&mul.1, 5u8)));
         
         group.finish();
     }   
