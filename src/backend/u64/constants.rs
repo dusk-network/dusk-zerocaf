@@ -44,6 +44,9 @@ pub const RR_FIELD: FieldElement = FieldElement([
     10175238647962,
 ]);
 
+/// `INVERSE_MOD_TWO = 1/2 (mod l)`. 
+pub const INVERSE_MOD_TWO: FieldElement = FieldElement([2587757230352887, 4210131976237760, 683900, 0, 8796093022208]);
+
 /// FieldElement-LFACTOR is the value that satisfies the equation: `L * LFACTOR = -1 (mod 2^52)`
 /// In this case, `LFACTOR` is the one used for the Montgomery Reduction algorithm,
 /// implemented on FieldElement Arithmetics module.
@@ -204,7 +207,13 @@ pub const BASEPOINT: EdwardsPoint = EdwardsPoint {
 /// Ristretto Basepoint.
 pub const RISTRETTO_BASEPOINT: RistrettoPoint = RistrettoPoint(BASEPOINT);
 
-pub(crate) const BASEPOINT_ODD_MULTIPLES_TABLE: [RistrettoPoint; 125] = [
+pub(crate) const BASEPOINT_ODD_MULTIPLES_TABLE: [RistrettoPoint; 126] = [
+    RistrettoPoint(EdwardsPoint {
+            X: FieldElement([0,0,0,0,0]),
+            Y: FieldElement([1,0,0,0,0]),
+            Z: FieldElement([1, 0, 0, 0, 0]),
+            T: FieldElement([0,0,0,0,0])
+        }),
     RistrettoPoint(EdwardsPoint {
             X: FieldElement([276718085098056, 1646536057461434, 2704687245600312, 2630386667454967, 13476148227069]),
             Y: FieldElement([1303868825475266, 3250718520537114, 2702159777242978, 2702159776422297, 10555311626649]),

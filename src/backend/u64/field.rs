@@ -324,26 +324,7 @@ impl<'a> Half for &'a FieldElement {
     /// `FieldElements` otherways, can produce erroneus
     /// results.
     fn half(self) -> FieldElement {
-        assert!(self.is_even(), "The FieldElement has to be even.");
-        let mut res = *self;
-        let mut remainder = 0u64;
-        for i in (0..5).rev() {
-            res[i] = res[i] + remainder;
-            match (res[i] == 1, res[i].is_even()) {
-                (true, _) => {
-                    remainder = 4503599627370496u64;
-                }
-                (_, false) => {
-                    res[i] = res[i] - 1u64;
-                    remainder = 4503599627370496u64;
-                }
-                (_, true) => {
-                    remainder = 0;
-                }
-            }
-            res[i] >>= 1;
-        }
-        res
+        self * &constants::INVERSE_MOD_TWO
     }
 }
 
@@ -432,7 +413,7 @@ impl<'a> ModSqrt for &'a FieldElement {
         let mut c = six.pow(&q);
 
         // Search for a solution.
-        let mut x = self.pow(&(q + one).inner_half());
+        let mut x = self.pow(&(q + one).half());
         let mut t = self.pow(&q);
         let mut m = s;
 
@@ -707,32 +688,6 @@ impl FieldElement {
         res.ct_eq(&FieldElement::minus_one()) ^ Choice::from(1u8)
     }
 
-    #[doc(hidden)]
-    /// This half implementation has no restriction for odd values
-    /// and is used in some parts of algorithms which impl require
-    /// to divide by 2 odd numbers at some parts.
-    pub(self) fn inner_half(self) -> FieldElement {
-        let mut res = self;
-        let mut remainder = 0u64;
-        for i in (0..5).rev() {
-            res[i] = res[i] + remainder;
-            match (res[i] == 1, res[i].is_even()) {
-                (true, _) => {
-                    remainder = 4503599627370496u64;
-                }
-                (_, false) => {
-                    res[i] = res[i] - 1u64;
-                    remainder = 4503599627370496u64;
-                }
-                (_, true) => {
-                    remainder = 0;
-                }
-            }
-            res[i] >>= 1;
-        }
-        res
-    }
-
     /// Given a `k`: u64, compute `2^k` giving the resulting result
     /// as a `FieldElement`.
     /// Note that the input must be between the range => 0..260.
@@ -910,25 +865,25 @@ impl FieldElement {
                 match (u.is_even(), v.is_even(), u > v, v >= u) {
                     // u is even
                     (true, _, _, _) => {
-                        u = u.inner_half();
+                        u = u.half();
                         s = s * two;
                     }
                     // u isn't even but v is even
                     (false, true, _, _) => {
-                        v = v.inner_half();
+                        v = v.half();
                         r = r * two;
                     }
                     // u and v aren't even and u > v
                     (false, false, true, _) => {
                         u = u - v;
-                        u = u.inner_half();
+                        u = u.half();
                         r = r + s;
                         s = s * two;
                     }
                     // u and v aren't even and v > u
                     (false, false, false, true) => {
                         v = v - u;
-                        v = v.inner_half();
+                        v = v.half();
                         s = r + s;
                         r = r * two;
                     }
