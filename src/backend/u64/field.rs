@@ -1581,27 +1581,27 @@ pub mod tests {
     }
 
     #[test]
-    fn inner_two_pow_k() {
+    fn two_pow_k() {
         // Check for 0 value
-        let zero = FieldElement::inner_two_pow_k(0u64);
+        let zero = FieldElement::two_pow_k(0u64);
         for i in 0..5 {
             assert!(zero[i] == FieldElement::one()[i]);
         }
 
         // Check for MAX value
-        let max = FieldElement::inner_two_pow_k(252u64);
+        let max = FieldElement::two_pow_k(252u64);
         for i in 0..5 {
             assert!(max[i] == TWO_POW_252[i]);
         }
 
         // Check for non 52-multiple `k` values
-        let non_multiple = FieldElement::inner_two_pow_k(197u64);
+        let non_multiple = FieldElement::two_pow_k(197u64);
         for i in 0..5 {
             assert!(non_multiple[i] == TWO_POW_197[i]);
         }
 
         // Check for 52-multiple `k` values
-        let non_multiple = FieldElement::inner_two_pow_k(104u64);
+        let non_multiple = FieldElement::two_pow_k(104u64);
         for i in 0..5 {
             assert!(non_multiple[i] == TWO_POW_104[i]);
         }
