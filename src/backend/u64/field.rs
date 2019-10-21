@@ -562,22 +562,6 @@ impl FieldElement {
         self.0[0] & 0b01 == 0u64
     }
 
-    /// Performs the operation `((a + constants::FIELD_L) >> 2) % l)`.
-    /// This function SHOULD ONLY be used on the Kalinski's modular
-    /// inverse algorithm, since it is the only way we have to add `l`
-    /// to a `FieldElement` without obtaining the same number.
-    ///
-    /// On Kalinski's `PhaseII`, this function allows us to trick the
-    /// addition and be able to divide odd numbers by `2`.
-    pub(self) fn plus_p_and_half(&self) -> FieldElement {
-        let mut res = *self;
-        for i in 0..5 {
-            res[i] += constants::FIELD_L[i];
-        }
-
-        res.inner_half()
-    }
-
     /// Checks if a ´FieldElement` is considered negative following
     /// the Decaf paper criteria.
     ///
@@ -759,10 +743,7 @@ impl FieldElement {
     #[doc(hidden)]
     pub(self) fn inner_two_pow_k(exp: u64) -> FieldElement {
         // Check that exp has to be less than 260.
-        // Note that a FieldElement can be as much
-        // `2^252 + 27742317777372353535851937790883648493` so we pick
-        // 253 knowing that 252 will be less than `FIELD_L`.
-        debug_assert!(exp < 260u64, "Exponent can't be greater than 260");
+        assert!(exp < 260u64, "Exponent can't be greater than 260");
 
         let mut res = FieldElement::zero();
         match exp {
