@@ -672,6 +672,10 @@ impl FieldElement {
     /// 
     /// This function performs almost 4x faster than the
     /// `Half` implementation but SHOULD be used carefully.
+    /// 
+    /// # Panics
+    /// 
+    /// When the `FieldElement` provided is not even.
     pub fn fast_even_half(self) -> FieldElement {
         assert!(self.is_even());
         let mut res = self;
@@ -708,18 +712,16 @@ impl FieldElement {
     ///
     /// `0`  -> `Input (mod l) == 0`. Not implemented since you can't pass
     /// an input which is multiple of `FIELD_L`.
-    /// TODO: Refactor minus_one.half by a constant.
     pub fn legendre_symbol(&self) -> Choice {
-        let res = self.pow(&FieldElement::minus_one().half());
+        let res = self.pow(&constants::MINUS_ONE_HALF);
         res.ct_eq(&FieldElement::minus_one()) ^ Choice::from(1u8)
     }
 
     /// Given a `k`: u64, compute `2^k` giving the resulting result
     /// as a `FieldElement`.
-    /// Note that the input must be between the range => 0..260.
     ///
-    /// NOTE: Usually, we will say 253, but since on some operations as
-    /// inversion we need to exponenciate to greater values, we set the
+    /// NOTE: Usually, we will say 253, but since on inversion we 
+    /// need to exponenciate to greater values, we set the
     /// max on the Montgomery modulo so `260`.
     #[doc(hidden)]
     pub(self) fn inner_two_pow_k(exp: u64) -> FieldElement {
@@ -1279,6 +1281,7 @@ pub mod tests {
 
     #[test]
     fn legendre_symbol() {
+        println!("{:?}", FieldElement::minus_one().half());
         let res1 = A.legendre_symbol();
         let res2 = FieldElement::from(17u8).legendre_symbol();
 

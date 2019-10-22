@@ -44,8 +44,11 @@ pub const RR_FIELD: FieldElement = FieldElement([
     10175238647962,
 ]);
 
-/// `INVERSE_MOD_TWO = 1/2 (mod l)`. 
+/// `INVERSE_MOD_TWO = 1/2 (mod l)`.                   
 pub const INVERSE_MOD_TWO: FieldElement = FieldElement([2587757230352887, 4210131976237760, 683900, 0, 8796093022208]);
+
+/// `MINUS_ONE_HALF = (-1/2) (mod l)`. 
+pub const MINUS_ONE_HALF: FieldElement = FieldElement([2587757230352886, 4210131976237760, 683900, 0, 8796093022208]);
 
 /// FieldElement-LFACTOR is the value that satisfies the equation: `L * LFACTOR = -1 (mod 2^52)`
 /// In this case, `LFACTOR` is the one used for the Montgomery Reduction algorithm,
