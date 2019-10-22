@@ -333,7 +333,6 @@ impl<'a, 'b> Pow<&'b FieldElement> for &'a FieldElement {
     ///
     /// Schneier, Bruce (1996). Applied Cryptography: Protocols,
     /// Algorithms, and Source Code in C, Second Edition (2nd ed.).
-    /// TODO: Review the while with the different half implementations.
     fn pow(self, exp: &'b FieldElement) -> FieldElement {
         let (zero, one) = (FieldElement::zero(), FieldElement::one());
         let mut base = *self;
@@ -342,13 +341,13 @@ impl<'a, 'b> Pow<&'b FieldElement> for &'a FieldElement {
 
         while expon > zero {
             if expon.is_even() {
-                expon = expon.half();
+                expon = expon.fast_even_half();
                 base = base * base;
             } else {
                 expon = expon - one;
                 res = res * base;
 
-                expon = expon.half();
+                expon = expon.fast_even_half();
                 base = base * base;
             }
         }
