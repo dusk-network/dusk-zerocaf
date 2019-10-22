@@ -169,8 +169,15 @@ impl Shr<u8> for Scalar {
 
     fn shr(self, _rhs: u8) -> Scalar {
         let mut res = self;
-        for limb in &mut res.0 {
-            *limb >>= _rhs;
+
+        for _ in 0.._rhs {
+            let mut carry = 0u64;
+            for i in (0..5).rev() {
+                res[i] = res[i] | carry;
+                
+                carry = (res[i] & 1) << 52;
+                res[i] >>= 1;
+            }
         }
         res
     }
