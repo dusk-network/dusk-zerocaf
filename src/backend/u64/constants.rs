@@ -44,6 +44,9 @@ pub const RR_FIELD: FieldElement = FieldElement([
     10175238647962,
 ]);
 
+/// `SCALAR_INVERSE_MOD_TWO = 1/2 (mod l)`. 
+pub const SCALAR_INVERSE_MOD_TWO: Scalar = Scalar([2816638389838898, 2933572162591573, 357219, 0, 1099511627776]);
+
 /// `INVERSE_MOD_TWO = 1/2 (mod l)`.                   
 pub const INVERSE_MOD_TWO: FieldElement = FieldElement([2587757230352887, 4210131976237760, 683900, 0, 8796093022208]);
 

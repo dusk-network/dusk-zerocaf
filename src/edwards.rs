@@ -114,7 +114,7 @@ where
         };
 
         N = N.double();
-        n = n.inner_half();
+        n = n.fast_half_without_modulo();
     }
     Q
 }
@@ -160,12 +160,12 @@ pub fn window_naf_mul(scalar: &Scalar, window_width: u8) -> RistrettoPoint {
     for i in (0..250).rev() {
         Q = Q.double();
         let ki = scalar_wnaf[i];
+
         match (ki == 0i8, ki > 0i8) {
             (true, _) => (),
-            (false, true) => Q = &Q + &constants::BASEPOINT_ODD_MULTIPLES_TABLE[(ki.abs() as usize)],
-            (false, false) => Q = &Q - &constants::BASEPOINT_ODD_MULTIPLES_TABLE[(ki.abs() as usize)],
+            (false, true) => Q = &Q + &constants::BASEPOINT_ODD_MULTIPLES_TABLE[ki as usize],
+            (false, false) => Q = &Q - &constants::BASEPOINT_ODD_MULTIPLES_TABLE[ki.abs() as usize],
         }
-        println!("{:?}", Q);
     };
     Q
 }
@@ -587,23 +587,7 @@ impl<'a> Double for &'a EdwardsPoint {
     /// http://eprint.iacr.org/2008/522, Section 3.1.
     /// Cost: 4M+ 4S+ 1D
     fn double(self) -> EdwardsPoint {
-        let two: FieldElement = FieldElement::from(2u8);
-
-        let A = self.X.square();
-        let B = self.Y.square();
-        let C = two * self.Z.square();
-        let D = -A;
-        let E = (self.X + self.Y) * (self.X + self.Y) - A - B;
-        let G = D + B;
-        let F = G - C;
-        let H = D - B;
-
-        EdwardsPoint {
-            X: E * F,
-            Y: G * H,
-            Z: F * G,
-            T: E * H,
-        }
+        self + self
     }
 }
 
@@ -1417,6 +1401,10 @@ pub mod tests {
     fn extended_point_doubling() {
         let res = P1_EXTENDED.double();
         assert!(res == P3_EXTENDED);
+
+        // Identity case. 
+        let res = EdwardsPoint::identity();
+        assert!(res == res.double());
     }
 
     #[test]
@@ -1628,17 +1616,21 @@ pub mod tests {
         assert!(P1_EXTENDED * Scalar::minus_one() == binary_naf_mul(&P1_EXTENDED, &Scalar::minus_one()));
     }
 
-    /*#[test]
-    fn window_naf() {
-        let scalar = Scalar::one();
-        assert!(double_and_add(&constants::RISTRETTO_BASEPOINT, &scalar).0 == window_naf_mul(&scalar, 3u8).0);
-        let scalar = Scalar::two_pow_k(7);
-        assert!(double_and_add(&constants::RISTRETTO_BASEPOINT, &scalar) == window_naf_mul(&scalar, 3u8));
+/*
+    #[test]
+    fn aaaaa() {
+        // Doubling test. 
+        let scalar = Scalar::from(2u8);
+        assert!(double_and_add(&constants::RISTRETTO_BASEPOINT, &scalar) == window_naf_mul(&scalar, 2u8));
+        // Pow of 2. 
         let scalar = Scalar::two_pow_k(215);
         assert!(double_and_add(&constants::RISTRETTO_BASEPOINT, &scalar) == window_naf_mul(&scalar, 3u8));
+        // Not pow of 2.
         let scalar = Scalar::two_pow_k(249) - Scalar::one();
-        assert!(window_naf_mul(&scalar,3u8) == double_and_add(&constants::RISTRETTO_BASEPOINT, &scalar));
+        assert!(window_naf_mul(&scalar,4u8) == binary_naf_mul(&constants::RISTRETTO_BASEPOINT, &scalar));
+        // Minus one case.
+        let scalar = Scalar::minus_one() - Scalar::one();
+        assert!(double_and_add(&constants::RISTRETTO_BASEPOINT, &scalar) == window_naf_mul(&scalar, 5u8));
 
-        assert!(constants::RISTRETTO_BASEPOINT * Scalar::minus_one() == window_naf_mul(&scalar, 3u8));
     }*/
 }

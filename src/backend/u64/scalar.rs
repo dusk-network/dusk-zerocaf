@@ -287,30 +287,8 @@ impl<'a> Square for &'a Scalar {
 impl<'a> Half for &'a Scalar {
     type Output = Scalar;
     /// Give the half of the Scalar value (mod l).
-    ///
-    /// # Panics
-    /// If the `Scalar` is not even.
     fn half(self) -> Scalar {
-        assert!(self.is_even(), "The Scalar has to be even.");
-        let mut res = *self;
-        let mut remainder = 0u64;
-        for i in (0..5).rev() {
-            res[i] = res[i] + remainder;
-            match (res[i] == 1, res[i].is_even()) {
-                (true, _) => {
-                    remainder = 4503599627370496u64;
-                }
-                (_, false) => {
-                    res[i] = res[i] - 1u64;
-                    remainder = 4503599627370496u64;
-                }
-                (_, true) => {
-                    remainder = 0;
-                }
-            }
-            res[i] >>= 1;
-        }
-        res
+        self * &constants::SCALAR_INVERSE_MOD_TWO
     }
 }
 
@@ -331,7 +309,7 @@ impl<'a, 'b> Pow<&'b Scalar> for &'a Scalar {
 
         while expon > Scalar::zero() {
             if expon.is_even() {
-                expon = expon.half();
+                expon = expon.fast_even_half();
                 base = base.square();
             } else {
                 expon = expon - Scalar::one();
@@ -406,7 +384,7 @@ impl Scalar {
                 res[i] = 0i8;
             };
 
-            k = k.inner_half();
+            k = k.fast_even_half();
             i +=1;
         }
         res
@@ -432,7 +410,7 @@ impl Scalar {
                 res[i] = 0i8;
             };
 
-            k = k.inner_half();
+            k = k.fast_even_half();
             i+=1;
         }
         res
@@ -575,6 +553,41 @@ impl Scalar {
         res
     }
 
+    /// Returns the half of an **EVEN** `Scalar`.
+    /// 
+    /// This function performs almost 4x faster than the
+    /// `Half` implementation but SHOULD be used carefully.
+    /// 
+    /// # Panics
+    /// 
+    /// When the `Scalar` provided is not even.
+    pub fn fast_even_half(self) -> Scalar {
+        assert!(self.is_even());
+        let mut carry = 0u64;
+        let mut res = self;
+
+        for i in (0..5).rev() {
+            res[i] = res[i] | carry;
+            
+            carry = (res[i] & 1) << 52;
+            res[i] >>= 1;
+        }
+        res
+    }
+
+    pub fn fast_half_without_modulo(self) -> Scalar {
+        let mut carry = 0u64;
+        let mut res = self;
+        
+        for i in (0..5).rev() {
+            res[i] = res[i] + carry;
+            
+            carry = (res[i] & 1) << 52;
+            res[i] >>= 1;
+        }
+        res
+    }
+
     /// Compute `a * b`.
     /// Note that this is just the normal way of performing a product.
     /// This operation returns back a double precision result stored
@@ -613,34 +626,6 @@ impl Scalar {
             m(a_sqrt[3], a[4]),
             m(a[4], a[4]),
         ]
-    }
-
-    /// Give the half of the Scalar value (mod l).
-    ///
-    /// This op **SHOULD NEVER** be used by the end-user
-    /// since it's designed to allow some behaviours
-    /// needed on certain points of algorithm implementations.
-    #[doc(hidden)]
-    pub(crate) fn inner_half(self) -> Scalar {
-        let mut res = self;
-        let mut remainder = 0u64;
-        for i in (0..5).rev() {
-            res[i] = res[i] + remainder;
-            match (res[i] == 1, res[i].is_even()) {
-                (true, _) => {
-                    remainder = 4503599627370496u64;
-                }
-                (_, false) => {
-                    res[i] = res[i] - 1u64;
-                    remainder = 4503599627370496u64;
-                }
-                (_, true) => {
-                    remainder = 0;
-                }
-            }
-            res[i] >>= 1;
-        }
-        res
     }
 
     /// Compute `limbs/R` (mod l), where R is the Montgomery modulus 2^260
