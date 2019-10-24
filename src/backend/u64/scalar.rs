@@ -309,7 +309,7 @@ impl<'a, 'b> Pow<&'b Scalar> for &'a Scalar {
 
         while expon > Scalar::zero() {
             if expon.is_even() {
-                expon = expon.fast_even_half();
+                expon = expon.half_without_mod();
                 base = base.square();
             } else {
                 expon = expon - Scalar::one();
@@ -384,7 +384,7 @@ impl Scalar {
                 res[i] = 0i8;
             };
 
-            k = k.fast_even_half();
+            k = k.half_without_mod();
             i +=1;
         }
         res
@@ -410,7 +410,7 @@ impl Scalar {
                 res[i] = 0i8;
             };
 
-            k = k.fast_even_half();
+            k = k.half_without_mod();
             i+=1;
         }
         res
@@ -561,26 +561,13 @@ impl Scalar {
     /// # Panics
     /// 
     /// When the `Scalar` provided is not even.
-    pub fn fast_even_half(self) -> Scalar {
-        assert!(self.is_even());
+    pub fn half_without_mod(self) -> Scalar {
+        //assert!(self.is_even());
         let mut carry = 0u64;
         let mut res = self;
 
         for i in (0..5).rev() {
             res[i] = res[i] | carry;
-            
-            carry = (res[i] & 1) << 52;
-            res[i] >>= 1;
-        }
-        res
-    }
-
-    pub fn fast_half_without_modulo(self) -> Scalar {
-        let mut carry = 0u64;
-        let mut res = self;
-        
-        for i in (0..5).rev() {
-            res[i] = res[i] + carry;
             
             carry = (res[i] & 1) << 52;
             res[i] >>= 1;

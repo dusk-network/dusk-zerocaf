@@ -114,7 +114,7 @@ where
         };
 
         N = N.double();
-        n = n.fast_half_without_modulo();
+        n = n.half_without_mod();
     }
     Q
 }
