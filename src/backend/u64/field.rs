@@ -341,13 +341,13 @@ impl<'a, 'b> Pow<&'b FieldElement> for &'a FieldElement {
 
         while expon > zero {
             if expon.is_even() {
-                expon = expon.fast_even_half();
+                expon = expon.half_without_mod();
                 base = base * base;
             } else {
                 expon = expon - one;
                 res = res * base;
 
-                expon = expon.fast_even_half();
+                expon = expon.half_without_mod();
                 base = base * base;
             }
         }
@@ -401,7 +401,7 @@ impl<'a> ModSqrt for &'a FieldElement {
         let mut s = zero;
         while q.is_even() {
             s = s + one;
-            q = q.fast_even_half();
+            q = q.half_without_mod();
         }
 
         // Select a z which is a quadratic non resudue modulo p.
@@ -409,7 +409,7 @@ impl<'a> ModSqrt for &'a FieldElement {
         let mut c = six.pow(&q);
 
         // Search for a solution.
-        let mut x = self.pow(&(q + one).fast_even_half());
+        let mut x = self.pow(&(q + one).half_without_mod());
         let mut t = self.pow(&q);
         let mut m = s;
 
@@ -675,24 +675,15 @@ impl FieldElement {
     /// # Panics
     /// 
     /// When the `FieldElement` provided is not even.
-    pub fn fast_even_half(self) -> FieldElement {
-        assert!(self.is_even());
+    pub fn half_without_mod(self) -> FieldElement {
+       //assert!(self.is_even());
+        let mut carry = 0u64;
         let mut res = self;
-        let mut remainder = 0u64;
+
         for i in (0..5).rev() {
-            res[i] = res[i] + remainder;
-            match (res[i] == 1, res[i].is_even()) {
-                (true, _) => {
-                    remainder = 4503599627370496u64;
-                }
-                (_, false) => {
-                    res[i] = res[i] - 1u64;
-                    remainder = 4503599627370496u64;
-                }
-                (_, true) => {
-                    remainder = 0;
-                }
-            }
+            res[i] = res[i] | carry;
+            
+            carry = (res[i] & 1) << 52;
             res[i] >>= 1;
         }
         res
@@ -892,25 +883,25 @@ impl FieldElement {
                 match (u.is_even(), v.is_even(), u > v, v >= u) {
                     // u is even
                     (true, _, _, _) => {
-                        u = u.fast_even_half();
+                        u = u.half_without_mod();
                         s = s * two;
                     }
                     // u isn't even but v is even
                     (false, true, _, _) => {
-                        v = v.fast_even_half();
+                        v = v.half_without_mod();
                         r = r * two;
                     }
                     // u and v aren't even and u > v
                     (false, false, true, _) => {
                         u = u - v;
-                        u = u.fast_even_half();
+                        u = u.half_without_mod();
                         r = r + s;
                         s = s * two;
                     }
                     // u and v aren't even and v > u
                     (false, false, false, true) => {
                         v = v - u;
-                        v = v.fast_even_half();
+                        v = v.half_without_mod();
                         s = r + s;
                         r = r * two;
                     }
@@ -1472,12 +1463,12 @@ pub mod tests {
         let two_pow_52: FieldElement = FieldElement([0, 1, 0, 0, 0]);
         let half: FieldElement = FieldElement([2251799813685248, 0, 0, 0, 0]);
 
-        let comp_half = two_pow_52.half();
+        let comp_half = two_pow_52.half_without_mod();
         for i in 0..5 {
             assert!(comp_half[i] == half[i])
         }
 
-        let a_minus_b_half_comp = A_MINUS_B.half();
+        let a_minus_b_half_comp = A_MINUS_B.half_without_mod();
         for i in 0..5 {
             assert!(a_minus_b_half_comp[i] == A_MINUS_B_HALF[i]);
         }
