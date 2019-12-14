@@ -11,12 +11,16 @@ use core::ops::{Add, Mul, Neg, Sub};
 use core::ops::{Index, IndexMut};
 
 use std::cmp::{Ord, Ordering, PartialOrd};
+use std::ops::Shr;
 
 use num::Integer;
 
 use crate::backend::u64::constants;
 use crate::traits::ops::*;
 use crate::traits::Identity;
+
+use subtle::ConstantTimeEq;
+
 
 /// The `Scalar` struct represents an Scalar over the modulo
 /// `2^249 + 14490550575682688738086195780655237219` as 5 52-bit limbs
@@ -63,6 +67,23 @@ impl Ord for Scalar {
 }
 
 //-------------- From Implementations -----------------//
+impl From<i8> for Scalar {
+    /// Performs the conversion. 
+    fn from(_inp: i8) -> Scalar {
+        let mut res = Scalar::zero();
+
+        match _inp >= 0 {
+            true => {
+                res[0] = _inp as u64;
+                return res
+            },
+            false => {
+                res[0] = _inp.abs() as u64;
+                return -res
+            }
+        }
+    }
+}
 impl From<u8> for Scalar {
     /// Performs the conversion.
     fn from(_inp: u8) -> Scalar {
@@ -140,6 +161,25 @@ impl Identity for Scalar {
     /// which equals `1 (mod l)`.
     fn identity() -> Scalar {
         Scalar::one()
+    }
+}
+
+impl Shr<u8> for Scalar {
+    type Output = Scalar;
+
+    fn shr(self, _rhs: u8) -> Scalar {
+        let mut res = self;
+
+        for _ in 0.._rhs {
+            let mut carry = 0u64;
+            for i in (0..5).rev() {
+                res[i] = res[i] | carry;
+                
+                carry = (res[i] & 1) << 52;
+                res[i] >>= 1;
+            }
+        }
+        res
     }
 }
 
@@ -247,35 +287,8 @@ impl<'a> Square for &'a Scalar {
 impl<'a> Half for &'a Scalar {
     type Output = Scalar;
     /// Give the half of the Scalar value (mod l).
-    ///
-    /// This op **SHOULD ONLY** be used with even
-    /// `Scalars` otherways, can produce erroneus
-    /// results.
-    ///
-    /// The implementation for `Scalar` has indeed
-    /// an `assert!` statement to check this.
-    #[inline]
     fn half(self) -> Scalar {
-        assert!(self.is_even(), "The Scalar has to be even.");
-        let mut res = *self;
-        let mut remainder = 0u64;
-        for i in (0..5).rev() {
-            res[i] = res[i] + remainder;
-            match (res[i] == 1, res[i].is_even()) {
-                (true, _) => {
-                    remainder = 4503599627370496u64;
-                }
-                (_, false) => {
-                    res[i] = res[i] - 1u64;
-                    remainder = 4503599627370496u64;
-                }
-                (_, true) => {
-                    remainder = 0;
-                }
-            }
-            res[i] >>= 1;
-        }
-        res
+        self * &constants::SCALAR_INVERSE_MOD_TWO
     }
 }
 
@@ -296,7 +309,7 @@ impl<'a, 'b> Pow<&'b Scalar> for &'a Scalar {
 
         while expon > Scalar::zero() {
             if expon.is_even() {
-                expon = expon.half();
+                expon = expon.half_without_mod();
                 base = base.square();
             } else {
                 expon = expon - Scalar::one();
@@ -310,8 +323,7 @@ impl<'a, 'b> Pow<&'b Scalar> for &'a Scalar {
     }
 }
 
-/// u64 * u64 = u128 inline func multiply helper.
-#[inline]
+/// u64 * u64 = u128 inline func multiply helper
 fn m(x: u64, y: u64) -> u128 {
     (x as u128) * (y as u128)
 }
@@ -337,6 +349,100 @@ impl Scalar {
         self.0[0].is_even()
     }
 
+    /// Returns the bit representation of the given `Scalar` as
+    /// an array of 256 bits represented as `u8`.
+    pub fn into_bits(&self) -> [u8; 256] {
+        let bytes = self.to_bytes();
+        let mut res = [0u8; 256];
+
+        let mut j = 0;
+
+        for byte in &bytes {
+            for i in 0..8 {
+                let bit = byte >> i as u8;
+                res[j] = !bit.is_even() as u8;
+                j+=1;
+            };
+        };
+        res
+    }
+
+    #[allow(non_snake_case)]
+    /// Compute the Non-Adjacent Form of a given `Scalar`.
+    pub fn compute_NAF(&self) -> [i8; 256] {
+        let mut k = *self;
+        let mut i = 0;
+        let one = Scalar::one();
+        let mut res = [0i8; 256];
+
+        while k >= one {
+            if !k.is_even() {
+                let ki = 2i8 - k.mod_2_pow_k(2u8) as i8;
+                res[i] = ki;
+                k = k - Scalar::from(ki);
+            } else {
+                res[i] = 0i8;
+            };
+
+            k = k.half_without_mod();
+            i +=1;
+        }
+        res
+    }
+
+    #[allow(non_snake_case)]
+    /// Compute the Windowed-Non-Adjacent Form of a given `Scalar`.
+    /// 
+    /// ## Inputs
+    /// - `width` => Represents the window-width i.e. `width = 2^width`.
+    pub fn compute_window_NAF(&self, width: u8) -> [i8; 256] {
+        let mut k = *self;
+        let mut i = 0;
+        let one = Scalar::one();
+        let mut res = [0i8; 256];
+
+        while k >= one {
+            if !k.is_even() {
+                let ki = k.mods_2_pow_k(width);
+                res[i] = ki;
+                k = k - Scalar::from(ki);
+            } else {
+                res[i] = 0i8;
+            };
+
+            k = k.half_without_mod();
+            i+=1;
+        }
+        res
+    }
+
+    /// Compute the result from `Scalar (mod 2^k)`.
+    /// 
+    /// # Panics
+    /// 
+    /// If the given k is > 32 (5 bits) as the value gets 
+    /// greater than the limb.  
+    pub fn mod_2_pow_k(&self, k: u8) -> u8 {
+        (self.0[0] & ((1 << k) -1)) as u8
+    }
+
+    /// Compute the result from `Scalar (mods k)`.
+    /// 
+    /// # Panics
+    /// 
+    /// If the given `k > 32 (5 bits)` || `k == 0` as the value gets 
+    /// greater than the limb.   
+    pub fn mods_2_pow_k(&self, w: u8) -> i8 {
+        assert!(w < 32u8);
+        let modulus = self.mod_2_pow_k(w) as i8; 
+        let two_pow_w_minus_one = 1i8 << (w - 1);
+
+        match modulus >= two_pow_w_minus_one {
+            false => return modulus,
+            true => return modulus - ((1u8 << w) as i8),
+        }
+    }
+
     /// Unpack a 32 byte / 256 bit Scalar into 5 52-bit limbs.
     pub fn from_bytes(bytes: &[u8; 32]) -> Scalar {
         let mut words = [0u64; 4];
@@ -358,6 +464,7 @@ impl Scalar {
         // Shift 16 to the right to get the 52 bits of the scalar on that limb. Then apply top_mask.
         s[4] = (words[3] >> 16) & top_mask;
 
+        assert!(s <= Scalar::minus_one());
         s
     }
 
@@ -415,28 +522,28 @@ impl Scalar {
     ///
     /// See that the input must be between the range => 0..250.
     ///
-    /// NOTE: This function implements an `assert!` statement that
-    /// checks the correctness of the exponent provided as param.
+    /// # Panics
+    /// If the input is greater than the Sub-group order.
     pub fn two_pow_k(exp: u64) -> Scalar {
         // Check that exp has to be less than 260.
         // Note that a Scalar can be as much
         // `2^249 - 15145038707218910765482344729778085401` so we pick
         // 250 knowing that 249 will be lower than the prime of the
         // sub group.
-        assert!(exp < 253u64, "Exponent can't be greater than 260");
+        assert!(exp < 250u64, "Exponent can't be greater than the sub-group order");
 
         let mut res = Scalar::zero();
         match exp {
-            0...51 => {
+            0..=51 => {
                 res[0] = 1u64 << exp;
             }
-            52...103 => {
+            52..=103 => {
                 res[1] = 1u64 << (exp - 52);
             }
-            104...155 => {
+            104..=155 => {
                 res[2] = 1u64 << (exp - 104);
             }
-            156...207 => {
+            156..=207 => {
                 res[3] = 1u64 << (exp - 156);
             }
             _ => {
@@ -446,11 +553,32 @@ impl Scalar {
         res
     }
 
+    /// Returns the half of an **EVEN** `Scalar`.
+    /// 
+    /// This function performs almost 4x faster than the
+    /// `Half` implementation but SHOULD be used carefully.
+    /// 
+    /// # Panics
+    /// 
+    /// When the `Scalar` provided is not even.
+    pub fn half_without_mod(self) -> Scalar {
+        //assert!(self.is_even());
+        let mut carry = 0u64;
+        let mut res = self;
+
+        for i in (0..5).rev() {
+            res[i] = res[i] | carry;
+            
+            carry = (res[i] & 1) << 52;
+            res[i] >>= 1;
+        }
+        res
+    }
+
     /// Compute `a * b`.
     /// Note that this is just the normal way of performing a product.
     /// This operation returns back a double precision result stored
     /// on a `[u128; 9] in order to avoid overflowings.
-    #[inline]
     pub(self) fn mul_internal(a: &Scalar, b: &Scalar) -> [u128; 9] {
         let mut res = [0u128; 9];
 
@@ -471,7 +599,6 @@ impl Scalar {
     ///
     /// This operation returns a double precision result.
     /// So it gives back a `[u128; 9]` with the result of the squaring.
-    #[inline]
     pub(self) fn square_internal(a: &Scalar) -> [u128; 9] {
         let a_sqrt = [a[0] * 2, a[1] * 2, a[2] * 2, a[3] * 2];
 
@@ -488,45 +615,15 @@ impl Scalar {
         ]
     }
 
-    /// Give the half of the Scalar value (mod l).
-    ///
-    /// This op **SHOULD NEVER** be used by the end-user
-    /// since it's designed to allow some behaviours
-    /// needed on certain points of algorithm implementations.
-    #[inline]
-    #[doc(hidden)]
-    pub(crate) fn inner_half(self) -> Scalar {
-        let mut res = self;
-        let mut remainder = 0u64;
-        for i in (0..5).rev() {
-            res[i] = res[i] + remainder;
-            match (res[i] == 1, res[i].is_even()) {
-                (true, _) => {
-                    remainder = 4503599627370496u64;
-                }
-                (_, false) => {
-                    res[i] = res[i] - 1u64;
-                    remainder = 4503599627370496u64;
-                }
-                (_, true) => {
-                    remainder = 0;
-                }
-            }
-            res[i] >>= 1;
-        }
-        res
-    }
-
     /// Compute `limbs/R` (mod l), where R is the Montgomery modulus 2^260
-    #[inline]
     pub(self) fn montgomery_reduce(limbs: &[u128; 9]) -> Scalar {
-        #[inline]
+
         fn adjustment_fact(sum: u128) -> (u128, u64) {
             let p = (sum as u64).wrapping_mul(constants::LFACTOR) & ((1u64 << 52) - 1);
             ((sum + m(p, constants::L[0])) >> 52, p)
         }
 
-        #[inline]
+
         fn montg_red_res(sum: u128) -> (u128, u64) {
             let w = (sum as u64) & ((1u64 << 52) - 1);
             (sum >> 52, w)
@@ -557,21 +654,18 @@ impl Scalar {
     }
 
     /// Compute `(a * b) / R` (mod l), where R is the Montgomery modulus 2^260
-    #[inline]
     #[allow(dead_code)]
     pub(self) fn montgomery_mul(a: &Scalar, b: &Scalar) -> Scalar {
         Scalar::montgomery_reduce(&Scalar::mul_internal(a, b))
     }
 
     /// Puts a Scalar into Montgomery form, i.e. computes `a*R (mod l)`
-    #[inline]
     #[allow(dead_code)]
     pub(self) fn to_montgomery(&self) -> Scalar {
         Scalar::montgomery_mul(self, &constants::RR)
     }
 
     /// Takes a Scalar out of Montgomery form, i.e. computes `a/R (mod l)`
-    #[inline]
     #[allow(dead_code)]
     pub(self) fn from_montgomery(&self) -> Scalar {
         let mut limbs = [0u128; 9];
@@ -853,5 +947,109 @@ mod tests {
         use subtle::ConstantTimeEq;
         assert!(A.ct_eq(&A).unwrap_u8() == 1u8);
         assert!(A.ct_eq(&B).unwrap_u8() == 0u8);
+    }
+
+
+    #[test]
+    fn two_pow_k() {
+        // 0 case.  
+        assert!(Scalar::two_pow_k(0) == Scalar::one());
+        // 1 case. 
+        assert!(Scalar::two_pow_k(1) == Scalar::from(2u8));
+        // Normal case. 
+        assert!(Scalar::two_pow_k(249) == Scalar([0, 0, 0, 0, 2199023255552]));
+        assert!(Scalar::two_pow_k(248) == Scalar([0, 0, 0, 0, 1099511627776]));
+    }
+
+    #[test]
+    fn shr() {
+        // Normal case.
+        assert!(A >>1 == Scalar([0, 0, 0, 1, 0]));
+        // Limb reduction case.
+        assert!(Scalar([0, 0, 0, 1, 0]) >>1 == Scalar([0, 0, 2251799813685248, 0, 0]));
+        // Last limb with 1 case. 
+        assert!(Scalar::one() >>1 == Scalar([0, 0, 0, 0, 0]));
+        // Zero case. 
+        assert!(Scalar::zero() >>1 == Scalar::zero());
+        // Max case. 
+        assert!(Scalar::minus_one() >>250 == Scalar::zero());
+        assert!(Scalar::two_pow_k(249)>>248 == Scalar::from(2u8));
+        // Reduction
+        assert!(Scalar::two_pow_k(249)>>249 == Scalar::one());
+    }
+
+    #[test]
+    fn into_bits() {
+        // Define following results as bit-arrays. 
+        let zero = [0u8; 256];
+        let one = {
+            let mut res = zero.clone();
+            res[0] = 1;
+            res
+        };
+        let nine = {
+            let mut res = one.clone();
+            res[3] = 1;
+            res
+        };
+        let two_pow_249 = {
+            let mut res = zero.clone();
+            res[249] = 1;
+            res
+        };
+        let minus_one = [0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0];
+
+        // 0 case. 
+        assert!(&Scalar::zero().into_bits()[..] == &zero[..]);
+        // 1 case. 
+        assert!(&Scalar::one().into_bits()[..] == &one[..]);
+        // Odd case. 
+        assert!(&Scalar::from(9u8).into_bits()[..] == &nine[..]); 
+        // Even case. 
+        assert!(&Scalar::two_pow_k(249).into_bits()[..] == &two_pow_249[..]);
+        // MAX case. 
+        assert!(&Scalar::minus_one().into_bits()[..] == &minus_one[..]);
+    }
+
+    #[test]
+    fn mod_four() {
+        // Modulo case.
+        assert!(Scalar::from(4u8).mod_2_pow_k(2u8) == 0u8);
+        // Low case.
+        assert!(Scalar::from(3u8).mod_2_pow_k(2u8) == 3u8);
+        // Bignum case. 
+        assert!(Scalar::from(557u16).mod_2_pow_k(2u8) == 1u8);
+        assert!(Scalar::from(42535295865117307932887201356513780707u128).mod_2_pow_k(2u8) == 3u8);
+    }
+
+    #[test]
+    fn naf() {
+        let seven_in_naf = [-1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        assert!(&Scalar::from(7u8).compute_NAF()[..4] == &seven_in_naf[..4]);
+    }
+
+    #[test]
+    fn window_naf() {
+        let scalar = Scalar::from(1122334455u64);
+        // Case NAF2
+        let naf2_scalar = [-1, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0, 0, -1, 0, -1, 0, 1, 0, -1, 0, 0 ,-1, 0,1,0,0,0,1];
+        assert!(&naf2_scalar[..] == &scalar.compute_window_NAF(2)[..31]);
+
+        // Case NAF3
+        let naf3_scalar = [-1, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0, 0, 3,0,0,1,0,0,-1,0,0,3,0,0,0,0,0,1];
+        assert!(&naf3_scalar[..] == &scalar.compute_window_NAF(3)[..31]);
+
+        // Case NAF4
+        let naf4_scalar = [7,0,0,0,-1,0,0,0,7,0,0,0,7,0,0,0,5,0,0,0,0,7,0,0,0,1,0,0,0,0,1];
+        assert!(&naf4_scalar[..] == &scalar.compute_window_NAF(4)[..31]);
+
+        // Case NAF5
+        let naf5_scalar = [-9,0,0,0,0,0,0,0,-9,0,0,0,0,0,0,11,0,0,0,0,0,-9,0,0,0,0,-15,0,0,0,0,1];
+        assert!(&naf5_scalar[..] == &scalar.compute_window_NAF(5)[..32]);
+
+        //Case NAF6
+        let naf6_scalar = [-9,0,0,0,0,0,0,0,-9,0,0,0,0,0,0,11,0,0,0,0,0,23,0,0,0,0,0,0,0,0,1];
+        assert!(&naf6_scalar[..] == &scalar.compute_window_NAF(6)[..31]);
+
     }
 }

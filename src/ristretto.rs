@@ -31,7 +31,7 @@ use crate::scalar::Scalar;
 use crate::traits::ops::*;
 use crate::traits::{Identity, ValidityCheck};
 
-use core::ops::{Add, Index, Mul, Neg};
+use core::ops::{Add, Sub, Index, Mul, Neg};
 
 use std::fmt::Debug;
 
@@ -155,11 +155,11 @@ impl CompressedRistretto {
 }
 
 #[derive(Clone, Copy)]
-pub struct RistrettoPoint(pub(crate) EdwardsPoint);
+pub struct RistrettoPoint(pub EdwardsPoint);
 
 impl Debug for RistrettoPoint {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
-        write!(f, "{:?}", &self.coset4())
+        write!(f, "{:?}", &self.0)
     }
 }
 
@@ -248,8 +248,7 @@ impl Neg for RistrettoPoint {
 impl<'a, 'b> Add<&'a RistrettoPoint> for &'b RistrettoPoint {
     type Output = RistrettoPoint;
     /// Performs the addition of two RistrettoPoints following the
-    /// Twisted Edwards Extended Coordinates formulae but using as
-    /// `d` parameter the `RISTRETTO_D` instead of the `EDWARDS_D`.
+    /// Twisted Edwards Extended Coordinates formulae.
     ///
     /// This implementation is specific for curves with `a = -1` as
     /// the isomorphic twist is for Doppio.
@@ -264,8 +263,7 @@ impl<'a, 'b> Add<&'a RistrettoPoint> for &'b RistrettoPoint {
 impl Add<RistrettoPoint> for RistrettoPoint {
     type Output = RistrettoPoint;
     /// Performs the addition of two RistrettoPoints following the
-    /// Twisted Edwards Extended Coordinates formulae but using as
-    /// `d` parameter the `RISTRETTO_D` instead of the `EDWARDS_D`.
+    /// Twisted Edwards Extended Coordinates formulae.
     ///
     /// This implementation is specific for curves with `a = -1` as
     /// the isomorphic twist is for Doppio.
@@ -274,6 +272,42 @@ impl Add<RistrettoPoint> for RistrettoPoint {
     /// (http://eprint.iacr.org/2008/522), Section 3.1.
     fn add(self, other: RistrettoPoint) -> RistrettoPoint {
         &self + &other
+    }
+}
+
+impl<'a, 'b> Sub<&'a RistrettoPoint> for &'b RistrettoPoint {
+    type Output = RistrettoPoint;
+    /// Performs the subtraction of two RistrettoPoints following the
+    /// Twisted Edwards Extended Coordinates formulae.
+    /// 
+    /// Note that Subtraction is basically the addition of the first
+    /// point by the second negated.
+    ///
+    /// This implementation is specific for curves with `a = -1` as
+    /// the isomorphic twist is for Doppio.
+    ///
+    /// [Source: 2008 Hisil–Wong–Carter–Dawson],
+    /// (http://eprint.iacr.org/2008/522), Section 3.1.
+    fn sub(self, other: &'a RistrettoPoint) -> RistrettoPoint {
+        self + &-other
+    }
+}
+
+impl Sub<RistrettoPoint> for RistrettoPoint {
+    type Output = RistrettoPoint;
+    /// Performs the subtraction of two RistrettoPoints following the
+    /// Twisted Edwards Extended Coordinates formulae.
+    /// 
+    /// Note that Subtraction is basically the addition of the first
+    /// point by the second negated.
+    ///
+    /// This implementation is specific for curves with `a = -1` as
+    /// the isomorphic twist is for Doppio.
+    ///
+    /// [Source: 2008 Hisil–Wong–Carter–Dawson],
+    /// (http://eprint.iacr.org/2008/522), Section 3.1.
+    fn sub(self, other: RistrettoPoint) -> RistrettoPoint {
+        &self - &other
     }
 }
 
@@ -393,7 +427,7 @@ impl RistrettoPoint {
     /// Computes the Ristretto Elligator map.
     /// This gets a `RistrettoPoint` from a given
     /// `FieldElement´.
-    pub(crate) fn elligator_ristretto_flavor(r_0: &FieldElement) -> RistrettoPoint {
+    pub fn elligator_ristretto_flavor(r_0: &FieldElement) -> RistrettoPoint {
         let d = constants::EDWARDS_D;
         let one = FieldElement::one();
         let mut c = -one;
