@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Scalar","The `Scalar` struct represents an Scalar over the modulo `2^249 + 14490550575682688738086195780655237219` as 5 52-bit limbs represented in radix `2^52`."]]});

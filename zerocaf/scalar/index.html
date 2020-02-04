@@ -1,0 +1,56 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `scalar` mod in crate `zerocaf`."><meta name="keywords" content="rust, rustlang, rust-lang, scalar"><title>zerocaf::scalar - Rust</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="https://dusk.network/lib/img/favicon-16x16.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../zerocaf/index.html'><div class='logo-container'><img src='https://lh3.googleusercontent.com/SmwswGxtgIANTbDrCOn5EKcRBnVdHjmYsHYxLq2HZNXWCQ9-fZyaea-bNgdX9eR0XGSqiMFi=w128-h128-e365' alt='logo'></div></a><p class='location'>Module scalar</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#reexports">Re-exports</a></li><li><a href="#types">Type Definitions</a></li></ul></div><p class='location'><a href='../index.html'>zerocaf</a></p><script>window.sidebarCurrent = {name: 'scalar', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../../src/zerocaf/scalar.rs.html#1-113' title='goto source code'>[src]</a></span><span class='in-band'>Module <a href='../index.html'>zerocaf</a>::<wbr><a class="mod" href=''>scalar</a></span></h1><div class='docblock'><p>A <code>Scalar</code> represents an element of the finite field
+modulo <code>2^249 - 15145038707218910765482344729778085401</code>.</p>
+<p>The <code>Scalar</code> type is an alias for one of the backend
+implementations.</p>
+<p><code>ConstantTimeEq</code> and <code>PartialEq</code> traits have been implemented
+here since they will be the samme across all of the different
+backends.</p>
+<p>Here it is also defined the <code>Ristretto255Scalar</code> type,
+which is a type-alias for the curve25519-dalek Scalar Struct.</p>
+<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">zerocaf</span>::<span class="ident">scalar</span>::<span class="ident">Scalar</span>;
+<span class="kw">use</span> <span class="ident">zerocaf</span>::<span class="ident">traits</span>::<span class="ident">ops</span>::<span class="kw-2">*</span>;
+
+<span class="comment">// You can create a Scalar from a byte-array as follows:</span>
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_bytes</span>(<span class="kw-2">&amp;</span>[<span class="number">0u8</span>;<span class="number">32</span>]);
+
+<span class="comment">// You ca also create a Scalar from an uint type as follows:</span>
+<span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from</span>(<span class="number">43325u128</span>);
+<span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from</span>(<span class="number">86650u64</span>);
+
+<span class="comment">// The last way of creating a Scalar it by calling the</span>
+<span class="comment">// constructor. THIS IS NOT RECOMMENDED since ANY checks about</span>
+<span class="comment">// the correctness of the input will be done. It can be done as</span>
+<span class="comment">// follows:</span>
+<span class="kw">let</span> <span class="ident">d</span>: <span class="ident">Scalar</span> <span class="op">=</span> <span class="ident">Scalar</span>([<span class="number">0</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>]); <span class="comment">// d = 2^52.</span>
+<span class="macro">assert</span><span class="macro">!</span>(<span class="ident">d</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">two_pow_k</span>(<span class="number">52u64</span>));
+
+<span class="comment">// All of the basuc modular operations are implemented</span>
+<span class="comment">// for Scalar type:</span>
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">a</span> <span class="op">+</span> <span class="ident">b</span>; <span class="comment">// Performs a + b (mod l).</span>
+<span class="ident">res</span> <span class="op">=</span> <span class="ident">a</span> <span class="op">-</span> <span class="ident">b</span>; <span class="comment">// Performs a - b (mod l).</span>
+<span class="ident">res</span> <span class="op">=</span> <span class="ident">c</span> <span class="op">*</span> <span class="ident">d</span>; <span class="comment">// Performs c * d (mod l).</span>
+<span class="ident">res</span> <span class="op">=</span> <span class="ident">a</span>.<span class="ident">square</span>(); <span class="comment">// Performs a^2 (mod l).</span>
+<span class="ident">res</span> <span class="op">=</span> <span class="op">-</span><span class="kw-2">&amp;</span><span class="ident">a</span>; <span class="comment">// Performs Negation over the modulo l.</span>
+
+<span class="comment">// Dividing even Scalars by two is recommended through the `Half`</span>
+<span class="comment">// trait implmementation since it&#39;s much faster.</span>
+<span class="kw">if</span> <span class="ident">a</span>.<span class="ident">is_even</span>() {
+    <span class="kw">let</span> <span class="ident">half_c</span> <span class="op">=</span> <span class="ident">c</span>.<span class="ident">half</span>(); <span class="comment">// This will panic if a isn&#39;t even.</span>
+    <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">half_c</span> <span class="op">=</span><span class="op">=</span> <span class="ident">b</span>);
+}
+
+<span class="comment">// You can export your `Scalar` as an slice of 32 bytes in Little</span>
+<span class="comment">// Endian encoding by:</span>
+<span class="kw">let</span> <span class="ident">d_bytes</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> <span class="ident">d</span>.<span class="ident">to_bytes</span>();</pre></div>
+<p><code>PartialOrd</code>, <code>Ord</code>, <code>PartialEq</code> and <code>Eq</code> are also implemented for
+<code>Scalar</code> type.</p>
+<p>All <code>std::core::ops traits -&gt; (Add, Sub, Mul)</code> are implemented
+for both, <code>&amp;Scalar</code> and <code>Scalar</code>.</p>
+</div><h2 id='reexports' class='section-header'><a href="#reexports">Re-exports</a></h2>
+<table><tr><td><code>pub use backend::u64::<a class="mod" href="../../zerocaf/backend/u64/scalar/index.html" title="mod zerocaf::backend::u64::scalar">scalar</a>::*;</code></td></tr></table><h2 id='types' class='section-header'><a href="#types">Type Definitions</a></h2>
+<table><tr class='module-item'><td><a class="type" href="type.Ristretto255Scalar.html" title='zerocaf::scalar::Ristretto255Scalar type'>Ristretto255Scalar</a></td><td class='docblock-short'><p>This is a type alias for the Scalar type in the <code>curve25519-dalek</code> lib.</p>
+</td></tr><tr class='module-item'><td><a class="type" href="type.Scalar.html" title='zerocaf::scalar::Scalar type'>Scalar</a></td><td class='docblock-short'><p>A <code>Scalar</code> represents an element of the field generated by
+the prime of the sub-group: <code>2^249 - 15145038707218910765482344729778085401</code>.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "zerocaf";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script defer src="../../search-index.js"></script></body></html>

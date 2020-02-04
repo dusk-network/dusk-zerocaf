@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["FieldElement","A `FieldElement` represents an element of the field which has order of `2^252 + 27742317777372353535851937790883648493`"]]});

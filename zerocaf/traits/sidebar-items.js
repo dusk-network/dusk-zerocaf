@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["ops",""]],"trait":[["Identity","Gives the Identity element for the type which it has been implemented on."],["ValidityCheck","This trait pretends to be a verification in ct_time about a point correctness."]]});

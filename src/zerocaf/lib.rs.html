@@ -1,0 +1,349 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="https://dusk.network/lib/img/favicon-16x16.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../zerocaf/index.html'><div class='logo-container'><img src='https://lh3.googleusercontent.com/SmwswGxtgIANTbDrCOn5EKcRBnVdHjmYsHYxLq2HZNXWCQ9-fZyaea-bNgdX9eR0XGSqiMFi=w128-h128-e365' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<span id="2">  2</span>
+<span id="3">  3</span>
+<span id="4">  4</span>
+<span id="5">  5</span>
+<span id="6">  6</span>
+<span id="7">  7</span>
+<span id="8">  8</span>
+<span id="9">  9</span>
+<span id="10"> 10</span>
+<span id="11"> 11</span>
+<span id="12"> 12</span>
+<span id="13"> 13</span>
+<span id="14"> 14</span>
+<span id="15"> 15</span>
+<span id="16"> 16</span>
+<span id="17"> 17</span>
+<span id="18"> 18</span>
+<span id="19"> 19</span>
+<span id="20"> 20</span>
+<span id="21"> 21</span>
+<span id="22"> 22</span>
+<span id="23"> 23</span>
+<span id="24"> 24</span>
+<span id="25"> 25</span>
+<span id="26"> 26</span>
+<span id="27"> 27</span>
+<span id="28"> 28</span>
+<span id="29"> 29</span>
+<span id="30"> 30</span>
+<span id="31"> 31</span>
+<span id="32"> 32</span>
+<span id="33"> 33</span>
+<span id="34"> 34</span>
+<span id="35"> 35</span>
+<span id="36"> 36</span>
+<span id="37"> 37</span>
+<span id="38"> 38</span>
+<span id="39"> 39</span>
+<span id="40"> 40</span>
+<span id="41"> 41</span>
+<span id="42"> 42</span>
+<span id="43"> 43</span>
+<span id="44"> 44</span>
+<span id="45"> 45</span>
+<span id="46"> 46</span>
+<span id="47"> 47</span>
+<span id="48"> 48</span>
+<span id="49"> 49</span>
+<span id="50"> 50</span>
+<span id="51"> 51</span>
+<span id="52"> 52</span>
+<span id="53"> 53</span>
+<span id="54"> 54</span>
+<span id="55"> 55</span>
+<span id="56"> 56</span>
+<span id="57"> 57</span>
+<span id="58"> 58</span>
+<span id="59"> 59</span>
+<span id="60"> 60</span>
+<span id="61"> 61</span>
+<span id="62"> 62</span>
+<span id="63"> 63</span>
+<span id="64"> 64</span>
+<span id="65"> 65</span>
+<span id="66"> 66</span>
+<span id="67"> 67</span>
+<span id="68"> 68</span>
+<span id="69"> 69</span>
+<span id="70"> 70</span>
+<span id="71"> 71</span>
+<span id="72"> 72</span>
+<span id="73"> 73</span>
+<span id="74"> 74</span>
+<span id="75"> 75</span>
+<span id="76"> 76</span>
+<span id="77"> 77</span>
+<span id="78"> 78</span>
+<span id="79"> 79</span>
+<span id="80"> 80</span>
+<span id="81"> 81</span>
+<span id="82"> 82</span>
+<span id="83"> 83</span>
+<span id="84"> 84</span>
+<span id="85"> 85</span>
+<span id="86"> 86</span>
+<span id="87"> 87</span>
+<span id="88"> 88</span>
+<span id="89"> 89</span>
+<span id="90"> 90</span>
+<span id="91"> 91</span>
+<span id="92"> 92</span>
+<span id="93"> 93</span>
+<span id="94"> 94</span>
+<span id="95"> 95</span>
+<span id="96"> 96</span>
+<span id="97"> 97</span>
+<span id="98"> 98</span>
+<span id="99"> 99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+</pre><div class="example-wrap"><pre class="rust ">
+<span class="attribute">#![<span class="ident">doc</span>(
+    <span class="ident">html_logo_url</span> <span class="op">=</span> <span class="string">&quot;https://lh3.googleusercontent.com/SmwswGxtgIANTbDrCOn5EKcRBnVdHjmYsHYxLq2HZNXWCQ9-fZyaea-bNgdX9eR0XGSqiMFi=w128-h128-e365&quot;</span>
+)]</span>
+<span class="attribute">#![<span class="ident">doc</span>(<span class="ident">html_favicon_url</span> <span class="op">=</span> <span class="string">&quot;https://dusk.network/lib/img/favicon-16x16.png&quot;</span>)]</span>
+<span class="doccomment">//! &lt;a href=&quot;https://codecov.io/gh/dusk-network/Dusk-Zerocaf&quot;&gt;</span>
+<span class="doccomment">//! &lt;img src=&quot;https://codecov.io/gh/dusk-network/Dusk-Zerocaf/branch/master/graph/badge.svg&quot; /&gt;</span>
+<span class="doccomment">//! &lt;/a&gt;</span>
+<span class="doccomment">//! &lt;a href=&quot;https://travis-ci.com/dusk-network/dusk-zerocaf&quot;&gt;</span>
+<span class="doccomment">//! &lt;img src=&quot;https://travis-ci.com/dusk-network/dusk-zerocaf.svg?branch=master&quot; /&gt;</span>
+<span class="doccomment">//! &lt;/a&gt;</span>
+<span class="doccomment">//! &lt;a href=&quot;https://github.com/dusk-network/dusk-zerocaf&quot;&gt;</span>
+<span class="doccomment">//! &lt;img alt=&quot;GitHub closed issues&quot; src=&quot;https://img.shields.io/github/issues-closed/dusk-network/dusk-zerocaf.svg?color=4C4CFF&quot;&gt;</span>
+<span class="doccomment">//! &lt;/a&gt;</span>
+<span class="doccomment">//! &lt;a href=&quot;https://crates.io/crates/zerocaf&quot;&gt;</span>
+<span class="doccomment">//! &lt;img alt=&quot;Crates.io&quot; src=&quot;https://img.shields.io/crates/v/zerocaf.svg?color=f07900&quot;&gt;</span>
+<span class="doccomment">//! &lt;/a&gt;</span>
+<span class="doccomment">//! &lt;/hr&gt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! &lt;div&gt;</span>
+<span class="doccomment">//! &lt;img src=&quot;https://camo.githubusercontent.com/db129d98b9686d0db27a9fd27c8e54086b14a6a7/68747470733a2f2f692e696d6775722e636f6d2f496a61645a50592e6a7067&quot; width=&quot;100%&quot; /&gt;</span>
+<span class="doccomment">//! &lt;/div&gt;</span>
+<span class="doccomment">//! &lt;br&gt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # What is Zerocaf?</span>
+<span class="doccomment">//! Zerocaf is a pure Rust cryptographic library constructed to define operations for an elliptic curve embedded</span>
+<span class="doccomment">//! into the Ristretto scalar field, which allows the construction of prime order groups</span>
+<span class="doccomment">//! from an otherwise non prime order curve. &lt;br&gt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! The ultimate purpose of defining operations is for set inclusion proofs - where it is shown, in zero-knowledge,</span>
+<span class="doccomment">//! that a private key exists in a set of many public keys. &lt;br&gt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Additionally, the zero-knowledge proofs use Bulletproofs as the argument for arithmetic circuits</span>
+<span class="doccomment">//! that are used to form arbitrary constraint systems.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # What can it be used for?</span>
+<span class="doccomment">//! The main goal of the library, as said before, is to be the base of operations over set inclusion proofs</span>
+<span class="doccomment">//! and other Zero-Knowledge protocols.&lt;br&gt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! But since Zerocaf is build upon the SonnyCurve using the Ristretto protocol, it allows other devs to build</span>
+<span class="doccomment">//! cryptographic protocols over it without needing to take care about the co-factor of the curve. &lt;br&gt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! This, brings to developers, a good mathematical backend library which can be used as a `mid-level` API</span>
+<span class="doccomment">//! for building all kinds of cryptographic protocols over it such as key agreement, signatures,</span>
+<span class="doccomment">//! anonymous credentials, rangeproofs... &lt;br&gt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Usage</span>
+<span class="doccomment">//! To import the library as a dependency of your project, just add on your `Cargo.toml`s project file:</span>
+<span class="doccomment">//! ```toml</span>
+<span class="doccomment">//! zerocaf = &quot;0.1.1&quot;</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Then import the crate as:</span>
+<span class="doccomment">//! ```rust</span>
+<span class="doccomment">//! extern crate zerocaf;</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Backends.</span>
+<span class="doccomment">//! Zerocaf has been built following the [Curve25519-dalek](https://docs.rs/curve25519-dalek/1.2.1/curve25519_dalek/) library structure, which allows for multiple</span>
+<span class="doccomment">//! backend implementations. All of the works are built to enable modularity.&lt;br&gt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Currently, `Zerocaf` has implemented the u64 backend.</span>
+<span class="doccomment">//! By default, the `u64` backend is the one which is used to perform all of</span>
+<span class="doccomment">//! the operations.</span>
+<span class="doccomment">//! Additionly, for future works, we would like to implement a `u32` backend aswell. &lt;br&gt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! To select a backend type, the following method can be used:</span>
+<span class="doccomment">//! ```sh</span>
+<span class="doccomment">//! // For unoptimized builds:</span>
+<span class="doccomment">//! cargo build --features &quot;u64_backend&quot;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! // For optimized/release builds:</span>
+<span class="doccomment">//! cargo build --release --features &quot;u64_backend&quot;</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//! &lt;br&gt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! NOTE: If no backend is selected, the compilation will fail!&lt;br&gt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Security and features of Zerocaf</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! As is previously mentioned, zerocaf is designed to host the fastest possible curve operations whilst</span>
+<span class="doccomment">//! simultaneously avoiding all of the drawbacks associated with having a cofactor such that h &gt; 1.&lt;br&gt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! To achieve this we make use of Ristretto, which is a technique to construct prime order elliptic curve groups.</span>
+<span class="doccomment">//! The Ristretto protocol compresses the cofactor by adding a thin abstraction layer to allow small changes</span>
+<span class="doccomment">//! in code to ultimately omit the cofactor issues. &lt;br&gt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! This is achieved by having defining the twisted edwards curve over the ristretto scalar field,</span>
+<span class="doccomment">//! which means to perform every operation on the curve in modulo L,</span>
+<span class="doccomment">//! where L is the order of the ristretto scalar field. &lt;br&gt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! `L =  2^252 + 27742317777372353535851937790883648493`. &lt;br&gt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! By expounding the operations in this manner, we can benefit from the speed of a non-prime order twisted</span>
+<span class="doccomment">//! edwards curve whilst not suffering the pitfalls of a cofactor greater than one.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Performance &amp; Benchmarks</span>
+<span class="doccomment">//! Benchmarks have been implemented using [Criterion.rs](https://docs.rs/criterion/0.2.11/criterion/).</span>
+<span class="doccomment">//! To run them just execute `cargo bench` on the repository root.&lt;br&gt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! All of the operatons have been implemented using bit-shifting techniques to allow better performance</span>
+<span class="doccomment">//! and a significant reduction in execution time.  </span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Examples</span>
+<span class="doccomment">//! We are planning to add some examples about tha basics of the `Zerocaf` library usage.&lt;br&gt;</span>
+<span class="doccomment">//! They will be uploaded to the [examples](https://github.com/dusk-network/dusk-zerocaf/tree/master/docs) folder.&lt;br&gt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! This is a very basic usage example of the Zerocaf lib:</span>
+<span class="doccomment">//! ```rust</span>
+<span class="doccomment">//! extern crate zerocaf;</span>
+<span class="doccomment">//! extern crate rand;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! use zerocaf::field::FieldElement;</span>
+<span class="doccomment">//! use zerocaf::scalar::Scalar;</span>
+<span class="doccomment">//! use zerocaf::edwards::EdwardsPoint;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! use rand::{Rng, thread_rng};</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! fn main() -&gt; () {</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!     // Let G be an `EdwardsPoint` which is a point over the Twisted Eds Extended Coordinates.</span>
+<span class="doccomment">//!     let G: EdwardsPoint = EdwardsPoint {</span>
+<span class="doccomment">//!         X: FieldElement([23, 0, 0, 0, 0]),</span>
+<span class="doccomment">//!         Y: FieldElement([1664892896009688, 132583819244870, 812547420185263, 637811013879057, 13284180325998]),</span>
+<span class="doccomment">//!         Z: FieldElement([1, 0, 0, 0, 0]),</span>
+<span class="doccomment">//!         T: FieldElement([4351986304670635, 4020128726404030, 674192131526433, 1158854437106827, 6468984742885])</span>
+<span class="doccomment">//!     };</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!     let scalar: Scalar = rand_scalar_generation();</span>
+<span class="doccomment">//!     println!(&quot;{:?}&quot;, scalar);</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!     // Perform G*k, Point mul uses the `add_and_double` standard algorithm.</span>
+<span class="doccomment">//!     let P = &amp;G  * &amp;scalar;</span>
+<span class="doccomment">//!     println!(&quot;{:?}&quot;, P);</span>
+<span class="doccomment">//! }</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! /// Generate a random `Scalar` defined over the sub-group field</span>
+<span class="doccomment">//! /// modulo: `2^249 - 15145038707218910765482344729778085401`</span>
+<span class="doccomment">//! pub fn rand_scalar_generation() -&gt; Scalar {</span>
+<span class="doccomment">//!     // Gen random 32-byte array.</span>
+<span class="doccomment">//!     let mut bytes = [0u8;32];</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!     // Fill the bytes varible with random bytes. We can use the 32 bytes co give</span>
+<span class="doccomment">//!     // total randomness but then we will need to be aware because we can generate</span>
+<span class="doccomment">//!     // values greater than `L = 2^252 + 27742317777372353535851937790883648493` and</span>
+<span class="doccomment">//!     // the program will panic if we don&#39;t catch the error correctly on the</span>
+<span class="doccomment">//!     // `from_bytes()` Scalar method call.</span>
+<span class="doccomment">//!     thread_rng().try_fill(&amp;mut bytes[..31]).expect(&quot;Error getting the random bytes&quot;);</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!     Scalar::from_bytes(&amp;bytes)</span>
+<span class="doccomment">//! }</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//! &lt;br&gt;</span>
+<span class="doccomment">//! We will also publish some videos talking about how is the library built and</span>
+<span class="doccomment">//! the maths that are happening behind the scenes.&lt;br&gt;</span>
+<span class="doccomment">//! Videos can also include programming examples using `Zerocaf` as a dependency.&lt;br&gt;</span>
+<span class="doccomment">//! You can check them on the [Dusk Network Youtube Channel](https://www.youtube.com/channel/UCAfY3VcuaxAelPp44B253Rw).</span>
+<span class="doccomment">//!</span>
+
+<span class="comment">// Used for traits related to constant-time code.</span>
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">subtle</span>;
+<span class="comment">// Used for Ristretto255Scalar trait.</span>
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">curve25519_dalek</span>;
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">num</span>;
+
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">backend</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">constants</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">edwards</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">field</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">montgomery</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">ristretto</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">scalar</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">traits</span>;
+</pre></div>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "zerocaf";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

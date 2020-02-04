@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["CompressedRistretto","Ristretto Point expressed in wire format. Since the Ristretto bytes encoding is canonical, two points are equal if their encodin form is equal."],["RistrettoPoint",""]]});

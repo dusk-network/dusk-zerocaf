@@ -1,0 +1,144 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `zerocaf` crate."><meta name="keywords" content="rust, rustlang, rust-lang, zerocaf"><title>zerocaf - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../dark.css"><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="shortcut icon" href="https://dusk.network/lib/img/favicon-16x16.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../zerocaf/index.html'><div class='logo-container'><img src='https://lh3.googleusercontent.com/SmwswGxtgIANTbDrCOn5EKcRBnVdHjmYsHYxLq2HZNXWCQ9-fZyaea-bNgdX9eR0XGSqiMFi=w128-h128-e365' alt='logo'></div></a><p class='location'>Crate zerocaf</p><div class="sidebar-elems"><a id='all-types' href='all.html'><p>See all zerocaf's items</p></a><div class="block items"><ul><li><a href="#modules">Modules</a></li></ul></div><p class='location'></p><script>window.sidebarCurrent = {name: 'zerocaf', ty: 'mod', relpath: '../'};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../src/zerocaf/lib.rs.html#1-173' title='goto source code'>[src]</a></span><span class='in-band'>Crate <a class="mod" href=''>zerocaf</a></span></h1><div class='docblock'><a href="https://codecov.io/gh/dusk-network/Dusk-Zerocaf">
+<img src="https://codecov.io/gh/dusk-network/Dusk-Zerocaf/branch/master/graph/badge.svg" />
+</a>
+<a href="https://travis-ci.com/dusk-network/dusk-zerocaf">
+<img src="https://travis-ci.com/dusk-network/dusk-zerocaf.svg?branch=master" />
+</a>
+<a href="https://github.com/dusk-network/dusk-zerocaf">
+<img alt="GitHub closed issues" src="https://img.shields.io/github/issues-closed/dusk-network/dusk-zerocaf.svg?color=4C4CFF">
+</a>
+<a href="https://crates.io/crates/zerocaf">
+<img alt="Crates.io" src="https://img.shields.io/crates/v/zerocaf.svg?color=f07900">
+</a>
+</hr>
+<div>
+<img src="https://camo.githubusercontent.com/db129d98b9686d0db27a9fd27c8e54086b14a6a7/68747470733a2f2f692e696d6775722e636f6d2f496a61645a50592e6a7067" width="100%" />
+</div>
+<br>
+<h1 id="what-is-zerocaf" class="section-header"><a href="#what-is-zerocaf">What is Zerocaf?</a></h1>
+<p>Zerocaf is a pure Rust cryptographic library constructed to define operations for an elliptic curve embedded
+into the Ristretto scalar field, which allows the construction of prime order groups
+from an otherwise non prime order curve. <br></p>
+<p>The ultimate purpose of defining operations is for set inclusion proofs - where it is shown, in zero-knowledge,
+that a private key exists in a set of many public keys. <br></p>
+<p>Additionally, the zero-knowledge proofs use Bulletproofs as the argument for arithmetic circuits
+that are used to form arbitrary constraint systems.</p>
+<h1 id="what-can-it-be-used-for" class="section-header"><a href="#what-can-it-be-used-for">What can it be used for?</a></h1>
+<p>The main goal of the library, as said before, is to be the base of operations over set inclusion proofs
+and other Zero-Knowledge protocols.<br></p>
+<p>But since Zerocaf is build upon the SonnyCurve using the Ristretto protocol, it allows other devs to build
+cryptographic protocols over it without needing to take care about the co-factor of the curve. <br></p>
+<p>This, brings to developers, a good mathematical backend library which can be used as a <code>mid-level</code> API
+for building all kinds of cryptographic protocols over it such as key agreement, signatures,
+anonymous credentials, rangeproofs... <br></p>
+<h1 id="usage" class="section-header"><a href="#usage">Usage</a></h1>
+<p>To import the library as a dependency of your project, just add on your <code>Cargo.toml</code>s project file:</p>
+<pre><code class="language-toml">zerocaf = &quot;0.1.1&quot;
+</code></pre>
+<p>Then import the crate as:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">zerocaf</span>;</pre></div>
+<h1 id="backends" class="section-header"><a href="#backends">Backends.</a></h1>
+<p>Zerocaf has been built following the <a href="https://docs.rs/curve25519-dalek/1.2.1/curve25519_dalek/">Curve25519-dalek</a> library structure, which allows for multiple
+backend implementations. All of the works are built to enable modularity.<br></p>
+<p>Currently, <code>Zerocaf</code> has implemented the u64 backend.
+By default, the <code>u64</code> backend is the one which is used to perform all of
+the operations.
+Additionly, for future works, we would like to implement a <code>u32</code> backend aswell. <br></p>
+<p>To select a backend type, the following method can be used:</p>
+<pre><code class="language-sh">// For unoptimized builds:
+cargo build --features &quot;u64_backend&quot;
+
+// For optimized/release builds:
+cargo build --release --features &quot;u64_backend&quot;
+</code></pre>
+<br>
+<p>NOTE: If no backend is selected, the compilation will fail!<br></p>
+<h1 id="security-and-features-of-zerocaf" class="section-header"><a href="#security-and-features-of-zerocaf">Security and features of Zerocaf</a></h1>
+<p>As is previously mentioned, zerocaf is designed to host the fastest possible curve operations whilst
+simultaneously avoiding all of the drawbacks associated with having a cofactor such that h &gt; 1.<br></p>
+<p>To achieve this we make use of Ristretto, which is a technique to construct prime order elliptic curve groups.
+The Ristretto protocol compresses the cofactor by adding a thin abstraction layer to allow small changes
+in code to ultimately omit the cofactor issues. <br></p>
+<p>This is achieved by having defining the twisted edwards curve over the ristretto scalar field,
+which means to perform every operation on the curve in modulo L,
+where L is the order of the ristretto scalar field. <br></p>
+<p><code>L =  2^252 + 27742317777372353535851937790883648493</code>. <br></p>
+<p>By expounding the operations in this manner, we can benefit from the speed of a non-prime order twisted
+edwards curve whilst not suffering the pitfalls of a cofactor greater than one.</p>
+<h1 id="performance--benchmarks" class="section-header"><a href="#performance--benchmarks">Performance &amp; Benchmarks</a></h1>
+<p>Benchmarks have been implemented using <a href="https://docs.rs/criterion/0.2.11/criterion/">Criterion.rs</a>.
+To run them just execute <code>cargo bench</code> on the repository root.<br></p>
+<p>All of the operatons have been implemented using bit-shifting techniques to allow better performance
+and a significant reduction in execution time.</p>
+<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
+<p>We are planning to add some examples about tha basics of the <code>Zerocaf</code> library usage.<br>
+They will be uploaded to the <a href="https://github.com/dusk-network/dusk-zerocaf/tree/master/docs">examples</a> folder.<br></p>
+<p>This is a very basic usage example of the Zerocaf lib:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">zerocaf</span>;
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">rand</span>;
+
+<span class="kw">use</span> <span class="ident">zerocaf</span>::<span class="ident">field</span>::<span class="ident">FieldElement</span>;
+<span class="kw">use</span> <span class="ident">zerocaf</span>::<span class="ident">scalar</span>::<span class="ident">Scalar</span>;
+<span class="kw">use</span> <span class="ident">zerocaf</span>::<span class="ident">edwards</span>::<span class="ident">EdwardsPoint</span>;
+
+<span class="kw">use</span> <span class="ident">rand</span>::{<span class="ident">Rng</span>, <span class="ident">thread_rng</span>};
+
+<span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> () {
+
+    <span class="comment">// Let G be an `EdwardsPoint` which is a point over the Twisted Eds Extended Coordinates.</span>
+    <span class="kw">let</span> <span class="ident">G</span>: <span class="ident">EdwardsPoint</span> <span class="op">=</span> <span class="ident">EdwardsPoint</span> {
+        <span class="ident">X</span>: <span class="ident">FieldElement</span>([<span class="number">23</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>]),
+        <span class="ident">Y</span>: <span class="ident">FieldElement</span>([<span class="number">1664892896009688</span>, <span class="number">132583819244870</span>, <span class="number">812547420185263</span>, <span class="number">637811013879057</span>, <span class="number">13284180325998</span>]),
+        <span class="ident">Z</span>: <span class="ident">FieldElement</span>([<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>]),
+        <span class="ident">T</span>: <span class="ident">FieldElement</span>([<span class="number">4351986304670635</span>, <span class="number">4020128726404030</span>, <span class="number">674192131526433</span>, <span class="number">1158854437106827</span>, <span class="number">6468984742885</span>])
+    };
+
+    <span class="kw">let</span> <span class="ident">scalar</span>: <span class="ident">Scalar</span> <span class="op">=</span> <span class="ident">rand_scalar_generation</span>();
+    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">scalar</span>);
+
+    <span class="comment">// Perform G*k, Point mul uses the `add_and_double` standard algorithm.</span>
+    <span class="kw">let</span> <span class="ident">P</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">G</span>  <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">scalar</span>;
+    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">P</span>);
+}
+
+<span class="doccomment">/// Generate a random `Scalar` defined over the sub-group field</span>
+<span class="doccomment">/// modulo: `2^249 - 15145038707218910765482344729778085401`</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">rand_scalar_generation</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Scalar</span> {
+    <span class="comment">// Gen random 32-byte array.</span>
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> [<span class="number">0u8</span>;<span class="number">32</span>];
+
+    <span class="comment">// Fill the bytes varible with random bytes. We can use the 32 bytes co give</span>
+    <span class="comment">// total randomness but then we will need to be aware because we can generate</span>
+    <span class="comment">// values greater than `L = 2^252 + 27742317777372353535851937790883648493` and</span>
+    <span class="comment">// the program will panic if we don&#39;t catch the error correctly on the</span>
+    <span class="comment">// `from_bytes()` Scalar method call.</span>
+    <span class="ident">thread_rng</span>().<span class="ident">try_fill</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes</span>[..<span class="number">31</span>]).<span class="ident">expect</span>(<span class="string">&quot;Error getting the random bytes&quot;</span>);
+
+    <span class="ident">Scalar</span>::<span class="ident">from_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>)
+}</pre></div>
+<br>
+We will also publish some videos talking about how is the library built and
+the maths that are happening behind the scenes.<br>
+Videos can also include programming examples using `Zerocaf` as a dependency.<br>
+You can check them on the [Dusk Network Youtube Channel](https://www.youtube.com/channel/UCAfY3VcuaxAelPp44B253Rw).</div><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+<table><tr class='module-item'><td><a class="mod" href="backend/index.html" title='zerocaf::backend mod'>backend</a></td><td class='docblock-short'><p>This contains the different backend implementations: <code>u64</code> and further comming ones. .</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="constants/index.html" title='zerocaf::constants mod'>constants</a></td><td class='docblock-short'><p>Contains the curve-constants needed by different algorithm implementations.</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="edwards/index.html" title='zerocaf::edwards mod'>edwards</a></td><td class='docblock-short'><p>Edwards Point operations and their implementations are
+shown with the corresponding definitions.
+Encoding/decoding process implementations are shown,
+as is support for all kind of interactions which apply
+each of the processes.</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="field/index.html" title='zerocaf::field mod'>field</a></td><td class='docblock-short'><p>A <code>FieldElement</code> represents an element of the finite field
+modulo <code>2^252 + 27742317777372353535851937790883648493</code>.</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="montgomery/index.html" title='zerocaf::montgomery mod'>montgomery</a></td><td class='docblock-short'><p>Implementation that provides support for Montgomery Points
+over the Sonnycurve.</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="ristretto/index.html" title='zerocaf::ristretto mod'>ristretto</a></td><td class='docblock-short'><p>Implementation of the Ristretto Protocol over the
+Sonnycurve.</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="scalar/index.html" title='zerocaf::scalar mod'>scalar</a></td><td class='docblock-short'><p>A <code>Scalar</code> represents an element of the finite field
+modulo <code>2^249 - 15145038707218910765482344729778085401</code>.</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="traits/index.html" title='zerocaf::traits mod'>traits</a></td><td class='docblock-short'><p>Module for Public Trait implementations.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "zerocaf";</script><script src="../aliases.js"></script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>
