@@ -76,6 +76,8 @@ use subtle::{Choice, ConditionallySelectable, ConstantTimeEq};
 
 use rand::{CryptoRng, Rng};
 
+use curve25519_dalek::scalar::Scalar;
+
 use crate::backend;
 
 #[cfg(feature = "u64_backend")]
@@ -115,6 +117,12 @@ impl ConditionallySelectable for FieldElement {
     }
 }
 
+impl Into<Scalar> for &FieldElement {
+    fn into(self) -> Scalar {
+        Scalar::from_bytes_mod_order(self.to_bytes())
+    }
+}
+
 impl FieldElement {
     /// Generate a valid FieldElement choosen uniformly using user-
     /// provided rng.
@@ -126,6 +134,8 @@ impl FieldElement {
     {
         let mut bytes = [0u8; 32];
         rand.fill_bytes(&mut bytes);
+        // Ensure that the value is lower than `FIELD_L`.
+        bytes[31] &= 0b0000_0111;
         FieldElement::from_bytes(&bytes)
     }
 }
