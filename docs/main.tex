@@ -1,163 +1,421 @@
 \documentclass{article}
-\usepackage[utf8]{inputenc}
-\usepackage{amsmath}
-\usepackage{graphicx}
-\graphicspath{ {images/} }
-\newcommand{\Mod}[1]{\ (\mathrm{mod}\ #1)}
 
-\title{Sonny: A curve designed to perform high security circuit operations for Elliptic Curve protocols in Zero Knowledge }
-\author{
-  Carlos Perez\\
-  Dusk Foundation\footnote{https://dusk.network/}\\
-  \texttt{carlos@dusk.network}
-  \and
-  Luke Pearson\\
-  Dusk Foundation\\
-  \texttt{luke@dusk.network}
-}
-\date{October 2019}
+\usepackage[colorlinks=true, urlcolor=black, linkcolor=black, citecolor=black]{hyperref} 
+
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amsthm, amssymb, mathtools}
+\usepackage{enumerate, enumitem}
+\usepackage{graphicx, color, xcolor}
+\usepackage{epsfig, wrapfig, caption}
+
+\graphicspath{ {images/} }
+\newcommand{\N}{\ensuremath{\mathbb{N}}}
+\newcommand{\Np}{\ensuremath{\mathbb{N}^{+}}}
+\newcommand{\Z}{\ensuremath{\mathbb{Z}}}
+\newcommand{\Q}{\ensuremath{\mathbb{Q}}}
+\newcommand{\R}{\ensuremath{\mathbb{R}}}
+\newcommand{\C}{\ensuremath{\mathbb{C}}}
+\newcommand{\F}{\ensuremath{\mathbb{F}}}
+\newcommand{\Fp}{\ensuremath{\mathbb{F}_p}}
+\newcommand{\Fq}{\ensuremath{\mathbb{F}_q}}
+\newcommand{\Fr}{\ensuremath{\mathbb{F}_r}}
+\newcommand{\Fl}{\ensuremath{\mathbb{F}_l}}
+\newcommand{\G}{\ensuremath{\mathbb{G}}}
+\newcommand{\point}[1]{P_{#1} = (x_{#1}, y_{#1})}
+\newcommand{\noi}{\noindent}
+\newcommand{\Prover}{\ensuremath{\mathcal{P }}}
+\newcommand{\V}{\ensuremath{\mathcal{V }}}
+
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{grouplaw}[thm]{Group Law}
+\newtheorem{prob}[thm]{Problem}
+\theoremstyle{definition}
+\newtheorem{defn}[thm]{Definition}
+\theoremstyle{remark}
+\newtheorem{rem}[thm]{Remark}
+\newtheorem{exmp}[thm]{Example}
 
 \begin{document}
-
-
-
-\maketitle
-\thispagestyle{empty}
-\pagestyle{empty}
-
-\begin{abstract}
-
-
-
-\end{abstract}
-
-\newpage
-
-\tableofcontents
-
-\newpage
-
-\section{Introduction}
-The construction and use of elliptic curves is paramount to many cryptographic protocols. Elliptic curves are among the fastest performing primitives where the Discrete Logarithm Problem (DLP) is hard, which is why they are regarded as dominant in the field of cryptography. As the field of cryptography advances, elliptic curves have been proven to be unparalleled in their use for cryptographic systems which have speed and security as two of the most outstanding features. As they are held in such high regard, they can greatly steer the direction of new cryptographic protocols. When outlining new protocols which rely upon elliptic curves, there are a multitude of features which are affected depending on design; often regarded as factors of opportunity cost which leads to compromise on critical features within Elliptic Curve Cryptography (ECC). However, some contemporary techniques can be used to better facilitate systems that rely so heavily upon these primitives. Since many previous protocols are proven to be secure, it is $often$ far more efficient to add to these standards with compound technologies rather than seeking entire system replacements. \\\\ One of the most groundbreaking techniques used in state of the art cryptography is the constructing of Zero Knowledge  (ZK) proofs for nearly universal computation. As is with many cryptographic protocols, there is a choice of which proof system is best tailored to a system. Which includes a trade off, between proof sizes, verification times and other factors making up a ZK proof.  For particular proof systems, their expression relies upon an elliptic curve and an arithmetic circuit. The elliptic curve here is a function used to encode the public outputs which are represented as field elements, upon which a lot of operations rely. The operations for these proofs systems, however, are expressed in terms of a circuit which is determined by scalar curve arithmetic. This unfortunately restricts the operations which can be performed as they are dependent upon standard arithmetic circuit outputs - addition, multiplication, subtraction and division. Many protocols such as Elliptic Curve Digital Signature Algorithms (ECDSA), which are performed using field encodings, are in operable through the medium of generic ZK proofs which are expressed in terms of a circuit. \\\\ 
-\boldsymbol{A} \boldsymbol{profound} \boldsymbol{solution}.
-In section 3, we elaborate on how we use our derived curve, which is embedded into the scalar field of Curve25519, in order to extend the circuit operations to those which exceed the traditional bounds of constraint systems. The curve is constructed across a scalar field, as a base field, thus allowing the portability of ZK proofs onto non scalar protocols.\\\\
-As with all elliptic curves, their construction will strongly influence the outcomes of the protocols in which they are implemented. In addition to this, there can be discrepancies in both the security and speed of cryptographic systems dependant upon on how they're implemented. For this reason, we wanted to make use of the the fastest complete formulas for elliptic curves, which are Twisted Edwards curves. In conjunction to their complete formulas, Twisted Edwards curves have been proven by Bernstein et al, to be Birationally equivalent to Montgomery curves. Which fit the purpose of the augmented construction, as Montgomery operations in arithmetic circuits were proven by the Z-cash team to provide a fast Montgomery ladder for in circuit multiplication. Whilst these curves models can provide some of the fastest and most simplistic operations, they do provide issues in security. Neither Montgomery, nor Edwards curves deliver prime order groups in their implementations. They provide curves which have a cofactor, $h$, which multiplies the prime of the subgroup to give the group order. Whereas curves like Weierstrass give prime order but their formulas are too inefficient for circuit operations.\\\\ 
-For non prime order curve groups, the mismatch in desirability of prime order curves and inability to implement one directly from the curve can be patched with uniquely tailored modifications.  However, these fixes oft become perplexing to the non-implementors and with higher level protocols they are seldom straightforward. Using curves which provide prime order groups, such as Weierstrass Curves, have slower formulae and are very difficult to implement in constant time. Plentiful curve families allow for the encoding of different related curves for protocol specific purposes. For example, [] library uses Twisted Edwards forms for out of circuit operations like public key generation to exploit the high speed formula but uses Montgomery form for in circuit operations to benefit from the ladder multiplication. If an ad hoc fix needs to be given to each related curve model, then the implementation can become tedious and very complex.\\\\
-\boldsymbol{A} \boldsymbol{centric} \boldsymbol{solution}.
-In section 4, we explain how to use the Ristretto technique, which constructs prime order Edwards curves from non prime order groups, with our embedded curve, to compress the cofactor such that $h$ = 1. Ristretto makes use of the relationship between curves and provides a fix for the cofactor complication for all models in one place.\\\\
-
-
-
-
-\subsection{$Compatibility$} (isogenies/facility) ristretto - sig - scalar
-
-\section{Notation and Formulae} 
-\subsection{General notation}
-$Finite Field$: $F_p$ is the finite field where the $char$ \neq {2}\vee{3}\\\\
-$\varepsilon_{a,d}$ is a Edwards curve, given by the equation: $$ {a}x^2+y^2=1+{d}x^2y^2 $$ where {$d$} and {$ad$} are none square in $F$ and has no points at infinity. In this paper, the primary focus is upon Twisted Edwards curves, where $a = -1$. The identity point of an Edwards curve, $\varepsilon$, where (X,Y) $\epsilon$ in $F_p$, is given encoded to (0,1). When Edwards points are expressed in Extended Twisted coordinates, the identity encoding is given by (X : Y : Z : T) = (0 : 1 : 1 : 0).\\\\
-${M}_{a,\frac{2-4d}{a}}$ is a Montgomery curve, given by the equation: $$ y^2=x^3+Ax^2+Bx $$ A Montgomery curve is Birationally equivalent to an Edwards curve - a definition used for algebraic substitution -  where its point at of infinity is the identity point, denoted as (0 : 1 : 0).\\\\  
-$\jmath_{a^{2},a−{2d}}$ is a Jacobi curve, given by the equation: $$y
-^2 = {e}x^4 + 2Ax^2 + 1$$ A Jacobi curve, better known as a Jacobi quartic, is central to all curve models and to utilise this curve relationship we will only be using Jacobi curves where $e = {a}^2$, as such curves have a full 2-torsion point.\\\\
-$Torsion\ points$:\ An element [P] in  $G$ is a torsion point if there is a mapping of $M$, by means of multiplication, where $M$ \cdot\ [P] = $0_{G}$. Torquing elements for a curve form a subgroup, $G$[$M$], where the order is divisible by ${M}^2$. The torsion subgroups for this curve family have order 1, 2 or 4.  \\\\ 
-$Isogeny$: An isogeny, $\varphi$ , is a function which maps algebraic groups whilst preserving the group structure. This mapping must satisfy the properties of being surjective and having a finite kernel. The isogeny, in this paper, is used to transport an encoding between different curve models.\\\\
-$Curve forms$: $\varepsilon_{a,d}$; ${M}_{a,\frac{2-4d}{a}}$; $\jmath_{a^{2},a-{2d}}$ \\\\ These curve models are all isogenous to one another. The Edwards, Montgomery and Twisted Edwards are independently 2-isogenous to the Jacobi quartic and are therefore 4-isogenous to one another.  \\\\
-$Arithmetic$\ $circuits$: These are the computational models for computing circuits. They are universally bound to add and multiply, which are the functions performed at each node on all given inputs. \\\\
-$Cofactor$\ $compression$: This refers a quasi-construction of cofactor 1 curves from cofactor 8 groups. Also known as cofactor division, it involves the process of point compression when points of order 4 or 8 are produced.\\ 
-
-\subsection{Our contributions}
-\subsubsection{Elliptic curve}
-Here we present an elliptic curve, created for an safe and efficient Elliptic curve operations inside bulletproofs; called Sonny. Sonny is defined as an embedded curve which the gives the input for the proofs and the discrete log based proof is implemented using the outer curve, Curve25519. \\\\
-
-\noindent\fbox{%
-    \parbox{\textwidth}{%
-    $$ Sonny  $$
-        \begin{itemize}
-    \item Curve equation in Twisted Edwards form: $$ ax^2+y^2=1-dx^2y^2 $$ 
-    \item $a= -1$
-    \item $d= -\frac{126296}{126297}$
-    \item $Basepoint: Y = \frac{3}{5}$\\
-    \item Montgomery form equivalent: $$ y^2=x^3+Ax^2+x $$
-    \item $A = 505186 $
-    \item $Basepoint: X = 4$\\
-    \item The curve group order, G, is $$ 2^{252}+115924404605461509904689566245241897752 $$      
-    \item The order of the scalar field, $r$, is $$ 2^{249}+15114490550575682688738086195780655237219 $$       \item The order of the base field, $p$, is  $$ 2^{252} + 27742317777372353535851937790883648493 $$
-    \item Cofactor: $$ h =\frac{G}{r} = 8$$
-    \item Weierstrass form equivalent: \\  $$y^2=x^3+ax+b $$
-    \item $a$ = 7237005577332262213973186563042994240857116359379907606001\\950828033483786813
-    \item $b$ = 445582015604702849664
-\end{itemize}
-    }%
-}\\\\
-
-
-
-\section{Finite fields}
-A finite field is a set of numbers on which arithmetic operations are performed and satisfies a specific set of rules. These operations include multiplication, addition, subtraction and division - notably, the most fundamental operations in ECC. Elliptic Curve arithmetic uses the finite field of integers reduced mod$p$, where $p$ is some prime. The use of finite fields as the extension of elliptic curves is to reinforce the hardness of the DLP, as well as make certain cryptographic assumptions about the order of the set. The choice of finite fields for elliptic curves, known as base curves, provide a cyclic group which gives precise knowledge to the amount of bits that need to be stored by point outputs. As stated, the base fields dictate the operations for the elliptic curves and thus selection of these fields affects the security, speed and simplicity of the implementation of the curve. Supplementary to standard operations performed mod$p$, there are many protocols can be performed in ECC which are implemented using finite sets but do not make use of the base field. They rely upon another prime order field, which is the curves scalar field, also known as the subgroup.  The existing systems like the verification systems are already deployed and because their operations are performed on on the base field, and not a scalar field, they are not directly updateable with a large range of contemporary techniques. This paper and findings focuses on Zero Knowledge  proofs as the 'add-on technology' for existing schemes. \\\\ Elliptic curves have both a base field, which is the finite field in which they are defined; and a scalar field, which is associated with the number of points on the curve. DL based proofs which use a curve and a circuit rely upon both of the finite fields. The base field here is a function used to encode the public coordinates which are represented as field elements. However, as the operations are performed mod$p$, where $p$ is prime,  the outputs are reduced to the prime scalar field. Thus operations which require the base field, cannot be performed inside proof systems which use arithmetic circuits as an expression. As a result the ZK outputs are limited to what circuit operations can be performed by the elliptic curves scalar field. The circuit, in this case, encodes relation between the input and outputs.
-\subsection{Efficient ZK for higher operability }
-To extend the range of ZK elliptic curves operations to those which employ the base field, we have built a curve which has a base field equal to the scalar field of Curve25519. This is defined in the following manner: Let $\varepsilon_{1}$ and $\varepsilon_{2}$ be elliptic curves. Where the prime subgroup order, or scalar field, of $\varepsilon_{1}$ is $r$; we define $\varepsilon_{2}$ over the base field $F_p$, where \#$F_p$ = $r$. 
-This will allow us to perform fast in circuit operations using $\varepsilon_{2}$ as the embedded curve within the scalar field of $\varepsilon_{1}$.One particular current issue that embedding curves helps to alleviate is the adding to, or updating of, existing software protocols with privacy techniques so that already deployed systems can benefit from high levels of privacy preservation. By constructing this, we are making a quasi representation of one finite field as both a scalar and a base field. We can therefore encode the field based protocols curve over the scalar field of existing systems - and protocols such as key signature verification, can be performed inside a Zero Knowledge  proof. We present a means of verifying only the scalar operation, in Zero Knowledge , so that Zero Knowledge  proof of statements derived for signature schemes can be proven rather than the signature itself. This is performed by expressing ZK proof of computations as the argument for computational models, such as arithmetic circuits.\\\\
-In the case of Zerocaf protocol, we have the outer curve operations, using Curve25519, which implement the ZK proof system, where the operations are performed as integers mod the base field. Then there is Sonny, the inner curve, known as the embedded curve which is the curve we make the proofs about. For the case of signature schemes, like Elliptic Curve Digital Signature Algorithm (ECDSA), the operations for the signature generation are made using Sonny then the Zero Knowledge  arguments for these outputs are generated using Curve25519. By setting the scalar field of Curve25519 as the base field of Sonny, all the operations are efficient when expressed in terms of a circuit. The validation keys here are effectively turned into discrete log proofs, as the generation of ZK values is performed in one amalgamated protocol, even though it comes from two different curves. \\\\
-Many software layers require information from the user - just like authentication certificates for websites, where the type of secret keys is known to the website for verification. The information given is often burnt into the hard memory of the website, which can be used by the software owners to discriminate against different keys and brands of keys hence the need to preserve privacy on these existing protocols.
-\subsection{Circuits}
-An circuit is combinational set of operations which are aligned in a set or series for the ultimate purpose of optimising otherwise standardised mathematical process. The operations, better known as the basic arithmetic operations (addition, subtraction, multiplication, and division), are theoretically performed in constant time. This statement is derived from the fact that the required RAM required is roughly equal for all operations. However, when computing these operations for some large integers, it is apparent that the magnitude greatly affects the costs of RAM. Thus giving a discrepancy for computational time between the theoretical arguments and the practical implementation. When the expression of these arithmetic operations is performed in a circuit, it is referred to as an arithmetic circuit. When expressed for computations within computer systems, any arithmetic circuit is constructed from various combinational elements, which are connected by wires. A combinational element is fixed element which performs a specific function from a constant number of inputs and outputs.
-Circuits are used alongside the elliptic curves to construct discrete log based proof systems; when the circuit is defined over the scalar field.
-
-
-\section{Prime order groups}
-'A group of prime order' is always a cyclic group, that has a mapping - which respects the group structure - to the quotient of the group of integers by a subgroup. This subgroup is generated by a prime number. Groups of prime order are often a prerequisite to crytpographic prototcols, as they provide the basis for a hard DLP and thus increased security for implementation. For implementation, we have made efficiency the most paramount factor for curve selection, which led to us choosing a Twisted Edwards curve form. This is because the Edwards forms of the curves provide the fastest known formulas, which can be accredited to extended Twisted Edwards, introduced by Hysil et al, where auxiliary points are used with fewer field inversions. As elliptic curves are Abelian groups, they provide varying order for their respective groups. Edwards curves and their birational Montgomery equivalents, provide 'not quite' prime order groups over fields - the absence of prime groups can lead to timing variations when implementing protocols such as the signature schemes Sonny implements. Instead of certain Elliptic curve groups being prime, they have a cofactor $h$, meaning that $h \cdot q$ is the group order, where $h > 1$ and $q$ is a large prime. Having this property where $h > 1$ can lead to many implementation complexities.\\\\
-There are cofactor relates attacks designed to extract information, in the form of bits, about a users private key. When generating a public key, it is ideally performed using a point operation on a given curve point, where a chosen scalar outputs a new point, modulo the base field. This provides a public key, from which the scalar, known as the private key, cannot be extracted. However, if points on the curve are selected by attackers to have order which divides $h$, then presented as valid curve points, they can be mistakenly used by a user. If an incognizant user generates a public key by inputting a secret scalar to a function which operates with points of order $h$, then the attacker can gain some bits about the input scalar. Whereas within a prime order group, there is no means of generating valid points which have order dividing $h$. The abstraction of having non prime order groups can be solved with specialised modifications towards individual protocols. One notorious method is to multiply points by the cofactor and check the result; if the resulting point is the identity point then it can be discarded. Many of the individual techniques produce continuous and substantial flaws, especially with regards to patchwork comprehension, which occurs when the protocols are being implemented by those who did not design them, i.e. Implementors not knowing at which step to multiply by $h$. 
-\subsection{Cofactor compression}
-There are various advantages and disadvantages to having a cofactor larger than one, therefore a thorough analysis must be performed,  so that it is known whether or not cofactor manipulation is needed. For all curves, except for Hessian curves, the cofactor is divisible by 4. To become more useful to a broad spectrum of cryptography, Ristretto is apt for a large number of curves, which have a cofactor of 8 or 4. When the cofactor is greater than 1 multiple operations can be hindered. A quotient group can be constructed to allow for the implementation of prime order groups, thus effectively compressing the cofactor, by applying the Ristretto technique. This technique requires just one additional step to Mike Hamburgs decaf proposal for cofactor-4 curves. The technique works using following four functions:\\\\   
-${Equality}$ ${testing}$ This function checks the equality of group elements. \\\\
-${Encode}$\ The encoding function is applied to an Edwards point and this becomes the internal representation for the new "Ristretto point', meaning the same Edwards point operations are performed on the Ristretto point, and with no overhead cost. The function encodes the elements as byte strings so that that the Ristretto elements can be encoded identically.\\\\
-${Decode}$\ This function decodes the byte strings into the internal representations of Ristretto points. There is also a validity check which assesses the canonical representation of points, and only accepts those which are outputs of the encoding function. \\\\
-${Curve}$ ${hashing}$\ For many protocols, mapping elements in a group to a curve is done by a hash function, as it provides standardised digests which can be encoded. Ristretto using an Elligator 2, which gives a 1:1 mapping of group elements to the curve. Elliga
- 
-\subsection{Isogenies}
-By using the Ristretto technique, we are able to solve all cofactor related issues in one place and with one step. This is facilitated by its use in the relationship of the curves, and how this lets us transport the cofactor compression for curves, via the isogeny, to another curve in the same family. Which in turn means we work with prime order points in any operations of ECC. Otherwise, the implementation would have to deal with the issue at varying stages which is dependent upon a protocols ultimate design. An isogeny is a function which maps one algebraic group to another, whilst maintaining the structure of the group - which in terms of elliptic curves, means that a curve is allowed curve to take on the values of another and preserve the same point addition method. These functions are non-constant and are used as a tool for effective 'transportation' between curve models. Just as with all concrete mathematical formulae, these functions have a domain and co-domain, which means that given these two, it is possible to compute the function itself. In this document isogenies will be given the generalization as the multiplication by $m$ map, where they have a finite kernel and are restricted to rational mappings.  
-A deeper understanding of isogenies for elliptic curves has greatly advanced the field of ECC, as it is possible to deduce one mapping from the form of another. Additionally, if these relationships are well understood then they can be applied or integrated into other functions and broaden their domain of propriety to more use cases.\\\\
-When there exists a non-constant function, $\varphi$, which gives a rational mapping from one group to another denoted as $\varphi$ : $\varepsilon$ $\rightarrow$ $\varepsilon\prime$. This mapping from $\varepsilon$ to $\varepsilon\prime$ has degree $n$. Where there is this separable isogeny, then exists a mapping from $\varepsilon$ to $\varepsilon\prime$, which is known as the dual isogeny, $\hat{\varphi}$, where both functions have degree $n$. The dual isogeny is conveyed as $\hat{\varphi}$ : $\varepsilon\prime$ $\rightarrow$ $\varepsilon$ of degree $n$. The isogeny $\hat{\varphi}$ here is known as the dual of $\varphi$, such that $\hat{\varphi}$ $\circ$ $\varphi$ is the multiplication by $n$, where $n$ = $\hat{\varphi}$ $\circ$ $\varphi$, from $\varepsilon$ to $\varepsilon\prime$. This dual isogeny has certain properties which allow for the two way transportation of functions between curves. These can be exploited to provide abstraction of protocols where it would otherwise be inapplicable.
-
-\subsubsection {Curve mappings}
-As curve models $\varepsilon_{a,d}$; ${M}_{a,\frac{2-4d}{a}}$; $\jmath_{a^{2},a-{2d}}$, have different implementation features we can utilise these relationships to achieve the implementation we desire, namely a prime order curve. It is possible to construct prime order curves using the Montgomery and Edwards curve forms by transporting encoding to and from the Jacobi quartic, via isogenies. The functions for cofactor compression would typically be used on the Jacobi quartic form, by means of canonically selecting outputs for curve points. Now this selection process can be applied to the Edwards and Montgomery form by integrating it to the function which maps between them. \\\\ 
-
-\subsubsection{Encoding types}
-\section{Zerocaf}
-As is previously explained our curve has a base field which is the scalar field of Curve25519, to allow for the use of efficient Zero Knowledge  on operations within a circuit. the difficulty of breaking cryptographic systems stems solely from the hardness of the mathematical problems on which they are based. However, this proves not to be the case in practical implementations because of side channel attacks, which target the implementation as medium of encoding the cryptography - to circumvent these attacks, the operations need to be performed in constant time. The use of Edwards curves results in a uniform implementation which better facilitates these constant time operations.  The Edwards form of a curve is considered complete, as any two inputs, given as x and y, provide a correct result. Whereas in circuit operations can greater benefit from variable time implementations, as they perform faster. They can be applied when there is no secret data to protect, as they may lead to leakage of data. We therefore present an implementation which performs statement proofs in constant time with high security, and verification in variable time and high speed. \\ 
-
-
-
-
-\section{Future work}
-R1CS optimisation for constraints 
-Further isogeny use cases 
-
-\section{Conclusion}
- 
-\section{Acknowledgements}
-We would like to give special thanks to Henry de Valence for his personalised help in understanding the Ristretto Protocol and being so responsive for questions regarding the implementation. We would also like to show our strong appreciation for Marta Bellés Muñoz for her contributions with the discrete log based theory used in the understanding of this project. 
-
-
-\newpage
-
-
-
-\begin{thebibliography}{99}
-
-\bibitem{c1} Stanford University, University College London and BlockStream, Benedikt Bünz, Johnathan Bootle, Dan Boneh, Andrew Polestra, Pieter Wuille and Greg Maxwell. Bulletproofs: Short Proofs for Confidential Transactions and More.\\ https://eprint.iacr.org/2017/1066.pdf
-\bibitem{c2} Shafi Goldwasser, Silvio Micali, and Charles Rackoff. The knowledge complexity of interactive
-proof-systems (extended abstract). In 17th Annual ACM Symposium on Theory of Computing
-(STOC’85), pages 291–304, 1985."
-\bibitem{c3} Pedersen T.P. (1992) Non-Interactive and Information-Theoretic Secure Verifiable Secret Sharing. In: Feigenbaum J. (eds) Advances in Cryptology — CRYPTO ’91. CRYPTO 1991. Lecture Notes in Computer Science, vol 576. Springer, Berlin, Heidelberg
-\bibitem{c4} Isis Lovecruft and Henry de Valence. Ristretto. https://Ristretto.group/Ristretto.html
-\bibitem{c5} Mike Hamburg : Deacaf. November, 2015. https://eprint.iacr.org/2015/673.pdf
-\bibitem{c6} Feng Hao, Thales E-Security, Cambridge, UK https://eprint.iacr.org/2010/149.pdf
-\bibitem{c7}Robert Dijkgraaf: Mirror Symmetry and Elliptic Curves, university of Amsterdam, November 15, 2002
-\bibitem{c8} Tehcnological University of Visvesvaraya, Jnana Sangama https://www.academia.edu/8777556/
-
-\end{thebibliography}
-
-
-
-
+	
+	\title{Sonny: A Bulletproof Friendly Elliptic Curve\\
+	(Draft)}
+	\author{
+		Carlos Pérez\\
+		{\small Dusk Foundation\footnote{https://dusk.network/}}\\
+		\texttt{\small carlos@dusk.network}
+		\and
+		Luke Pearson\\
+		{\small Dusk Foundation}\\
+		\texttt{\small luke@dusk.network}
+		\and
+		Marta Bell\'es-Mu\~noz\\
+		{\small Dusk Foundation}\\
+		\texttt{\small marta@dusk.network}
+	}
+	
+	\date{April 2020}
+	
+	\maketitle
+	
+	\begin{abstract}
+		
+		Signature schemes are used to verify signatures and statements. These schemes and their statements oft rely upon Elliptic Curve Cryptography (ECC), which use primitives where the discrete logarithm problems are assumed to be hard. A lot of zero-knowledge proofs use elliptic curves in their construction, to aid in proving a statement. However, zero-knowledge proofs are built from a circuit, which is defined over a different group to a signature scheme. In order to prove a signature in zero knowledge, a scheme cannot utilise the properties of only curve, as the modular operations are asynchronous. To counter this problem, zero knowledge statements and other ECC operations can rely upon a curve, which is embedded within another curve. This work presents a new elliptic curve, named Sonny, which is suitable for performing signature algorithms in zero-knowledge. When constructing elliptic curves, there are many features which must be considered and amongst the all the possible choices, Sonny was designed to operate with high speed and rigid security for both theory and implementations. The curve is a Montgomery Curve, with a birationally equivalent twisted Edwards curve - this allows for the use of high speed curve formulae for operations, performed in and out of arithmetic circuits. In addition to the speed, the curve can make use of complete formulas to increase the security of the curve arithmetic. Twisted Edwards curves have a group of points which have non-prime order and the points instead have a small cofactor, of order 8. The Sonny curve was constructed to be compatible with the Ristretto technique of cofactor compression, which can omit any cofactor related issues.\\
+		
+		{\bf Keywords:} Elliptic curve cryptography, signature verification, blockchain, zero-knowledge proofs, bulletproof, embedded curve, cofactor security. \\
+		
+	\end{abstract}
+	
+	\newpage
+	
+	\tableofcontents
+	
+	\newpage
+	
+	\section{Introduction}
+	
+	\subsection{Motivation}
+	
+	A significant portion of contemporary cryptography is in someway connected to zero knowledge proofs. With the benefit of greater privacy, many new practical systems utilise zero knowledge proofs in their design. Alongside the incorporation of these privacy preserving features into novel techniques and designs, there is also a large effort to port them onto existing systems - including already standardised models. There are many different curves or primitives and thus choices for outlining protocols, the need for ECC in zero knowledge is fundamental to the design of a lot of modern ideas. Many blockchains need to use signature schemes in order to achieve scalability. The underlying ideas is that signature schemes can be used to reduce the size of the signature, or compress multiple signatures into one and ultimately reduce the size of the block - which allows more transactions per block. Notable signature schemes which are interoperable with elliptic curves are the Elliptic Curve Digital Signature Algorithm (ECDSA), which is used in Bitcoin. As well as Edwards-curve Digital Signature Algorithm (EdDSA), which was designed by Bernstein et al. in 2011 to provide high speed signatures that do not forgo any security parameters. EdDSA is a variant of the Schnorr signature algorithm, which was designed by Claus Schnorr to generate short and efficient signatures.\\\\ 
+	
+	Having statements proved in zero-knowledge is paramount in maintaining a high level of privacy. Unfortunately, conducting proofs about signature schemes, in zero knowledge, is non-trivial; this is because of the fields in which the two different protocols operate. A signature algorithm, such as ECDSA relies upon a finite base field of an elliptic curve, where all of the operations are performed across the integers, made modular for some $prime$ $p$. However, to perform signatures in zero knowledge inexpensively, they need to be done in the scalar field of the group where the proof system operates; this difference in use of finite fields is where we have the mismatch when trying to align the protocols. \\\\ 
+	
+	In 1985, Koblitz and  Miller independently introduced elliptic curves into public key cryptography (PKC), they proved to be an improvement to existing primitves due to their short key sizes which lead to no compromise in security - as a 256 bit elliptic curve public key will provide similar security to a 3072 bit RSA public key. Since the 2004, there has been a surge in the use of elliptic curves for PKG; the choice for elliptic curves has grown tremendously and has lead to an eclectic range of options when selecting or constructing elliptic curves. Being spoilt for choice sadly doesn't mean each option is an all-purpose fit, as elliptic curve models have multitude of features which differ depending on design; often regarded as factors of opportunity cost within ECC.  \\\\
+	
+	{\bf A profound solution}. In this work, we present an elliptic curve that is capable of performing ECC operations in zero knowledge, with bulletproofs as the argument. elaborate on how to use embedded curves to to extend the circuit operations to those which exceed the traditional bounds of constraint systems. We have constructed a curve, across the scalar field of curve25519 to extend the rang of EC operations inside bulletproofs, with increased security at minimal overhead.\\\\
+	
+	curves elliptic curve cryptography performed perfo l all of these operations can be performed  a with those which rely upon elliptic curves  there are a multitude of features which are affected depending on design; often regarded as factors of opportunity cost  within Elliptic Curve Cryptography (ECC). However, some contemporary techniques can be used to better facilitate systems that rely so heavily upon these primitives. Since many previous protocols are proven to be secure, it is $often$ far more efficient to add to these standards with compound technologies rather than seeking entire system replacements. \\\\ 
+	
+	One of the most used in state of the art cryptography is the constructing of Zero Knowledge (ZK) proofs for nearly universal computation. As is with many cryptographic protocols, there is a choice of which proof system is best tailored to a system. Which includes a trade off, between proof sizes, verification times and other factors making up a ZK proof.  For particular proof systems, their expression relies upon an elliptic curve and an arithmetic circuit. The elliptic curve here is a function used to encode the public outputs which are represented as field elements, upon which a lot of operations rely. The operations for these proofs systems, however, are expressed in terms of a circuit which is determined by scalar curve arithmetic. This unfortunately restricts the operations which can be performed as they are dependent upon standard arithmetic circuit outputs - addition, multiplication, subtraction and division. Many protocols such as Elliptic Curve Digital Signature Algorithms (ECDSA), which are performed using field encodings, are in operable through the medium of generic ZK proofs which are expressed in terms of a circuit. \\\\ 
+	
+	{\bf A profound solution}.
+	In section 3, we elaborate on how to use embedded curves to to extend the circuit operations to those which exceed the traditional bounds of constraint systems. We have constructed a curve, across the scalar field of curve25519 to extend the rang of EC operations inside bulletproofs, with increased security at minimal overhead.\\\\
+	As with all elliptic curves, their construction will strongly influence the outcomes of the protocols in which they are implemented. In addition to this, there can be discrepancies in both the security and speed of cryptographic systems dependant upon on how they're implemented. For this reason, we wanted to construct the embedded curve such that we can make use of the the fastest formulas for elliptic curves, which are for Twisted Edwards curves. The Edwards form of a curve is considered complete, as any two inputs, given as x and y, provide a correct result. In conjunction to their complete formulas, Twisted Edwards curves have been proven by Bernstein et al, to be Birationally equivalent to Montgomery curves. Which fit the purpose of the augmented construction, as Montgomery operations in arithmetic circuits were proven by the Z-cash team to provide a fast Montgomery ladder for in circuit multiplication. Whilst these curves models can provide some of the fastest and most simplistic operations, they do provide issues in security. Neither Montgomery, nor Edwards curves deliver prime order groups in their implementations. They provide curves which have a cofactor, $h$, which multiplies the prime of the subgroup to give the group order. Whereas curves like Weierstrass give prime order but their formulas are too inefficient for circuit operations.\\\\ 
+	
+	For non prime order curve groups, the mismatch in desirability of prime order curves and inability to implement one directly from the curve can be patched with uniquely tailored modifications.  However, these fixes oft become perplexing to the non-implementors and with higher level protocols they are seldom straightforward. Using curves which provide prime order groups, such as Weierstrass Curves, have slower formulae and are very difficult to implement in constant time. Plentiful curve families allow for the encoding of different related curves for protocol specific purposes. For example, [] library uses Twisted Edwards forms for out of circuit operations like public key generation to exploit the high speed formula but uses Montgomery form for in circuit operations to benefit from the ladder multiplication. If an ad hoc fix needs to be given to each related curve model, then the implementation can become tedious and very complex.\\\\
+	
+	{\bf A centric solution}.
+	In section 4, we explain how to use the Ristretto technique, which constructs prime order Edwards curves from non prime order groups, with our embedded curve, to compress the cofactor such that $h$ = 1. Ristretto makes use of the relationship between curves and provides a fix for the cofactor complication for all models in one place.\\\\
+	
+	Alongside the companies which revolve around the idea of privacy at the grassroots of society, such as Z-cash and Monero, the privacy cryptocurrencies, there are many more areas where signature schemes are handling sensitive data which can be easily expoloited. For example, when signing to a website the website privacy.
+	
+	\subsection{State of the Art}
+	
+	[Work in progress]
+	
+	%TODO: Talk about zcash, ethereum, etc.
+	
+	\subsection{Our Contributions}
+	
+	Here we present an elliptic curve, created for a safe and efficient elliptic curve operations inside discrete log based proofs; called Sonny. Sonny is defined as an embedded curve which the gives the input for the proofs and the outer curve, Curve25519, will be used to implement the proof itself. \\\\
+	
+	This curve is used to prove the outcomes of elliptic curve functions in general knowledge. An elliptic curve statement, such as a signature scheme, allows a for the generation and verification of digital signatures from an EC key pair. However, such statements cannot be made in ZK as they are made with the Elliptic curve operations and not scalar arithmetic. With the Sonny curve, elliptic curve operations can be performed using inside circuits, with bulletproofs as the argument, so that we have ZK proof statements for signatures. \\
+	
+	
+	\section{Notation and Formulae} 
+	
+	\subsection{Elliptic Curves}
+	
+	\begin{itemize}
+		
+		\item Finite field: let \Fp{ }denote a prime finite field with characteristic $\neq {2}\vee{3}$.
+		
+		\item Edwards curve: let $\varepsilon_{a,d}$ denote an Edwards curve, given by equation 
+		$$ {a}x^2+y^2=1+{d}x^2y^2, $$ 
+		where {$d$} and {$ad$} are non-square elements of $\Fp$ and with no points at infinity. %TODO: what do you mean with no points at infinity?
+		In this paper, the primary focus is upon Twisted Edwards curves, where $a = -1$. 
+		The identity point of an Edwards curve, $\varepsilon$, where (X,Y) $\epsilon$ in \Fp, is given encoded to $(0,1)$. When Edwards points are expressed in Extended Twisted coordinates, the identity encoding is given by $(X : Y : Z : T) = (0 : 1 : 1 : 0)$.
+		
+		\item Montgomery curve: ${M}_{a,\frac{2-4d}{a}}$ is a Montgomery curve, given by equation
+		$$y^2=x^3+Ax^2+Bx.$$ 
+		A Montgomery curve is birationally equivalent to an Edwards curve - a definition used for algebraic substitution -  where its point at of infinity is the identity point, denoted as $(0 : 1 : 0)$.
+		
+		\item Jacobi curve: $\jmath_{a^{2},a-{2d}}$ is a Jacobi curve, given by an equation of the form 
+		$$y^2 = {e}x^4 + 2Ax^2 + 1.$$ 
+		A Jacobi curve, better known as a Jacobi quartic, is central to all curve models and to utilise this curve relationship we will only be using Jacobi curves where $e = {a}^2$, as such curves have a full 2-torsion point.
+		
+		\item Torsion points: An element $[P]$ in $G$ is a torsion point if there is a mapping of $M$, by means of multiplication, where $M \cdot\ [P] = 0_{G}$. Torquing elements for a curve form a subgroup, $G[M]$, where the order is divisible by ${M}^2$. The torsion subgroups for this curve family have order 1, 2 or 4.
+		
+		\item Isogeny: An isogeny $\varphi$ is a function which maps algebraic groups whilst preserving the group structure. This mapping must satisfy the properties of being surjective and having a finite kernel. The isogeny, in this paper, is used to transport an encoding between different curve models.
+		
+		\item Curve forms: $\varepsilon_{a,d}$; ${M}_{a,\frac{2-4d}{a}}$; $\jmath_{a^{2},a-{2d}}$ These curve models are all isogenous to one another. The Edwards, Montgomery and Twisted Edwards are independently 2-isogenous to the Jacobi quartic and are therefore 4-isogenous to one another. 
+		
+		\item Arithmetic circuits: These are the computational models for computing circuits. They are universally bound to add and multiply, which are the functions performed at each node on all given inputs.
+		
+		\item Cofactor compression: This refers a quasi-construction of cofactor 1 curves from cofactor 8 groups. Also known as cofactor division, it involves the process of point compression when points of order 4 or 8 are produced. 
+		
+	\end{itemize}
+	
+	\subsection{Zero-Knowledge Proofs}
+	
+	[Work in progress]
+	
+	\subsubsection{Bulletproofs}
+	
+	[Work in progress]
+	
+	\newpage
+	
+	\section{Sonny Elliptic Curve}
+	
+	%TODO: Explain Ed-255, etc.
+	
+	
+	\subsection{Definition}
+	\noindent
+	Let $\Fp$ be the prime finite field with $p$ elements, where 
+	\begin{align*}
+		p = 2^{252} + 27742317777372353535851937790883648493.
+	\end{align*}
+	
+	\begin{defn}[Sonny]
+		Let $C$ be the twisted Edwards elliptic curve defined over $\Fp$ 
+		described by equation 
+		$$ -x^2 + y^2 = 1 + \frac{126296}{126297}x^2y^2.	$$
+		We call {\it Sonny} the curve $E = C(\Fp)$. That is, $E$ is the subgroup of $\Fp$-rational points of $C$.
+	\end{defn}
+	%
+	\subsection{Order}
+	\noindent Sonny has order 
+	\begin{align*}
+		n = 2^{252}+115924404605461509904689566245241897752,
+	\end{align*}
+	which factors in $h \times r$ where $h=8$ and 
+	\begin{align*}
+		r = 2^{249}+15114490550575682688738086195780655237219
+	\end{align*}
+	is a prime number.\\
+	
+	\subsection{Security Level}
+	%TODO: Luke?
+	It is claimed that the security level of the curve is of $N\approx 127$. We show why here. 
+	
+	
+	\subsection{Forms}
+	
+	\subsubsection{Montgomery}
+	\begin{itemize}
+		\item Equation $B y^2 = x^3 + A x^2 + x$
+		\item Parameters $A = 505186$, $B = 1$
+		\item Generator $G = (x_0, y_0)$ with coordinates
+		\begin{align*}
+			x_0 =  \\
+			y_0 = 
+		\end{align*}
+		\item Base point $B = (x_1, y_1)$ with coordinates
+		\begin{align*}
+			x_1 = \\
+			y_1 = 
+		\end{align*}
+	\end{itemize}
+	
+	\subsubsection{Twisted Edwards}
+	\begin{itemize}
+		\item Equation $a x^2 + y^2 = 1 + d x^2 y^2$
+		\item Parameters $a = -1$, $d= -\frac{126296}{126297}$. %TODO: Change to field rep.
+		\item Generator $G = (x_0, y_0)$ with coordinates
+		\begin{align*}
+			x_0 = \\
+			y_0 = 
+		\end{align*}
+		\item Base point $B = (x_1, y_1)$ with coordinates
+		\begin{align*}
+			x_1 = \\
+			y_1 = 	
+		\end{align*}
+	\end{itemize}
+	
+	\subsubsection{Conversion maps}
+	The following rational maps convert points of Sonny from one form of the curve to another \cite[Theorem 3.2]{teds}. %TODO: Add reference.
+	\begin{itemize}
+		\item Montgomery to Twisted Edwards
+		\begin{align}
+			\label{eq-mon-to-ted}
+			(u, v)&\mapsto \left(\frac{u}{v}, \frac{u-1}{u+1}\right)
+		\end{align}
+		\item Twisted Edwards to Montgomery
+		\begin{align}
+			\label{eq-ted-to-mon}
+			(x, y)&\mapsto \left(\frac{1+y}{1-y}, \frac{1+y}{(1-y)x}\right)
+		\end{align}		
+	\end{itemize}
+	
+	\subsection{Curve Generation}
+	
+	We start by deterministically generating a Montgomery elliptic curve $E^M$ over $\Fp$ and then setting the generator and base points. Afterwards, we convert the curve and the points to twisted Edwards form using the maps of theorem [REF]. %TODO: Add ref.
+	We finally rescale all parameters so that the parameter $a = -1$. This last step has the advantage that the arithmetic in the curve can be speeded up \cite{scaling}. %it requires less operations
+	
+	Our algorithm takes prime number $p$ and returns a twisted Edwards curve defined over $\Fp$. The specific outputs of the algorithm are:
+	\begin{itemize}
+		\item The prime order of the finite field the curve is defined over (which is the input $p$).
+		\item Parameters $a$ and $d$ of the equation that defines the twisted Edwards curve.
+		\item Order of the curve and its decomposition into the product of a cofactor and a large prime. 
+		\item Generator and base points.
+	\end{itemize}
+	
+	As the finite field is defined by the input $p$, no specification of this parameter is required. In the same way, the order of the curve and its decomposition is determined once the parameters of the equation describing the curve are fixed. Hence, the only remaining specifications are parameters $a$ and $d$ and the choice of generator and base point. 
+	
+	\subsubsection{Choice of Montgomery Equation}
+	
+	We start by finding a Montgomery curve defined over $\Fp$ where $p$ is the order of Ed255 used to generate and verify Bulletproofs. given prime number. The assumptions and algorithm presented are based on the work of \cite{generation} and Zcash team \cite{github:zkcrypto:derive}.
+	
+	The algorithm takes a prime $p$, fixes $B = 1$ and  returns the Montgomery elliptic curve defined over $\Fp$ with smallest coefficient $A$ such that $A-2$ is a multiple of 4. 
+	% Choosing curve constants with extremely small sizes or extremely low (or high) hamming weight can be used to eliminate the computational overhead of a field multiplication. 
+	This comes from the fact that this value is used in many operations, so trying to keep it smaller and divisible by four is a reasonable assumption \cite{generation}. As with $A=1$ and $A=2$ the equation does not describe a smooth curve, the algorithm starts with $A=3$.
+	
+	For primes congruent to 1 mod 4, the minimal cofactors of the curve and its twist are either $\{4, 8\}$ or $\{8, 4\}$.  We choose a curve with the latter cofactors so that any algorithms that take the cofactor into account don't have to worry about checking for points on the twist, because the twist cofactor will be the smaller of the two \cite{generation}. For a prime congruent to 3 mod 4, both the curve and twist cofactors can be 4, and this is minimal.  
+	
+	\subsubsection{Choice of Generator and Base Points}
+	
+	To pick a generator $G_0$ of the curve, we choose the smallest element of $\Fp$ that corresponds to an $x$-coordinate of a point in the curve of order $n$. Then as a base point, we define $G_1 = 8\cdot G_0$, which has order $l$. 
+	
+	\subsubsection{Transformation to Twisted Edwards}
+	
+	Use the birational map of equation (\ref{eq-mon-to-ted}) to get the coefficients, generator and base points in twisted Edwards form.
+	
+	\subsubsection{Optimisation of Parameters}
+	
+	As pointed out in \cite[Sec. 3.1]{scaling}, if $-a$ is a square in $\Fp$, it is possible to optimise the number of operations in a twisted Edwards curve by scaling it. 
+	
+	\begin{thm} \label{thm-scale} %[Rescaling of E]
+		Consider a twisted Edwards curve defined over $\Fp$ given by equation $ax^2+y^2= 1 +dx^2y^2.$ If $-a$ is a square in $\Fp$, then the map $(x, y) \to (x/\sqrt{-a}, y)$ defines the curve $-x^2+y^2= 1 +(-d/a)x^2y^2.$ We denote by $f = \sqrt{-a}$ the scaling factor.
+	\end{thm}
+	
+	\begin{proof}
+		The result follows directly from the map's definition.
+	\end{proof}
+	
+	\subsection{Security Analysis}
+	
+	This section specifies the safety criteria that the elliptic curve should satisfy. The choices of security parameters are based on the joint work of Bernstein and Lange summarised in \cite{safe-curves}. To this purpose, we defined an algorithm that should be run after finding the elliptic curve as proposed in previous section. The algorithm is based on the the code of Daira Hopewood \cite{github:daira:safe}, which is an extension of the original SAGE code \cite{safe-curves} to general twisted Edwards curves.
+	
+	\subsubsection{Curve Parameters}
+	
+	Check all given parameters describe a well-defined elliptic curve over a prime finite field.
+	
+	\begin{itemize}
+		\item The given number $p$ is prime.
+		\item The given parameters define an equation that corresponds to an elliptic curve.
+		\item The product of $h$ and $l$ results into the order of the curve and the point $G_0$ is a generator.
+		\item The given number $l$ is prime and the point $G_1$ is a generator of $\G$.
+	\end{itemize}
+	
+	\subsubsection{Elliptic Curve Discrete Logarithm Problem}
+	
+	Check that the discrete logarithm problem remains difficult in the given curve. For that, we check it is resistant to the following known attacks. %ECDLP attacks.
+	
+	\begin{itemize}
+		\item {\it Rho method} \cite[Sec. V.1]{seroussi}: we require the cost for the rho method, which takes on average around $0.886 \sqrt{l}$ additions, to be above $2^{100}$.	
+		\item {\it Additive and multiplicative %(MOV attacks) 
+			transfers} \cite[Sec. V.2]{seroussi}: we require the embedding degree to be at least $(l-1)/100$.
+		\item {\it High discriminant} \cite[Sec. IX.3]{seroussi}: we require the complex-multiplication field discriminant $D$ to be larger than $2^{100}$. 
+		% Although it is not clear it is better for security to have large $|D|$, there are speed ups to the rho method for some curves where this value is very small.
+	\end{itemize}
+	
+	\subsubsection{Elliptic Curve Cryptography}
+	
+	\begin{itemize}
+		\item {\it Ladders} \cite{montgomery}:   check the curve supports the Montgomery ladder. 
+		\item {\it Twists} \cite[twist]{safe-curves}: check it is secure against the small-subgroup attack, invalid-curve attacks and twisted-attacks.
+		\item {\it Completeness} \cite[complete]{safe-curves}: check if the curve has complete single-scalar and multiple-scalar formulas. It is enough to check that there is only one point of order 2 and 2 of order 4. 
+		\item {\it Indistinguishability} \cite{indist}: check availability of maps that turn elliptic-curve points indistinguishable from uniform random strings.
+	\end{itemize}
+	
+	\subsection{Cofactor Compression}
+	
+	\subsubsection{Isogenies}
+	
+	\subsubsection {Curve Mappings}
+	
+	\section{ECC for Zero Knowledge Proofs}
+	
+	Elliptic Curve arithmetic uses the finite field of integers reduced mod$p$, where $p$ is some usually large prime. The use of finite fields as the extension of elliptic curves allows  make certain cryptographic assumptions about the order of the set. The choice of finite fields for elliptic curves, known as base curves, provide a cyclic group which gives precise knowledge to the amount of bits that need to be stored by point outputs. As stated, the base fields dictate the operations for the elliptic curves and thus selection of these fields affects the security, speed and simplicity of the implementation of the curve. Supplementary to standard operations performed mod $p$, there are many protocols can be performed in ECC which are implemented using finite sets but do not make use of the base field. As previously touched on, they rely upon another prime order field, which is the curves scalar field, also known as the prime subgroup. Elliptic curve operations are utilised for an eclectic variety of reasons within cryptography, the predominant reason is the security that couples each of operations - resulting from hard a DLP.\\\\ 
+	
+	Elliptic curves are capable of generating public/private key pairs, which can be signed with a digital signature scheme to become security keys, and these security keys are rapidly becoming replacements for many password schemes. For example, security keys are used to show attestation certificates for websites, which allows the website to verify that a user is genuine by receiving a copy of a users authenticity. The issue arises when a verified key is registered, as becomes possible for a server to learn the make, model, and batch of the verification for the key.  This data can be manipulated by website owners and then used to discriminate which batches and models can be trusted in the future. If these key signatures and EC statements are generated in Zero Knowledge, we can provide the proof of the users signed certificate without providing additional information about the signature; this can mitigate the security risks that are tied to the data sensitivity.\\\\ 
+	
+	Solving this issue involves using a zero-knowledge proof schemes. For our scheme, we choose bulletproofs. The existing systems like the verification systems are already deployed and because their operations are performed on on the base field, and not a scalar field, they are not directly updateable with a large range of contemporary techniques. This paper and findings focuses on Zero Knowledge  proofs as the 'add-on technology' for existing schemes. \\\\ 
+	
+	Elliptic curves have both a base field, which is the finite field in which they are defined; and a scalar field, which is associated with the number of points on the curve. DL based proofs which use a curve and a circuit rely upon both of the finite fields. The base field here is a function used to encode the public coordinates which are represented as field elements. However, as the operations are performed mod$p$, where $p$ is prime,  the outputs are reduced to the prime scalar field. Thus operations which require the base field, cannot be performed inside proof systems which use arithmetic circuits as an expression. As a result the ZK outputs are limited to what circuit operations can be performed by the elliptic curves scalar field. The circuit, in this case, encodes relation between the input and outputs.
+	
+	\subsection{Efficient ZK for higher operability}
+	
+	To extend the range of ZK elliptic curves operations to those which employ the base field, we have built a curve which has a base field equal to the scalar field of Curve25519. This is defined in the following manner: Let $\varepsilon_{1}$ and $\varepsilon_{2}$ be elliptic curves. Where the prime subgroup order, or scalar field, of $\varepsilon_{1}$ is $r$; we define $\varepsilon_{2}$ over the base field $F_p$, where \#$F_p$ = $r$. 
+	This will allow us to perform fast in circuit operations using $\varepsilon_{2}$ as the embedded curve within the scalar field of $\varepsilon_{1}$.One particular current issue that embedding curves helps to alleviate is the adding to, or updating of, existing software protocols with privacy techniques so that already deployed systems can benefit from high levels of privacy preservation. By constructing this, we are making a quasi representation of one finite field as both a scalar and a base field. We can therefore encode the field based protocols curve over the scalar field of existing systems - and protocols such as key signature verification, can be performed inside a Zero Knowledge  proof. We present a means of verifying only the scalar operation, in Zero Knowledge , so that Zero Knowledge  proof of statements derived for signature schemes can be proven rather than the signature itself. This is performed by expressing ZK proof of computations as the argument for computational models, such as arithmetic circuits.\\\\ 
+	
+	In the case of Zerocaf protocol, we have the outer curve operations, using Curve25519, which implement the ZK proof system, where the operations are performed as integers mod the base field. Then there is Sonny, the inner curve, known as the embedded curve which is the curve we make the proofs about. For the case of signature schemes, like Elliptic Curve Digital Signature Algorithm (ECDSA), the operations for the signature generation are made using Sonny then the Zero Knowledge  arguments for these outputs are generated using Curve25519. By setting the scalar field of Curve25519 as the base field of Sonny, all the operations are efficient when expressed in terms of a circuit. The validation keys here are effectively turned into discrete log proofs, as the generation of ZK values is performed in one amalgamated protocol, even though it comes from two different curves. \\\\
+	
+	Many software layers require information from the user - just like authentication certificates for websites, where the type of secret keys is known to the website for verification. The information given is often burnt into the hard memory of the website, which can be used by the software owners to discriminate against different keys and brands of keys hence the need to preserve privacy on these existing protocols.
+	
+	\subsection{Circuits}
+	
+	An circuit is combinational set of operations which are aligned in a set or series for the ultimate purpose of optimising otherwise standardised mathematical process. The operations, better known as the basic arithmetic operations (addition, subtraction, multiplication, and division), are theoretically performed in constant time. This statement is derived from the fact that the required RAM required is roughly equal for all operations. However, when computing these operations for some large integers, it is apparent that the magnitude greatly affects the costs of RAM. Thus giving a discrepancy for computational time between the theoretical arguments and the practical implementation. When the expression of these arithmetic operations is performed in a circuit, it is referred to as an arithmetic circuit. When expressed for computations within computer systems, any arithmetic circuit is constructed from various combinational elements, which are connected by wires. A combinational element is fixed element which performs a specific function from a constant number of inputs and outputs. Circuits are used alongside the elliptic curves to construct discrete log based proof systems; when the circuit is defined over the scalar field. 
+	
+	\section{Prime Order Groups}
+	
+	'A group of prime order' is always a cyclic group, that has a mapping - which respects the group structure - to the quotient of the group of integers by a subgroup. This subgroup is generated by a prime number. Groups of prime order are often a prerequisite to crytpographic prototcols, as they provide the basis for a hard DLP and thus increased security for implementation. For implementation, we have made efficiency the most paramount factor for curve selection, which led to us choosing a Twisted Edwards curve form. This is because the Edwards forms of the curves provide the fastest known formulas, which can be accredited to extended Twisted Edwards, introduced by Hysil et al, where auxiliary points are used with fewer field inversions. As elliptic curves are Abelian groups, they provide varying order for their respective groups. Edwards curves and their birational Montgomery equivalents, provide 'not quite' prime order groups over finite fields - the absence of prime groups can lead to timing variations when implementing protocols such as the signature schemes Sonny implements. Instead of certain Elliptic curve groups being prime, they have a cofactor $h$, meaning that $h \cdot q$ is the group order, where $h > 1$ and $q$ is a large prime. Having this property where $h > 1$ can lead to many implementation complexities.\\\\
+	
+	There are cofactor relates attacks designed to extract information, in the form of bits, about a users private key. When generating a public key, it is ideally performed using a point operation on a given curve point, where a chosen scalar outputs a new point, modulo the base field. This provides a public key, from which the scalar, known as the private key, cannot be extracted. However, if points on the curve are selected by attackers to have order which divides $h$, then presented as valid curve points, they can be mistakenly used by a user. If an incognizant user generates a public key by inputting a secret scalar to a function which operates with points of order $h$, then the attacker can gain some bits about the input scalar. Whereas within a prime order group, there is no means of generating valid points which have order dividing $h$. The abstraction of having non prime order groups can be solved with specialised modifications towards individual protocols. One notorious method is to multiply points by the cofactor and check the result; if the resulting point is the identity point then it can be discarded. Many of the individual techniques produce continuous and substantial flaws, especially with regards to patchwork comprehension, which occurs when the protocols are being implemented by those who did not design them, i.e. Implementors not knowing at which step to multiply by $h$. 
+	
+	\subsection{Cofactor Compression}
+	
+	There are various advantages and disadvantages to having a cofactor larger than one, therefore a thorough analysis must be performed,  so that it is known whether or not cofactor manipulation is needed. For all curves, except for Hessian curves, the cofactor is divisible by 4. To become more useful to a broad spectrum of cryptography, Ristretto is apt for a large number of curves, which have a cofactor of 8 or 4. When the cofactor is greater than 1 multiple operations can be hindered. A quotient group can be constructed to allow for the implementation of prime order groups, thus effectively compressing the cofactor, by applying the Ristretto technique. This technique requires just one additional step to Mike Hamburgs decaf proposal for cofactor-4 curves. The technique works using following four functions:\\\\   
+	
+	${Equality}$ ${testing}$ This function checks the equality of group elements. \\\\
+	
+	${Encode}$\ The encoding function is applied to an Edwards point and this becomes the internal representation for the new "Ristretto point', meaning the same Edwards point operations are performed on the Ristretto point, and with no overhead cost. The function encodes the elements as byte strings so that that the Ristretto elements can be encoded identically.\\\\
+	
+	${Decode}$\ This function decodes the byte strings into the internal representations of Ristretto points. There is also a validity check which assesses the canonical representation of points, and only accepts those which are outputs of the encoding function. \\\\
+	
+	${Curve}$ ${hashing}$\ For many protocols, mapping elements in a group to a curve is done by a hash function, as it provides standardised digests which can be encoded. Ristretto using an Elligator 2, which gives a 1:1 mapping of group elements to the curve. Elliga
+	
+	\subsection{Isogenies}
+	
+	By using the Ristretto technique, we are able to solve all cofactor related issues in one place and with one step. This is facilitated by its use in the relationship of the curves, and how this lets us transport the cofactor compression for curves, via the isogeny, to another curve in the same family. Which in turn means we work with prime order points in any operations of ECC. Otherwise, the implementation would have to deal with the issue at varying stages which is dependent upon a protocols ultimate design. An isogeny is a function which maps one algebraic group to another, whilst maintaining the structure of the group - which in terms of elliptic curves, means that a curve is allowed curve to take on the values of another and preserve the same point addition method. These functions are non-constant and are used as a tool for effective 'transportation' between curve models. Just as with all concrete mathematical formulae, these functions have a domain and co-domain, which means that given these two, it is possible to compute the function itself. In this document isogenies will be given the generalization as the multiplication by $m$ map, where they have a finite kernel and are restricted to rational mappings.  
+	A deeper understanding of isogenies for elliptic curves has greatly advanced the field of ECC, as it is possible to deduce one mapping from the form of another. Additionally, if these relationships are well understood then they can be applied or integrated into other functions and broaden their domain of propriety to more use cases.\\\\
+	
+	When there exists a non-constant function, $\varphi$, which gives a rational mapping from one group to another denoted as $\varphi$ : $\varepsilon$ $\rightarrow$ $\varepsilon\prime$. This mapping from $\varepsilon$ to $\varepsilon\prime$ has degree $n$. Where there is this separable isogeny, then exists a mapping from $\varepsilon$ to $\varepsilon\prime$, which is known as the dual isogeny, $\hat{\varphi}$, where both functions have degree $n$. The dual isogeny is conveyed as $\hat{\varphi}$ : $\varepsilon\prime$ $\rightarrow$ $\varepsilon$ of degree $n$. The isogeny $\hat{\varphi}$ here is known as the dual of $\varphi$, such that $\hat{\varphi}$ $\circ$ $\varphi$ is the multiplication by $n$, where $n$ = $\hat{\varphi}$ $\circ$ $\varphi$, from $\varepsilon$ to $\varepsilon\prime$. This dual isogeny has certain properties which allow for the two way transportation of functions between curves. These can be exploited to provide abstraction of protocols where it would otherwise be inapplicable.
+	
+	\subsubsection {Curve Mappings}
+	
+	As curve models $\varepsilon_{a,d}$; ${M}_{a,\frac{2-4d}{a}}$; $\jmath_{a^{2},a-{2d}}$, have different implementation features we can utilise these relationships to achieve the implementation we desire, namely a prime order curve. It is possible to construct prime order curves using the Montgomery and Edwards curve forms by transporting encoding to and from the Jacobi quartic, via isogenies. The functions for cofactor compression would typically be used on the Jacobi quartic form, by means of canonically selecting outputs for curve points. Now this selection process can be applied to the Edwards and Montgomery form by integrating it to the function which maps between them. \\\\ 
+	
+	\section{Elliptic Curve Operations in Zero Knowledge}
+	
+	Elliptic curve operations are utilised for an eclectic variety of reasons within cryptography, the predominant reason is the security that couples each of operations - resulting from hard a DLP. Elliptic curves are capable of generating public/private key pairs, as well as signing with them for accessing websites, and these keys are rapidly becoming replacements for many password schemes. The issue arises when a verified key is registered, as becomes possible for a server to learn the make, model, and batch of the verification for the key. This data can be manipulated by website owners and then used to discriminate which batches and models can be trusted in the future. If we generate these key signatures and EC statements in Zero Knowledge then we can mitigate the security risks that are tied to the data sensitivity. 
+	
+	Unfortunately, in their raw form, elliptic curve field operations are not compatible with zero knowledge proof systems which  
+	
+	\section{Implementation}
+	
+	There exists a comprehensive and detailed implementation of Sonny Curve in a cryptographic library named Zerocaf. This implementation is done by Dusk Network and can be found here {\url{https://github.com/dusk-network/dusk-zerocaf}}.\\\\  
+	
+	The difficulty of breaking cryptographic systems stems solely from the hardness of the mathematical problems on which they are based. However, this proves not to be the case in practical implementations because of side channel attacks, which target the implementation as medium of encoding the cryptography - to circumvent these attacks, the operations are performed in constant time. The use of Edwards curve form results in a uniform implementation which better facilitates these constant time operations.   Whereas the efficiency for in circuit operations can greater benefit from the variable time implementations. These operations are applied when there is no secret data to protect. We therefore present an implementation which performs statement proofs in constant time with high security, and verification in variable time and high speed. \\ 
+	
+	
+	
+	
+	
+	
+	\section{Future Work}
+	
+	R1CS optimisation for constraints 
+	
+	Further isogeny use cases 
+	
+	\section{Conclusions}
+	
+	\section{Acknowledgements}
+	
+	We would like to give special thanks to Henry de Valence for his personalised help in understanding the Ristretto Protocol and being so responsive for questions regarding the implementation. 
+	%We would also like to show our strong appreciation for Marta Bellés Muñoz for her contributions with the discrete log based theory used in the understanding of this project. 
+	
+	\newpage
+	
+	%\bibliographystyle{unsrt}
+	\bibliographystyle{alpha}
+	\bibliography{lit}
+	
 \end{document}
